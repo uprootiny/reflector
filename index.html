@@ -5,7 +5,7 @@
   <title>Elegant Multi-Domain Endpoint Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Refined Color Palette & Global Variables */
+    /* Global Variables & Refined Palette */
     :root {
       --primary: #3498db;
       --secondary: #2c3e50;
@@ -16,7 +16,7 @@
       --text-muted: #7f8c8d;
       --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-
+    
     /* Global Reset & Base Styles */
     * {
       box-sizing: border-box;
@@ -41,8 +41,8 @@
       color: var(--text-muted);
       margin-bottom: 20px;
     }
-
-    /* Glass Panel (Skeuomorphic) */
+    
+    /* Glass Panels & Skeuomorphic Effects */
     .glass-panel {
       background: var(--bg-glass);
       border-radius: 12px;
@@ -51,8 +51,8 @@
       backdrop-filter: blur(10px);
       margin-bottom: 20px;
     }
-
-    /* Accordion Styles */
+    
+    /* Accordion (Domain Sections) */
     .accordion {
       background: var(--primary);
       color: #fff;
@@ -80,14 +80,15 @@
       box-shadow: var(--shadow-light);
       backdrop-filter: blur(8px);
     }
-    /* Domain-Specific Color Coding (via border accent) */
+    
+    /* Domain-Specific Color Coding (via Border Accent) */
     .domain-cyrillrafael { border-left: 5px solid #2980b9; }
     .domain-marchdown { border-left: 5px solid #e67e22; }
     .domain-dissemblage { border-left: 5px solid var(--accent); }
     .domain-hyperstitious { border-left: 5px solid #16a085; }
     .domain-xenoethics { border-left: 5px solid #c0392b; }
     .domain-dashboard { border-left: 5px solid #8e44ad; }
-
+    
     /* Table Styles */
     table {
       width: 100%;
@@ -106,7 +107,7 @@
       text-transform: uppercase;
       font-weight: 500;
     }
-
+    
     /* Status Indicators & Sparkline */
     .status { font-weight: 600; }
     .status.up {
@@ -120,7 +121,7 @@
       100% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
     }
     .sparkline { width: 100px; height: 30px; }
-
+    
     /* Link Styles */
     .live-link {
       text-decoration: none;
@@ -128,7 +129,7 @@
       font-weight: 500;
     }
     .live-link:hover { text-decoration: underline; }
-
+    
     /* Deploy Button */
     .deploy-btn {
       background: var(--accent);
@@ -142,7 +143,7 @@
       transition: background 0.3s;
     }
     .deploy-btn:hover { background: #8e44ad; }
-
+    
     /* Refresh Timestamp */
     .refresh-timestamp {
       text-align: right;
@@ -150,7 +151,7 @@
       color: var(--text-muted);
       margin-top: 10px;
     }
-
+    
     /* Cheatsheet Section */
     #cheatsheet {
       max-width: 800px;
@@ -164,10 +165,21 @@
       color: #333;
       backdrop-filter: blur(5px);
     }
-    #cheatsheet h2 { margin-top: 0; font-weight: 400; color: var(--secondary); }
-    #cheatsheet ul { list-style-type: disc; padding-left: 20px; }
-    code { background: #f0f0f0; padding: 2px 4px; border-radius: 2px; }
-
+    #cheatsheet h2 {
+      margin-top: 0;
+      font-weight: 400;
+      color: var(--secondary);
+    }
+    #cheatsheet ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+    
     /* Modal Styles for Deployment Instructions */
     #instructionModal {
       display: none;
@@ -206,20 +218,24 @@
 </head>
 <body>
   <h1>Elegant Multi-Domain Endpoint Dashboard</h1>
-  <p class="meta">Monitor your portfolio, projects, and dynamic services. Click on a section to view details.</p>
+  <p class="meta">Monitor your portfolio, projects, and dynamic services. Click a domain to view details and deploy services.</p>
   
   <div id="dashboard-container" class="glass-panel"></div>
   
   <div class="refresh-timestamp" id="lastRefreshed">Last refreshed: --</div>
   
   <section id="cheatsheet" class="glass-panel">
-    <h2>Cheatsheet & Inspection Tips</h2>
+    <h2>Cheatsheet & Best Practices</h2>
     <ul>
-      <li>Inspect a service: <code>curl -I &lt;endpoint&gt;</code></li>
-      <li>DNS lookup: <code>nslookup &lt;domain&gt;</code></li>
-      <li>View logs: <code>tail -f /var/log/nginx/access.log</code></li>
-      <li>Deploy updates: <code>git commit -am "Update endpoints" && git push</code></li>
-      <li>Refresh manually: Press F5 to reload this page.</li>
+      <li><strong>Service Inspection:</strong> Run <code>curl -I &lt;endpoint&gt;</code> to view HTTP headers and status codes.</li>
+      <li><strong>DNS Diagnostics:</strong> Use <code>nslookup &lt;domain&gt;</code> or <code>dig &lt;domain&gt;</code> to verify DNS records.</li>
+      <li><strong>Log Monitoring:</strong> Tail your web server logs with <code>tail -f /var/log/nginx/access.log</code> to monitor traffic and errors in real time.</li>
+      <li><strong>Versioning & Deployment:</strong> Commit changes with clear messages (<code>git commit -am "Update endpoints"</code>) and push updates (<code>git push</code>). Consider using CI/CD for automated deployments.</li>
+      <li><strong>Container Deployment:</strong> For dynamic services, containerize with Docker. Example:
+        <pre><code>docker run -d -p [EXTERNAL_PORT]:[INTERNAL_PORT] your-docker-image</code></pre>
+      </li>
+      <li><strong>Service Rewiring:</strong> Use environment variables or configuration files to update backend endpoints and proxy settings without code changes.</li>
+      <li><strong>Manual Testing:</strong> Click the “Live” link or use browser developer tools to inspect network activity and troubleshoot issues.</li>
     </ul>
   </section>
   
@@ -228,27 +244,27 @@
     <div class="modal-content">
       <span class="close" id="modalClose">&times;</span>
       <div id="modalBody">
-        <!-- Instructions will be injected here -->
+        <!-- Deployment instructions will be injected here -->
       </div>
     </div>
   </div>
   
   <script>
     /**
-     * Data Model: Each domain includes:
-     *  - domain: The domain name.
-     *  - capacity: A short, human-friendly tagline.
-     *  - discovery: How the services were discovered or configured.
-     *  - live: The primary live URL (if applicable).
-     *  - github: A GitHub URL for the project (if applicable).
-     *  - colorClass: A CSS class for color-coding.
-     *  - services: An array of service objects with label, url, and port.
+     * Data Model: Each domain includes metadata and an array of services.
+     * - domain: Domain name.
+     * - capacity: A human-friendly tagline.
+     * - discovery: How endpoints were discovered/configured.
+     * - live: Primary live URL (if applicable).
+     * - github: GitHub repository URL (if applicable).
+     * - colorClass: CSS class for color-coding.
+     * - services: Array of service objects with label, url, and port.
      */
     const domains = [
       {
         domain: 'cyrillrafael.org',
         capacity: 'Creative & Innovative',
-        discovery: 'Manually configured. Portfolio served via GitHub Pages.',
+        discovery: 'Manually configured. Portfolio via GitHub Pages.',
         live: 'https://uprootiny.github.io/portfolio',
         github: 'https://github.com/uprootiny/portfolio',
         colorClass: 'domain-cyrillrafael',
@@ -343,7 +359,7 @@
         capacity: 'Central Dashboard Hub',
         discovery: 'Aggregated status from creative projects.',
         live: 'https://dashboard.dissemblage.art',
-        github: '', // Add GitHub repo URL if available.
+        github: '', // Optionally add GitHub repo URL.
         colorClass: 'domain-dashboard',
         services: [
           { label: 'Main Dashboard (443)', url: 'https://dashboard.dissemblage.art', port: 443 },
@@ -387,7 +403,7 @@
     }
 
     /**
-     * Ping a service using a HEAD request with timeout.
+     * Ping a service using a HEAD request with a timeout.
      * @param {string} url - The endpoint URL.
      * @param {number} timeout - Timeout in milliseconds.
      * @returns {Promise<object>} - A status object.
@@ -412,8 +428,7 @@
     }
 
     /**
-     * Returns a generic set of deployment instructions for a service.
-     * You can expand this function to provide more dynamic or algorithmically generated instructions.
+     * Generate deployment instructions for a service.
      * @param {object} service - The service object.
      * @returns {string} - HTML string with instructions.
      */
@@ -422,20 +437,36 @@
         <h3>Deployment Instructions for ${service.label}</h3>
         <p>To deploy your application at <strong>${service.url}</strong> on port <strong>${service.port}</strong>, follow these steps:</p>
         <ol>
-          <li>Configure DNS for this endpoint. For example, create a record for <code>${service.url}</code> pointing to your server's IP address.</li>
-          <li>Set up your web server (e.g., Nginx) with a virtual host for <code>${service.url}</code>. If needed, configure a reverse proxy.</li>
-          <li>If deploying a dynamic application, use your preferred deployment method. For example, if using Docker:
-            <pre><code>docker run -d -p ${service.port}:${service.port} your-docker-image</code></pre>
+          <li><strong>DNS Setup:</strong> Create or update your DNS record for <code>${service.url}</code> to point to your server's IP address.</li>
+          <li><strong>Web Server Configuration:</strong> Configure your web server (e.g., Nginx) with a virtual host for <code>${service.url}</code>. For example:
+            <pre><code>
+server {
+    listen 80;
+    server_name ${service.url};
+    root /var/www/your-app;
+    index index.html;
+    # Additional configuration...
+}
+            </code></pre>
           </li>
-          <li>Test the endpoint: <code>curl -I ${service.url}</code> or visit it in your browser.</li>
-          <li>Monitor logs and performance (e.g., using <code>tail -f /var/log/nginx/access.log</code>).</li>
+          <li><strong>Application Deployment:</strong> For dynamic applications, deploy via Docker:
+            <pre><code>
+docker run -d -p ${service.port}:${service.port} your-docker-image
+            </code></pre>
+          </li>
+          <li><strong>Testing:</strong> Verify the deployment using:
+            <pre><code>curl -I ${service.url}</code></pre>
+          </li>
+          <li><strong>Monitoring:</strong> Check logs with:
+            <pre><code>tail -f /var/log/nginx/access.log</code></pre>
+          </li>
         </ol>
-        <p>Adjust these steps as necessary for your specific technology stack.</p>
+        <p>Adjust these steps as necessary for your environment.</p>
       `;
     }
 
     /**
-     * Show the deployment instructions in a modal dialog.
+     * Show deployment instructions in a modal dialog.
      * @param {object} service - The service object.
      */
     function showInstructions(service) {

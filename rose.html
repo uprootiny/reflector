@@ -1,0 +1,811 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Elegant Multi-Domain Dashboard & Project Flower</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    /* ======================================================================
+       Global Variables & Refined Palette
+    ====================================================================== */
+    :root {
+      --primary: #3498db;
+      --secondary: #2c3e50;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --accent: #9b59b6;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+      --text-muted: #7f8c8d;
+      --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+
+    /* ======================================================================
+       Global Reset & Base Styles
+    ====================================================================== */
+    * {
+      box-sizing: border-box;
+      margin: 0;
+      padding: 0;
+    }
+    body {
+      font-family: 'Segoe UI', Menlo, Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f8;
+      color: #333;
+      padding: 20px;
+      line-height: 1.6;
+    }
+    h1 {
+      text-align: center;
+      font-weight: 300;
+      margin-bottom: 10px;
+    }
+    .meta {
+      text-align: center;
+      font-size: 15px;
+      color: var(--text-muted);
+      margin-bottom: 20px;
+    }
+
+    /* ======================================================================
+       Layout: Two-Column Main Container
+    ====================================================================== */
+    #main-container {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 20px;
+    }
+    /* Left Column: Endpoint Dashboard (65%) */
+    #dashboard-column {
+      flex: 1 1 65%;
+    }
+    /* Right Column: Project Timeline (35%) */
+    #timeline-column {
+      flex: 1 1 35%;
+    }
+
+    /* ======================================================================
+       Glass Panels & Skeuomorphic Effects
+    ====================================================================== */
+    .glass-panel {
+      background: var(--bg-glass);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+    }
+
+    /* ======================================================================
+       Accordion (Endpoint Dashboard Sections)
+    ====================================================================== */
+    .accordion {
+      background: var(--primary);
+      color: #fff;
+      cursor: pointer;
+      padding: 16px 20px;
+      width: 100%;
+      border: none;
+      border-radius: 8px;
+      margin-bottom: 8px;
+      font-size: 18px;
+      text-align: left;
+      transition: background 0.3s ease;
+    }
+    .accordion:hover,
+    .accordion.active {
+      background: var(--secondary);
+    }
+    .panel {
+      display: none;
+      padding: 16px;
+      margin-bottom: 20px;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: var(--bg-glass);
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(8px);
+    }
+
+    /* Domain-Specific Color Coding */
+    .domain-cyrillrafael { border-left: 5px solid #2980b9; }
+    .domain-marchdown { border-left: 5px solid #e67e22; }
+    .domain-dissemblage { border-left: 5px solid var(--accent); }
+    .domain-hyperstitious { border-left: 5px solid #16a085; }
+    .domain-xenoethics { border-left: 5px solid #c0392b; }
+    .domain-dashboard { border-left: 5px solid #8e44ad; }
+
+    /* ======================================================================
+       Table Styles (for Endpoint Lists)
+    ====================================================================== */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background: var(--secondary);
+      color: #fff;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* ======================================================================
+       Status Indicators & Sparkline Graphs
+    ====================================================================== */
+    .status { font-weight: 600; }
+    .status.up {
+      color: var(--success);
+      animation: breathing 2s infinite;
+    }
+    .status.down { color: var(--danger); }
+    @keyframes breathing {
+      0% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
+      50% { box-shadow: 0 0 15px 4px rgba(39,174,96,1); }
+      100% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
+    }
+    .sparkline { width: 100px; height: 30px; }
+
+    /* ======================================================================
+       Link & Button Styles
+    ====================================================================== */
+    .live-link {
+      text-decoration: none;
+      color: var(--primary);
+      font-weight: 500;
+    }
+    .live-link:hover { text-decoration: underline; }
+    .deploy-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-left: 8px;
+      transition: background 0.3s;
+    }
+    .deploy-btn:hover { background: #8e44ad; }
+
+    /* ======================================================================
+       Refresh Timestamp
+    ====================================================================== */
+    .refresh-timestamp {
+      text-align: right;
+      font-size: 0.9em;
+      color: var(--text-muted);
+      margin-top: 10px;
+    }
+
+    /* ======================================================================
+       Timeline Styles
+    ====================================================================== */
+    #timeline-container {
+      background: var(--bg-glass);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(10px);
+    }
+    .timeline-event {
+      position: relative;
+      padding: 10px 20px 10px 40px;
+      border-left: 3px solid var(--primary);
+      margin-bottom: 10px;
+    }
+    .timeline-event::before {
+      content: '';
+      position: absolute;
+      left: -9px;
+      top: 10px;
+      width: 16px;
+      height: 16px;
+      background: var(--primary);
+      border-radius: 50%;
+      box-shadow: var(--shadow-light);
+    }
+    .timeline-date {
+      font-size: 12px;
+      color: var(--text-muted);
+      margin-bottom: 4px;
+    }
+    .timeline-title {
+      font-size: 16px;
+      font-weight: 500;
+      margin-bottom: 4px;
+    }
+    .timeline-desc {
+      font-size: 14px;
+      color: #555;
+    }
+
+    /* ======================================================================
+       Cheatsheet Section
+    ====================================================================== */
+    #cheatsheet {
+      max-width: 800px;
+      margin: 20px auto;
+      padding: 16px;
+      background: var(--bg-glass);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      box-shadow: var(--shadow-light);
+      font-size: 14px;
+      color: #333;
+      backdrop-filter: blur(5px);
+    }
+    #cheatsheet h2 {
+      margin-top: 0;
+      font-weight: 400;
+      color: var(--secondary);
+    }
+    #cheatsheet ul {
+      list-style-type: disc;
+      padding-left: 20px;
+    }
+    code {
+      background: #f0f0f0;
+      padding: 2px 4px;
+      border-radius: 2px;
+    }
+
+    /* ======================================================================
+       Modal Styles for Deployment Instructions
+    ====================================================================== */
+    #instructionModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
+    }
+    #instructionModal .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: var(--shadow-light);
+    }
+    #instructionModal .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #instructionModal .close:hover,
+    #instructionModal .close:focus {
+      color: #000;
+      text-decoration: none;
+    }
+  </style>
+</head>
+<body>
+  <h1>Elegant Multi-Domain Endpoint Dashboard</h1>
+  <p class="meta">
+    Monitor your portfolio, projects, and dynamic services. Click a domain to view details; use the timeline and flower for historical context.
+  </p>
+  
+  <!-- Two-Column Layout: Left for Dashboard, Right for Timeline -->
+  <div id="main-container">
+    <!-- Left Column: Endpoint Dashboard -->
+    <div id="dashboard-column" class="glass-panel"></div>
+    <!-- Right Column: Project Timeline -->
+    <div id="timeline-column" class="glass-panel">
+      <h2 style="text-align: center; margin-bottom: 16px;">Project Timeline</h2>
+      <div id="timeline-container"></div>
+    </div>
+  </div>
+  
+  <div class="refresh-timestamp" id="lastRefreshed">Last refreshed: --</div>
+  
+  <!-- Project Flower Section -->
+  <div id="flower-container" class="glass-panel">
+    <h2 style="text-align: center; margin-bottom: 16px;">Project Flower</h2>
+    <!-- SVG will be generated here -->
+  </div>
+  
+  <!-- Cheatsheet Section -->
+  <section id="cheatsheet" class="glass-panel">
+    <h2>Cheatsheet & Best Practices</h2>
+    <ul>
+      <li><strong>Service Inspection:</strong> Run <code>curl -I &lt;endpoint&gt;</code> to view HTTP headers and status codes.</li>
+      <li><strong>DNS Diagnostics:</strong> Use <code>nslookup &lt;domain&gt;</code> or <code>dig &lt;domain&gt;</code> to verify DNS records.</li>
+      <li><strong>Log Monitoring:</strong> Tail your web server logs with <code>tail -f /var/log/nginx/access.log</code> for real‑time traffic and error monitoring.</li>
+      <li><strong>Versioning & Deployment:</strong> Commit changes with clear messages (<code>git commit -am "Update endpoints"</code>) and push updates (<code>git push</code>). Consider CI/CD pipelines for automated deployments.</li>
+      <li><strong>Container Deployment:</strong> For dynamic services, containerize with Docker. Example:
+        <pre><code>docker run -d -p [EXTERNAL_PORT]:[INTERNAL_PORT] your-docker-image</code></pre>
+      </li>
+      <li><strong>Service Rewiring:</strong> Use environment variables or configuration files to update backend endpoints and proxy settings without modifying code.</li>
+      <li><strong>Manual Testing:</strong> Click the “Live” link or use browser developer tools to inspect network activity.</li>
+    </ul>
+  </section>
+  
+  <!-- Modal for Deployment Instructions -->
+  <div id="instructionModal">
+    <div class="modal-content">
+      <span class="close" id="modalClose">&times;</span>
+      <div id="modalBody">
+        <!-- Deployment instructions will be injected here -->
+      </div>
+    </div>
+  </div>
+  
+  <script>
+    /**
+     * Data Model: Each domain includes metadata and an array of services.
+     * Fields:
+     *  - domain: Domain name.
+     *  - capacity: A tagline describing the site's usage.
+     *  - discovery: How endpoints were discovered/configured.
+     *  - live: Primary live URL.
+     *  - github: GitHub repo URL.
+     *  - colorClass: CSS class for domain-specific color accents.
+     *  - services: Array of service objects { label, url, port }.
+     */
+    const domains = [
+      {
+        domain: 'cyrillrafael.org',
+        capacity: 'Creative & Innovative',
+        discovery: 'Manually configured. Portfolio via GitHub Pages.',
+        live: 'https://uprootiny.github.io/portfolio',
+        github: 'https://github.com/uprootiny/portfolio',
+        colorClass: 'domain-cyrillrafael',
+        services: [
+          { label: 'Portfolio (443)', url: 'https://portfolio.cyrillrafael.org', port: 443 },
+          { label: 'Blog (80)', url: 'http://blog.cyrillrafael.org', port: 80 },
+          { label: 'Gallery (80)', url: 'http://gallery.cyrillrafael.org', port: 80 },
+          { label: 'Studio (8080)', url: 'http://studio.cyrillrafael.org', port: 8080 },
+          { label: 'Projects (3000)', url: 'http://projects.cyrillrafael.org', port: 3000 },
+          { label: 'Docs (5000)', url: 'http://docs.cyrillrafael.org', port: 5000 }
+        ]
+      },
+      {
+        domain: 'marchdown.net',
+        capacity: 'Experimental & Edgy',
+        discovery: 'Registrar API + manual tweaks.',
+        live: 'http://void.marchdown.net',
+        github: 'https://github.com/uprootiny/marchdown',
+        colorClass: 'domain-marchdown',
+        services: [
+          { label: 'Void (80)', url: 'http://void.marchdown.net', port: 80 },
+          { label: 'Echo (443)', url: 'https://echo.marchdown.net', port: 443 },
+          { label: 'Nexus (443)', url: 'https://nexus.marchdown.net', port: 443 },
+          { label: 'Flux (8080)', url: 'http://flux.marchdown.net', port: 8080 },
+          { label: 'Quantum (5050)', url: 'http://quantum.marchdown.net', port: 5050 }
+        ]
+      },
+      {
+        domain: 'dissemblage.art',
+        capacity: 'Digital Art & Creative Experiments',
+        discovery: 'Internal scanning & manual entries.',
+        live: 'https://ollama.dissemblage.art',
+        github: 'https://github.com/uprootiny/dissemblage.art',
+        colorClass: 'domain-dissemblage',
+        services: [
+          { label: 'API (443)', url: 'https://api.dissemblage.art', port: 443 },
+          { label: 'Ollama (443)', url: 'https://ollama.dissemblage.art', port: 443 },
+          { label: 'Studio (8080)', url: 'http://studio.dissemblage.art', port: 8080 },
+          { label: 'Lab (443)', url: 'https://lab.dissemblage.art', port: 443 },
+          { label: 'Dashboard (80)', url: 'http://dashboard.dissemblage.art', port: 80 }
+        ]
+      },
+      {
+        domain: 'hyperstitious.org',
+        capacity: 'High Security & Private Networking',
+        discovery: 'Configured manually with internal probes.',
+        live: 'https://homeserver.hyperstitious.org',
+        github: 'https://github.com/uprootiny/hyperstitious.org',
+        colorClass: 'domain-hyperstitious',
+        services: [
+          { label: 'Homeserver (443)', url: 'https://homeserver.hyperstitious.org', port: 443 },
+          { label: 'Cloud (80)', url: 'http://cloud.hyperstitious.org', port: 80 },
+          { label: 'Monitor (443)', url: 'https://monitor.hyperstitious.org', port: 443 },
+          { label: 'Dev (3000)', url: 'http://dev.hyperstitious.org', port: 3000 },
+          { label: 'Docs (443)', url: 'https://docs.hyperstitious.org', port: 443 },
+          { label: 'API (5050)', url: 'http://api.hyperstitious.org', port: 5050 }
+        ]
+      },
+      {
+        domain: 'xenoethics.info',
+        capacity: 'Experimental & Avant-Garde',
+        discovery: 'Manually curated for creative expression.',
+        live: 'https://xenoethics.info',
+        github: 'https://github.com/uprootiny/xenoethics.info',
+        colorClass: 'domain-xenoethics',
+        services: [
+          { label: 'Main Site (443)', url: 'https://xenoethics.info', port: 443 },
+          { label: 'Articles (80)', url: 'http://articles.xenoethics.info', port: 80 },
+          { label: 'Blog (443)', url: 'https://blog.xenoethics.info', port: 443 },
+          { label: 'Forum (8080)', url: 'http://forum.xenoethics.info', port: 8080 },
+          { label: 'Docs (5000)', url: 'http://docs.xenoethics.info', port: 5000 },
+          { label: 'API (7777)', url: 'http://api.xenoethics.info', port: 7777 }
+        ]
+      },
+      {
+        domain: 'xenoethics.org',
+        capacity: 'Experimental & Avant-Garde',
+        discovery: 'Manually curated; focus on editorial content.',
+        live: 'https://xenoethics.org',
+        github: 'https://github.com/uprootiny/xenoethics.org',
+        colorClass: 'domain-xenoethics',
+        services: [
+          { label: 'Main Site (443)', url: 'https://xenoethics.org', port: 443 },
+          { label: 'News (80)', url: 'http://news.xenoethics.org', port: 80 },
+          { label: 'Articles (443)', url: 'https://articles.xenoethics.org', port: 443 },
+          { label: 'Docs (5000)', url: 'http://docs.xenoethics.org', port: 5000 },
+          { label: 'API (7777)', url: 'http://api.xenoethics.org', port: 7777 }
+        ]
+      },
+      {
+        domain: 'dashboard.dissemblage.art',
+        capacity: 'Central Dashboard Hub',
+        discovery: 'Aggregated status from creative projects.',
+        live: 'https://dashboard.dissemblage.art',
+        github: '', // Optionally add a GitHub repo URL.
+        colorClass: 'domain-dashboard',
+        services: [
+          { label: 'Main Dashboard (443)', url: 'https://dashboard.dissemblage.art', port: 443 },
+          { label: 'API Status (80)', url: 'http://api.dashboard.dissemblage.art', port: 80 },
+          { label: 'Analytics (3000)', url: 'http://analytics.dashboard.dissemblage.art', port: 3000 }
+        ]
+      }
+    ];
+
+    // Initialize history arrays.
+    domains.forEach(domain => {
+      domain.services.forEach(service => {
+        service.history = [];
+      });
+    });
+
+    /**
+     * Timeline Data: Project events.
+     */
+    const timelineProjects = [
+      { date: "2023-08-15", title: "Portfolio Redesign", description: "Launched the redesigned portfolio on GitHub Pages." },
+      { date: "2023-08-05", title: "API Service Deployment", description: "Deployed a new API service for dissemblage.art." },
+      { date: "2023-07-25", title: "Dashboard Aggregation", description: "Integrated endpoints into the central dashboard." },
+      { date: "2023-07-10", title: "Nginx Reverse Proxy Update", description: "Updated proxy settings for improved load balancing." },
+      { date: "2023-06-30", title: "Marchdown Experiment", description: "Launched experimental project on marchdown.net." },
+      { date: "2023-06-15", title: "Hyperstitious Upgrade", description: "Enhanced internal monitoring on hyperstitious.org." },
+      { date: "2023-05-20", title: "Xenoethics Revamp", description: "Refreshed editorial content and API endpoints." },
+      { date: "2023-05-05", title: "Containerization Initiative", description: "Started containerizing services for rapid deployment." },
+      { date: "2023-04-15", title: "Automated Monitoring", description: "Integrated auto-refresh and HEAD-checking into the dashboard." },
+      { date: "2023-04-01", title: "Initial Dashboard Launch", description: "Deployed the first version of the multi-domain dashboard." }
+    ];
+
+    /**
+     * Render the project timeline.
+     */
+    function renderTimeline() {
+      const timelineContainer = document.getElementById('timeline-container');
+      timelineContainer.innerHTML = "";
+      // Sort events in reverse chronological order.
+      const sortedEvents = timelineProjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+      sortedEvents.forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'timeline-event';
+        eventDiv.innerHTML = `
+          <div class="timeline-date">${new Date(event.date).toLocaleDateString()}</div>
+          <div class="timeline-title">${event.title}</div>
+          <div class="timeline-desc">${event.description}</div>
+        `;
+        timelineContainer.appendChild(eventDiv);
+      });
+    }
+
+    /**
+     * Generate a generative "Project Flower" SVG.
+     * Each timeline event produces one petal in a spiral pattern using the golden angle.
+     */
+    function generateFlower() {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const width = 400, height = 400;
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.style.display = "block";
+      svg.style.margin = "20px auto";
+      
+      // Center of the flower.
+      const cx = width / 2, cy = height / 2;
+      // Golden angle in radians.
+      const goldenAngle = 137.5 * Math.PI / 180;
+      // Scale factor for the spiral.
+      const scale = 10;
+      
+      // Sort timeline events in chronological order.
+      const events = timelineProjects.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      events.forEach((event, i) => {
+        // Calculate polar coordinates.
+        const angle = i * goldenAngle;
+        const r = scale * Math.sqrt(i);
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        
+        // Create an ellipse to represent the petal.
+        const petal = document.createElementNS(svgNS, "ellipse");
+        petal.setAttribute("cx", x);
+        petal.setAttribute("cy", y);
+        petal.setAttribute("rx", 20);
+        petal.setAttribute("ry", 8);
+        // Rotate the petal to align with the spiral.
+        petal.setAttribute("transform", `rotate(${angle * 180 / Math.PI}, ${x}, ${y})`);
+        
+        // Determine color from event index.
+        const hue = (i * 36) % 360;
+        petal.setAttribute("fill", `hsl(${hue}, 70%, 60%)`);
+        petal.setAttribute("stroke", "white");
+        petal.setAttribute("stroke-width", "1");
+        
+        // Tooltip for the petal.
+        const title = document.createElementNS(svgNS, "title");
+        title.textContent = `${event.date} - ${event.title}: ${event.description}`;
+        petal.appendChild(title);
+        
+        svg.appendChild(petal);
+      });
+      
+      const container = document.getElementById("flower-container");
+      container.innerHTML = "";
+      container.appendChild(svg);
+    }
+
+    /**
+     * Ping a service with a HEAD request and timeout.
+     */
+    async function pingService(url, timeout = 5000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const start = performance.now();
+      try {
+        const response = await fetch(url, { method: 'HEAD', signal: controller.signal });
+        clearTimeout(timeoutId);
+        const duration = Math.round(performance.now() - start);
+        if (response.ok) {
+          return { status: 'up', responseTime: duration, statusCode: response.status };
+        } else {
+          return { status: 'down', responseTime: 'N/A', statusCode: response.status, error: `HTTP ${response.status}` };
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        return { status: 'down', responseTime: 'N/A', statusCode: 'N/A', error: error.name === 'AbortError' ? 'Timeout' : error.message };
+      }
+    }
+
+    /**
+     * Refresh the status of all services.
+     */
+    async function refreshDashboard() {
+      for (const domain of domains) {
+        for (const service of domain.services) {
+          const result = await pingService(service.url);
+          service.status = result.status;
+          service.responseTime = result.responseTime;
+          service.statusCode = result.statusCode;
+          service.error = result.error || '';
+          if (typeof result.responseTime === 'number') {
+            service.history.push(result.responseTime);
+            if (service.history.length > 20) service.history.shift();
+          }
+        }
+      }
+      renderDashboard();
+      document.getElementById('lastRefreshed').textContent = 'Last refreshed: ' + new Date().toLocaleString();
+    }
+
+    /**
+     * Render the endpoint dashboard as an accordion with a table per domain.
+     */
+    function renderDashboard() {
+      const container = document.getElementById('dashboard-container');
+      container.innerHTML = '';
+      domains.forEach(domain => {
+        // Accordion header.
+        const acc = document.createElement('button');
+        acc.className = `accordion ${domain.colorClass}`;
+        acc.textContent = `${domain.domain} (${domain.capacity})`;
+        acc.addEventListener('click', function() {
+          this.classList.toggle('active');
+          const panel = this.nextElementSibling;
+          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        });
+        container.appendChild(acc);
+        
+        // Panel for domain details.
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<strong>Discovery:</strong> ${domain.discovery}`;
+        panel.appendChild(meta);
+        
+        // Table for services.
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>Service</th>
+            <th>URL</th>
+            <th>Port</th>
+            <th>Status</th>
+            <th>Response (ms)</th>
+            <th>Sparkline</th>
+            <th>Links</th>
+            <th>Deploy</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        domain.services.forEach(service => {
+          const tr = document.createElement('tr');
+          
+          // Service label.
+          const tdLabel = document.createElement('td');
+          tdLabel.textContent = service.label;
+          tr.appendChild(tdLabel);
+          
+          // URL with live link.
+          const tdUrl = document.createElement('td');
+          tdUrl.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">${service.url}</a>`;
+          tr.appendChild(tdUrl);
+          
+          // Port.
+          const tdPort = document.createElement('td');
+          tdPort.textContent = service.port;
+          tr.appendChild(tdPort);
+          
+          // Status.
+          const tdStatus = document.createElement('td');
+          tdStatus.textContent = service.status ? service.status.toUpperCase() : 'N/A';
+          tdStatus.className = 'status ' + (service.status || '');
+          tr.appendChild(tdStatus);
+          
+          // Response time.
+          const tdResponse = document.createElement('td');
+          tdResponse.textContent = service.responseTime || 'N/A';
+          tr.appendChild(tdResponse);
+          
+          // Sparkline.
+          const tdGraph = document.createElement('td');
+          const sparkCanvas = document.createElement('canvas');
+          sparkCanvas.className = 'sparkline';
+          sparkCanvas.width = 100;
+          sparkCanvas.height = 30;
+          tdGraph.appendChild(sparkCanvas);
+          if (service.history && service.history.length > 0) {
+            drawSparkline(sparkCanvas, service.history);
+          }
+          tr.appendChild(tdGraph);
+          
+          // Links: Live and GitHub.
+          const tdLinks = document.createElement('td');
+          tdLinks.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">Live</a>` +
+            (domain.github ? ` | <a class="live-link" href="${domain.github}" target="_blank">GitHub</a>` : '');
+          tr.appendChild(tdLinks);
+          
+          // Deploy Button.
+          const tdDeploy = document.createElement('td');
+          const deployBtn = document.createElement('button');
+          deployBtn.className = 'deploy-btn';
+          deployBtn.textContent = 'Deploy';
+          deployBtn.onclick = () => showInstructions(service);
+          tdDeploy.appendChild(deployBtn);
+          tr.appendChild(tdDeploy);
+          
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        panel.appendChild(table);
+        container.appendChild(panel);
+      });
+    }
+
+    /**
+     * Render the project timeline.
+     */
+    function renderTimeline() {
+      const timelineContainer = document.getElementById('timeline-container');
+      timelineContainer.innerHTML = "";
+      // Sort events in reverse chronological order.
+      const sortedEvents = timelineProjects.sort((a, b) => new Date(b.date) - new Date(a.date));
+      sortedEvents.forEach(event => {
+        const eventDiv = document.createElement('div');
+        eventDiv.className = 'timeline-event';
+        eventDiv.innerHTML = `
+          <div class="timeline-date">${new Date(event.date).toLocaleDateString()}</div>
+          <div class="timeline-title">${event.title}</div>
+          <div class="timeline-desc">${event.description}</div>
+        `;
+        timelineContainer.appendChild(eventDiv);
+      });
+    }
+
+    /**
+     * Generate the Project Flower SVG.
+     * Each timeline event produces one petal in a spiral using the golden angle.
+     */
+    function generateFlower() {
+      const svgNS = "http://www.w3.org/2000/svg";
+      const width = 400, height = 400;
+      const svg = document.createElementNS(svgNS, "svg");
+      svg.setAttribute("width", width);
+      svg.setAttribute("height", height);
+      svg.style.display = "block";
+      svg.style.margin = "20px auto";
+      
+      const cx = width / 2, cy = height / 2;
+      const goldenAngle = 137.5 * Math.PI / 180;
+      const scale = 10;
+      
+      // Sort events chronologically.
+      const events = timelineProjects.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      events.forEach((event, i) => {
+        const angle = i * goldenAngle;
+        const r = scale * Math.sqrt(i);
+        const x = cx + r * Math.cos(angle);
+        const y = cy + r * Math.sin(angle);
+        
+        // Create an elliptical petal.
+        const petal = document.createElementNS(svgNS, "ellipse");
+        petal.setAttribute("cx", x);
+        petal.setAttribute("cy", y);
+        petal.setAttribute("rx", 20);
+        petal.setAttribute("ry", 8);
+        petal.setAttribute("transform", `rotate(${angle * 180/Math.PI}, ${x}, ${y})`);
+        
+        // Color from event index.
+        const hue = (i * 36) % 360;
+        petal.setAttribute("fill", `hsl(${hue}, 70%, 60%)`);
+        petal.setAttribute("stroke", "white");
+        petal.setAttribute("stroke-width", "1");
+        
+        // Tooltip.
+        const title = document.createElementNS(svgNS, "title");
+        title.textContent = `${event.date} - ${event.title}: ${event.description}`;
+        petal.appendChild(title);
+        
+        svg.appendChild(petal);
+      });
+      
+      const container = document.getElementById("flower-container");
+      container.innerHTML = "";
+      container.appendChild(svg);
+    }
+
+    // Timeline project data.
+    const timelineProjects = [
+      { date: "2023-08-15", title: "Portfolio Redesign", description: "Launched the redesigned portfolio on GitHub Pages." },
+      { date: "2023-08-05", title: "API Service Deployment", description: "Deployed a new API service for dissemblage.art." },
+      { date: "2023-07-25", title: "Dashboard Aggregation", description: "Integrated endpoints into the central dashboard." },
+      { date: "2023-07-10", title: "Nginx Reverse Proxy Update", description: "Updated proxy settings for improved load balancing." },
+      { date: "2023-06-30", title: "Marchdown Experiment", description: "Launched experimental project on marchdown.net." },
+      { date: "2023-06-15", title: "Hyperstitious Upgrade", description: "Enhanced internal monitoring on hyperstitious.org." },
+      { date: "2023-05-20", title: "Xenoethics Revamp", description: "Refreshed editorial content and API endpoints." },
+      { date: "2023-05-05", title: "Containerization Initiative", description: "Started containerizing services for rapid deployment." },
+      { date: "2023-04-15", title: "Automated Monitoring", description: "Integrated auto-refresh and HEAD-checking into the dashboard." },
+      { date: "2023-04-01", title: "Initial Dashboard Launch", description: "Deployed the first version of the multi-domain dashboard." }
+    ];
+
+    // Auto-refresh dashboard and timeline every 5 minutes.
+    setInterval(() => { refreshDashboard(); renderTimeline(); generateFlower(); }, 5 * 60 * 1000);
+    refreshDashboard();
+    renderTimeline();
+    generateFlower();
+  </script>
+</body>
+</html>

@@ -2,61 +2,93 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Comprehensive Multi-Domain Endpoint Dashboard</title>
+  <title>Elegant Multi-Domain Endpoint Dashboard</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Base Styles */
+    /* Refined Color Palette & Global Variables */
+    :root {
+      --primary: #3498db;
+      --secondary: #2c3e50;
+      --success: #27ae60;
+      --danger: #e74c3c;
+      --accent: #9b59b6;
+      --bg-glass: rgba(255, 255, 255, 0.85);
+      --text-muted: #7f8c8d;
+      --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.1);
+    }
+    
+    /* Global Reset & Base Styles */
     * {
       box-sizing: border-box;
-    }
-    body { 
-      font-family: Menlo, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
-      margin: 20px; 
+      margin: 0;
       padding: 0;
-      background-color: #fbfbfb;
+    }
+    body {
+      font-family: 'Segoe UI', Menlo, Tahoma, Geneva, Verdana, sans-serif;
+      background: #f4f4f8;
       color: #333;
       line-height: 1.6;
+      padding: 20px;
     }
     h1 {
       text-align: center;
-      margin-bottom: 10px;
       font-weight: 300;
+      margin-bottom: 10px;
     }
     .meta {
       text-align: center;
       font-size: 15px;
-      color: #555;
+      color: var(--text-muted);
       margin-bottom: 20px;
     }
-
-    /* Accordion Styles */
+    
+    /* Glass Panel (Skeuomorphic) */
+    .glass-panel {
+      background: var(--bg-glass);
+      border-radius: 12px;
+      padding: 20px;
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(10px);
+      margin-bottom: 20px;
+    }
+    
+    /* Accordion (Domain Sections) */
     .accordion {
-      background-color: #3498db;
+      background: var(--primary);
       color: #fff;
       cursor: pointer;
-      padding: 14px 20px;
+      padding: 16px 20px;
       width: 100%;
       border: none;
-      border-radius: 4px;
+      border-radius: 8px;
       margin-bottom: 8px;
       font-size: 18px;
       text-align: left;
-      transition: background-color 0.3s ease;
+      transition: background 0.3s ease;
     }
     .accordion:hover,
     .accordion.active {
-      background-color: #2980b9;
+      background: var(--secondary);
     }
     .panel {
-      background-color: #fff;
-      border: 1px solid #ddd;
-      border-radius: 4px;
+      display: none;
       padding: 16px;
       margin-bottom: 20px;
-      display: none;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      background: var(--bg-glass);
+      box-shadow: var(--shadow-light);
+      backdrop-filter: blur(8px);
     }
-
+    
+    /* Domain-Specific Color Coding */
+    .domain-cyrillrafael { border-left: 5px solid #2980b9; }
+    .domain-marchdown { border-left: 5px solid #e67e22; }
+    .domain-dissemblage { border-left: 5px solid var(--accent); }
+    .domain-hyperstitious { border-left: 5px solid #16a085; }
+    .domain-xenoethics { border-left: 5px solid #c0392b; }
+    .domain-dashboard { border-left: 5px solid #8e44ad; }
+    
     /* Table Styles */
     table {
       width: 100%;
@@ -70,58 +102,68 @@
       border-bottom: 1px solid #eee;
     }
     th {
-      background-color: #2c3e50;
+      background: var(--secondary);
       color: #fff;
       text-transform: uppercase;
       font-weight: 500;
     }
-
-    /* Status & Sparkline */
-    .status { font-weight: 600; }
-    .status.up { 
-      color: #27ae60; 
+    
+    /* Status Indicators & Sparkline */
+    .status {
+      font-weight: 600;
+    }
+    .status.up {
+      color: var(--success);
       animation: breathing 2s infinite;
     }
-    .status.down { color: #e74c3c; }
+    .status.down {
+      color: var(--danger);
+    }
     @keyframes breathing {
       0% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
       50% { box-shadow: 0 0 15px 4px rgba(39,174,96,1); }
       100% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
     }
-    .sparkline { width: 100px; height: 30px; }
-
+    .sparkline {
+      width: 100px;
+      height: 30px;
+    }
+    
     /* Link Styles */
-    .live-link { 
-      text-decoration: none; 
-      color: #007bff; 
+    .live-link {
+      text-decoration: none;
+      color: var(--primary);
       font-weight: 500;
     }
-    .live-link:hover { text-decoration: underline; }
-
+    .live-link:hover {
+      text-decoration: underline;
+    }
+    
     /* Refresh Timestamp */
     .refresh-timestamp {
-      text-align: right; 
-      font-size: 0.9em; 
-      color: #666; 
+      text-align: right;
+      font-size: 0.9em;
+      color: var(--text-muted);
       margin-top: 10px;
     }
-
+    
     /* Cheatsheet Section */
     #cheatsheet {
       max-width: 800px;
       margin: 20px auto;
       padding: 16px;
-      background: #fff;
+      background: var(--bg-glass);
       border: 1px solid #ddd;
-      border-radius: 4px;
-      box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+      border-radius: 8px;
+      box-shadow: var(--shadow-light);
       font-size: 14px;
       color: #333;
+      backdrop-filter: blur(5px);
     }
     #cheatsheet h2 {
       margin-top: 0;
       font-weight: 400;
-      color: #2c3e50;
+      color: var(--secondary);
     }
     #cheatsheet ul {
       list-style-type: disc;
@@ -135,154 +177,141 @@
   </style>
 </head>
 <body>
-  <h1>Comprehensive Multi-Domain Endpoint Dashboard</h1>
-  <p class="meta">Monitor your portfolio, creative projects, and dynamic services. Click a domain to reveal details.</p>
+  <h1>Elegant Multi-Domain Endpoint Dashboard</h1>
+  <p class="meta">Monitor your portfolio, projects, and dynamic services. Click on a section to view details.</p>
   
-  <div id="dashboard-container"></div>
+  <div id="dashboard-container" class="glass-panel"></div>
   
   <div class="refresh-timestamp" id="lastRefreshed">Last refreshed: --</div>
   
-  <section id="cheatsheet">
-    <h2>Cheatsheet & Manual Inspection Tips</h2>
+  <section id="cheatsheet" class="glass-panel">
+    <h2>Cheatsheet & Inspection Tips</h2>
     <ul>
       <li>Inspect a service: <code>curl -I &lt;endpoint&gt;</code></li>
       <li>DNS lookup: <code>nslookup &lt;domain&gt;</code></li>
       <li>View logs: <code>tail -f /var/log/nginx/access.log</code></li>
       <li>Deploy updates: <code>git commit -am "Update endpoints" && git push</code></li>
-      <li>Refresh manually: Press F5 to reload this page.</li>
+      <li>Refresh manually: Press F5 to reload the dashboard.</li>
     </ul>
   </section>
   
   <script>
     /**
-     * Data model: Each domain has metadata and an array of services.
-     * Update these arrays as necessary.
+     * Data Model: Each domain object includes:
+     * - domain: The domain name.
+     * - capacity: A human-friendly tagline or usage description.
+     * - discovery: A note on how the services were discovered/configured.
+     * - live: The primary live URL (e.g., portfolio page) if applicable.
+     * - github: The GitHub URL for the project.
+     * - colorClass: A CSS class for domain-specific color coding.
+     * - services: An array of service objects, each with a label, URL, and port.
      */
     const domains = [
       {
         domain: 'cyrillrafael.org',
         capacity: 'Creative & Innovative',
-        discovery: 'Manual configuration',
+        discovery: 'Manually configured. Portfolio served via GitHub Pages.',
         live: 'https://uprootiny.github.io/portfolio',
         github: 'https://github.com/uprootiny/portfolio',
+        colorClass: 'domain-cyrillrafael',
         services: [
           { label: 'Portfolio (443)', url: 'https://portfolio.cyrillrafael.org', port: 443 },
-          { label: 'Blog (443)', url: 'https://blog.cyrillrafael.org', port: 443 },
+          { label: 'Blog (80)', url: 'http://blog.cyrillrafael.org', port: 80 },
           { label: 'Gallery (80)', url: 'http://gallery.cyrillrafael.org', port: 80 },
           { label: 'Studio (8080)', url: 'http://studio.cyrillrafael.org', port: 8080 },
           { label: 'Projects (3000)', url: 'http://projects.cyrillrafael.org', port: 3000 },
-          { label: 'Docs (5000)', url: 'http://docs.cyrillrafael.org', port: 5000 },
-          { label: 'Events (5050)', url: 'http://events.cyrillrafael.org', port: 5050 },
-          { label: 'Press (7000)', url: 'http://press.cyrillrafael.org', port: 7000 },
-          { label: 'Forum (7777)', url: 'http://forum.cyrillrafael.org', port: 7777 },
-          { label: 'Beta (443)', url: 'https://beta.cyrillrafael.org', port: 443 },
-          { label: 'Support (443)', url: 'https://support.cyrillrafael.org', port: 443 },
-          { label: 'API (5000)', url: 'http://api.cyrillrafael.org', port: 5000 }
+          { label: 'Docs (5000)', url: 'http://docs.cyrillrafael.org', port: 5000 }
         ]
       },
       {
         domain: 'marchdown.net',
         capacity: 'Experimental & Edgy',
-        discovery: 'Registrar API + manual tweaks',
+        discovery: 'Registrar API with manual tweaks.',
         live: 'http://void.marchdown.net',
         github: 'https://github.com/uprootiny/marchdown',
+        colorClass: 'domain-marchdown',
         services: [
           { label: 'Void (80)', url: 'http://void.marchdown.net', port: 80 },
           { label: 'Echo (443)', url: 'https://echo.marchdown.net', port: 443 },
           { label: 'Nexus (443)', url: 'https://nexus.marchdown.net', port: 443 },
           { label: 'Flux (8080)', url: 'http://flux.marchdown.net', port: 8080 },
-          { label: 'Vector (3000)', url: 'http://vector.marchdown.net', port: 3000 },
-          { label: 'Nova (443)', url: 'https://nova.marchdown.net', port: 443 },
-          { label: 'Quantum (5050)', url: 'http://quantum.marchdown.net', port: 5050 },
-          { label: 'Horizon (7777)', url: 'http://horizon.marchdown.net', port: 7777 },
-          { label: 'Archive (80)', url: 'http://archive.marchdown.net', port: 80 },
-          { label: 'Beta (443)', url: 'https://beta.marchdown.net', port: 443 },
-          { label: 'Docs (3000)', url: 'http://docs.marchdown.net', port: 3000 },
-          { label: 'Forum (443)', url: 'https://forum.marchdown.net', port: 443 }
+          { label: 'Quantum (5050)', url: 'http://quantum.marchdown.net', port: 5050 }
         ]
       },
       {
         domain: 'dissemblage.art',
         capacity: 'Digital Art & Creative Experiments',
-        discovery: 'Internal scanning & manual entries',
+        discovery: 'Internal scanning & manual entries.',
         live: 'https://ollama.dissemblage.art',
         github: 'https://github.com/uprootiny/dissemblage.art',
+        colorClass: 'domain-dissemblage',
         services: [
           { label: 'API (443)', url: 'https://api.dissemblage.art', port: 443 },
           { label: 'Ollama (443)', url: 'https://ollama.dissemblage.art', port: 443 },
           { label: 'Studio (8080)', url: 'http://studio.dissemblage.art', port: 8080 },
-          { label: 'Gallery (80)', url: 'http://gallery.dissemblage.art', port: 80 },
           { label: 'Lab (443)', url: 'https://lab.dissemblage.art', port: 443 },
-          { label: 'Docs (5000)', url: 'http://docs.dissemblage.art', port: 5000 },
-          { label: 'Press (443)', url: 'https://press.dissemblage.art', port: 443 },
-          { label: 'News (443)', url: 'https://news.dissemblage.art', port: 443 },
-          { label: 'Events (5050)', url: 'http://events.dissemblage.art', port: 5050 },
-          { label: 'Archive (80)', url: 'http://archive.dissemblage.art', port: 80 },
-          { label: 'Beta (443)', url: 'https://beta.dissemblage.art', port: 443 },
-          { label: 'Support (443)', url: 'https://support.dissemblage.art', port: 443 }
+          // Example: a link to a specific dashboard page hosted via nginx:
+          { label: 'Dashboard (80)', url: 'http://dashboard.dissemblage.art', port: 80 }
         ]
       },
       {
         domain: 'hyperstitious.org',
         capacity: 'High Security & Private Networking',
-        discovery: 'Manual with internal probes',
+        discovery: 'Configured manually with internal probes.',
         live: 'https://homeserver.hyperstitious.org',
         github: 'https://github.com/uprootiny/hyperstitious.org',
+        colorClass: 'domain-hyperstitious',
         services: [
           { label: 'Homeserver (443)', url: 'https://homeserver.hyperstitious.org', port: 443 },
           { label: 'Cloud (80)', url: 'http://cloud.hyperstitious.org', port: 80 },
           { label: 'Monitor (443)', url: 'https://monitor.hyperstitious.org', port: 443 },
           { label: 'Dev (3000)', url: 'http://dev.hyperstitious.org', port: 3000 },
-          { label: 'Research (5000)', url: 'http://research.hyperstitious.org', port: 5000 },
           { label: 'Docs (443)', url: 'https://docs.hyperstitious.org', port: 443 },
-          { label: 'Beta (443)', url: 'https://beta.hyperstitious.org', port: 443 },
-          { label: 'Forum (443)', url: 'https://forum.hyperstitious.org', port: 443 },
-          { label: 'API (5050)', url: 'http://api.hyperstitious.org', port: 5050 },
-          { label: 'Cloud2 (80)', url: 'http://cloud2.hyperstitious.org', port: 80 },
-          { label: 'Archive (443)', url: 'https://archive.hyperstitious.org', port: 443 },
-          { label: 'Support (443)', url: 'https://support.hyperstitious.org', port: 443 }
+          { label: 'API (5050)', url: 'http://api.hyperstitious.org', port: 5050 }
         ]
       },
       {
         domain: 'xenoethics.info',
         capacity: 'Experimental & Avant-Garde',
-        discovery: 'Manual, creative curation',
+        discovery: 'Manually curated for creative expression.',
         live: 'https://xenoethics.info',
         github: 'https://github.com/uprootiny/xenoethics.info',
+        colorClass: 'domain-xenoethics',
         services: [
           { label: 'Main Site (443)', url: 'https://xenoethics.info', port: 443 },
           { label: 'Articles (80)', url: 'http://articles.xenoethics.info', port: 80 },
           { label: 'Blog (443)', url: 'https://blog.xenoethics.info', port: 443 },
           { label: 'Forum (8080)', url: 'http://forum.xenoethics.info', port: 8080 },
           { label: 'Docs (5000)', url: 'http://docs.xenoethics.info', port: 5000 },
-          { label: 'Events (5050)', url: 'http://events.xenoethics.info', port: 5050 },
-          { label: 'API (7777)', url: 'http://api.xenoethics.info', port: 7777 },
-          { label: 'Beta (443)', url: 'https://beta.xenoethics.info', port: 443 },
-          { label: 'Gallery (80)', url: 'http://gallery.xenoethics.info', port: 80 },
-          { label: 'Archive (443)', url: 'https://archive.xenoethics.info', port: 443 },
-          { label: 'Shop (3000)', url: 'http://shop.xenoethics.info', port: 3000 },
-          { label: 'Dev (5050)', url: 'http://dev.xenoethics.info', port: 5050 }
+          { label: 'API (7777)', url: 'http://api.xenoethics.info', port: 7777 }
         ]
       },
       {
         domain: 'xenoethics.org',
         capacity: 'Experimental & Avant-Garde',
-        discovery: 'Manual, creative curation',
+        discovery: 'Manually curated; focus on editorial content.',
         live: 'https://xenoethics.org',
         github: 'https://github.com/uprootiny/xenoethics.org',
+        colorClass: 'domain-xenoethics',
         services: [
           { label: 'Main Site (443)', url: 'https://xenoethics.org', port: 443 },
           { label: 'News (80)', url: 'http://news.xenoethics.org', port: 80 },
           { label: 'Articles (443)', url: 'https://articles.xenoethics.org', port: 443 },
-          { label: 'Forum (8080)', url: 'http://forum.xenoethics.org', port: 8080 },
           { label: 'Docs (5000)', url: 'http://docs.xenoethics.org', port: 5000 },
-          { label: 'Events (5050)', url: 'http://events.xenoethics.org', port: 5050 },
-          { label: 'API (7777)', url: 'http://api.xenoethics.org', port: 7777 },
-          { label: 'Beta (443)', url: 'https://beta.xenoethics.org', port: 443 },
-          { label: 'Community (80)', url: 'http://community.xenoethics.org', port: 80 },
-          { label: 'Archive (443)', url: 'https://archive.xenoethics.org', port: 443 },
-          { label: 'Support (443)', url: 'https://support.xenoethics.org', port: 443 },
-          { label: 'Dev (5050)', url: 'http://dev.xenoethics.org', port: 5050 }
+          { label: 'API (7777)', url: 'http://api.xenoethics.org', port: 7777 }
+        ]
+      },
+      {
+        domain: 'dashboard.dissemblage.art',
+        capacity: 'Central Dashboard Hub',
+        discovery: 'Aggregated status from creative projects.',
+        live: 'https://dashboard.dissemblage.art',
+        github: '',  // If available, add repo link here.
+        colorClass: 'domain-dashboard',
+        services: [
+          { label: 'Main Dashboard (443)', url: 'https://dashboard.dissemblage.art', port: 443 },
+          { label: 'API Status (80)', url: 'http://api.dashboard.dissemblage.art', port: 80 },
+          { label: 'Analytics (3000)', url: 'http://analytics.dashboard.dissemblage.art', port: 3000 }
         ]
       }
     ];
@@ -295,7 +324,7 @@
     });
     
     /**
-     * Draw a sparkline chart on a canvas element.
+     * Draw a sparkline chart on a canvas.
      * @param {HTMLCanvasElement} canvas - The canvas element.
      * @param {number[]} data - Array of numeric data points.
      */
@@ -321,7 +350,7 @@
     }
     
     /**
-     * Ping a service using a HEAD request with timeout.
+     * Ping a service using a HEAD request with a timeout.
      * @param {string} url - The endpoint URL.
      * @param {number} timeout - Timeout in milliseconds.
      * @returns {Promise<object>} - A status object.
@@ -346,7 +375,7 @@
     }
     
     /**
-     * Refresh the status of all services.
+     * Refresh the status for all services.
      */
     async function refreshDashboard() {
       for (const domain of domains) {
@@ -375,7 +404,7 @@
       domains.forEach(domain => {
         // Create accordion header.
         const acc = document.createElement('button');
-        acc.className = 'accordion';
+        acc.className = `accordion ${domain.colorClass}`;
         acc.textContent = `${domain.domain} (${domain.capacity})`;
         acc.addEventListener('click', function() {
           this.classList.toggle('active');
@@ -464,7 +493,7 @@
     }
     
     // Auto-refresh every 5 minutes.
-    setInterval(refreshDashboard, 0.2 * 60 * 1000);
+    setInterval(refreshDashboard, 5 * 60 * 1000);
     refreshDashboard();
   </script>
 </body>

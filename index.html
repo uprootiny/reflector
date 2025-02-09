@@ -2,81 +2,115 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Matrix of Lights – Endpoint Dashboard</title>
+  <title>Comprehensive Multi-Domain Endpoint Dashboard</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
   <style>
-    /* Global Styles */
+    /* Base Styles */
+    * {
+      box-sizing: border-box;
+    }
     body { 
-      font-family: Menlo, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
-      margin: 20px;
+      font-family: Menlo, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 20px; 
+      padding: 0;
       background-color: #fbfbfb;
       color: #333;
       line-height: 1.6;
     }
-    h1 { 
-      text-align: center; 
-      margin-bottom: 20px; 
+    h1 {
+      text-align: center;
+      margin-bottom: 10px;
       font-weight: 300;
     }
-    p.subtitle {
+    .meta {
       text-align: center;
       font-size: 15px;
       color: #555;
       margin-bottom: 20px;
     }
-    
-    /* Matrix Grid */
-    .matrix {
-      display: grid;
-      grid-template-columns: repeat(auto-fit, minmax(100px, 1fr));
-      gap: 15px;
-      max-width: 800px;
-      margin: 0 auto 30px;
-    }
-    .matrix-item {
-      position: relative;
-      width: 100px;
-      height: 100px;
-      border-radius: 50%;
-      background-color: #bbb; /* initial color = unknown */
-      display: flex;
-      align-items: center;
-      justify-content: center;
-      cursor: pointer;
-      transition: box-shadow 0.3s ease;
-    }
-    .matrix-item:hover::after {
-      content: attr(data-label);
-      position: absolute;
-      bottom: -24px;
-      left: 50%;
-      transform: translateX(-50%);
-      background: rgba(0, 0, 0, 0.75);
+
+    /* Accordion Styles */
+    .accordion {
+      background-color: #3498db;
       color: #fff;
-      padding: 2px 6px;
-      border-radius: 3px;
-      font-size: 12px;
-      white-space: nowrap;
+      cursor: pointer;
+      padding: 14px 20px;
+      width: 100%;
+      border: none;
+      border-radius: 4px;
+      margin-bottom: 8px;
+      font-size: 18px;
+      text-align: left;
+      transition: background-color 0.3s ease;
     }
-    
-    /* Status animations */
-    .up {
-      background-color: #27ae60 !important;
+    .accordion:hover,
+    .accordion.active {
+      background-color: #2980b9;
+    }
+    .panel {
+      background-color: #fff;
+      border: 1px solid #ddd;
+      border-radius: 4px;
+      padding: 16px;
+      margin-bottom: 20px;
+      display: none;
+      box-shadow: 0 2px 4px rgba(0,0,0,0.06);
+    }
+
+    /* Table Styles */
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+      font-size: 14px;
+    }
+    th, td {
+      padding: 10px 12px;
+      text-align: left;
+      border-bottom: 1px solid #eee;
+    }
+    th {
+      background-color: #2c3e50;
+      color: #fff;
+      text-transform: uppercase;
+      font-weight: 500;
+    }
+
+    /* Status & Sparkline */
+    .status { font-weight: 600; }
+    .status.up { 
+      color: #27ae60; 
       animation: breathing 2s infinite;
     }
-    .down {
-      background-color: #e74c3c !important;
-    }
+    .status.down { color: #e74c3c; }
     @keyframes breathing {
-      0% { box-shadow: 0 0 5px 2px rgba(39, 174, 96, 0.7); }
-      50% { box-shadow: 0 0 15px 4px rgba(39, 174, 96, 1); }
-      100% { box-shadow: 0 0 5px 2px rgba(39, 174, 96, 0.7); }
+      0% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
+      50% { box-shadow: 0 0 15px 4px rgba(39,174,96,1); }
+      100% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
     }
-    
-    /* Cheatsheet */
+    .sparkline { width: 100px; height: 30px; }
+
+    /* Link Styles */
+    .live-link { 
+      text-decoration: none; 
+      color: #007bff; 
+      font-weight: 500;
+    }
+    .live-link:hover { text-decoration: underline; }
+
+    /* Refresh Timestamp */
+    .refresh-timestamp {
+      text-align: right; 
+      font-size: 0.9em; 
+      color: #666; 
+      margin-top: 10px;
+    }
+
+    /* Cheatsheet Section */
     #cheatsheet {
       max-width: 800px;
-      margin: 0 auto;
-      padding: 15px;
+      margin: 20px auto;
+      padding: 16px;
       background: #fff;
       border: 1px solid #ddd;
       border-radius: 4px;
@@ -98,21 +132,13 @@
       padding: 2px 4px;
       border-radius: 2px;
     }
-    
-    /* Refresh timestamp */
-    .refresh-timestamp {
-      text-align: center;
-      font-size: 0.9em;
-      color: #666;
-      margin-top: 10px;
-    }
   </style>
 </head>
 <body>
-  <h1>Matrix of Lights – Endpoint Dashboard</h1>
-  <p class="subtitle">Click on a light to open the service. Hover for details.</p>
+  <h1>Comprehensive Multi-Domain Endpoint Dashboard</h1>
+  <p class="meta">Monitor your portfolio, creative projects, and dynamic services. Click a domain to reveal details.</p>
   
-  <div class="matrix" id="matrix"></div>
+  <div id="dashboard-container"></div>
   
   <div class="refresh-timestamp" id="lastRefreshed">Last refreshed: --</div>
   
@@ -121,51 +147,186 @@
     <ul>
       <li>Inspect a service: <code>curl -I &lt;endpoint&gt;</code></li>
       <li>DNS lookup: <code>nslookup &lt;domain&gt;</code></li>
-      <li>Monitor logs: <code>tail -f /var/log/nginx/access.log</code></li>
-      <li>Versioning: <code>git commit -am "Update endpoints"</code> and push your changes.</li>
+      <li>View logs: <code>tail -f /var/log/nginx/access.log</code></li>
+      <li>Deploy updates: <code>git commit -am "Update endpoints" && git push</code></li>
+      <li>Refresh manually: Press F5 to reload this page.</li>
     </ul>
   </section>
   
   <script>
-    // Sample endpoints data with various ports.
-    const endpoints = [
-      { label: 'api.dissemblage.art (443)', url: 'https://api.dissemblage.art', port: 443 },
-      { label: 'ollama.dissemblage.art (443)', url: 'https://ollama.dissemblage.art', port: 443 },
-      { label: 'homeserver.hyperstitious.org (443)', url: 'https://homeserver.hyperstitious.org', port: 443 },
-      { label: 'portfolio.cyrillrafael.org (443)', url: 'https://portfolio.cyrillrafael.org', port: 443 },
-      { label: 'void.marchdown.net (80)', url: 'http://void.marchdown.net', port: 80 },
-      { label: 'blog.dissemblage.art (80)', url: 'http://blog.dissemblage.art', port: 80 },
-      { label: 'studio.dissemblage.art (8080)', url: 'http://studio.dissemblage.art', port: 8080 },
-      { label: 'dev.hyperstitious.org (3000)', url: 'http://dev.hyperstitious.org', port: 3000 },
-      { label: 'api.cyrillrafael.org (5000)', url: 'http://api.cyrillrafael.org', port: 5000 },
-      { label: 'market.marchdown.net (7777)', url: 'http://market.marchdown.net', port: 7777 },
-      { label: 'test.dissemblage.art (5050)', url: 'http://test.dissemblage.art', port: 5050 },
-      { label: 'dashboard.cyrillrafael.org (7000)', url: 'http://dashboard.cyrillrafael.org', port: 7000 }
+    /**
+     * Data model: Each domain has metadata and an array of services.
+     * Update these arrays as necessary.
+     */
+    const domains = [
+      {
+        domain: 'cyrillrafael.org',
+        capacity: 'Creative & Innovative',
+        discovery: 'Manual configuration',
+        live: 'https://uprootiny.github.io/portfolio',
+        github: 'https://github.com/uprootiny/portfolio',
+        services: [
+          { label: 'Portfolio (443)', url: 'https://portfolio.cyrillrafael.org', port: 443 },
+          { label: 'Blog (443)', url: 'https://blog.cyrillrafael.org', port: 443 },
+          { label: 'Gallery (80)', url: 'http://gallery.cyrillrafael.org', port: 80 },
+          { label: 'Studio (8080)', url: 'http://studio.cyrillrafael.org', port: 8080 },
+          { label: 'Projects (3000)', url: 'http://projects.cyrillrafael.org', port: 3000 },
+          { label: 'Docs (5000)', url: 'http://docs.cyrillrafael.org', port: 5000 },
+          { label: 'Events (5050)', url: 'http://events.cyrillrafael.org', port: 5050 },
+          { label: 'Press (7000)', url: 'http://press.cyrillrafael.org', port: 7000 },
+          { label: 'Forum (7777)', url: 'http://forum.cyrillrafael.org', port: 7777 },
+          { label: 'Beta (443)', url: 'https://beta.cyrillrafael.org', port: 443 },
+          { label: 'Support (443)', url: 'https://support.cyrillrafael.org', port: 443 },
+          { label: 'API (5000)', url: 'http://api.cyrillrafael.org', port: 5000 }
+        ]
+      },
+      {
+        domain: 'marchdown.net',
+        capacity: 'Experimental & Edgy',
+        discovery: 'Registrar API + manual tweaks',
+        live: 'http://void.marchdown.net',
+        github: 'https://github.com/uprootiny/marchdown',
+        services: [
+          { label: 'Void (80)', url: 'http://void.marchdown.net', port: 80 },
+          { label: 'Echo (443)', url: 'https://echo.marchdown.net', port: 443 },
+          { label: 'Nexus (443)', url: 'https://nexus.marchdown.net', port: 443 },
+          { label: 'Flux (8080)', url: 'http://flux.marchdown.net', port: 8080 },
+          { label: 'Vector (3000)', url: 'http://vector.marchdown.net', port: 3000 },
+          { label: 'Nova (443)', url: 'https://nova.marchdown.net', port: 443 },
+          { label: 'Quantum (5050)', url: 'http://quantum.marchdown.net', port: 5050 },
+          { label: 'Horizon (7777)', url: 'http://horizon.marchdown.net', port: 7777 },
+          { label: 'Archive (80)', url: 'http://archive.marchdown.net', port: 80 },
+          { label: 'Beta (443)', url: 'https://beta.marchdown.net', port: 443 },
+          { label: 'Docs (3000)', url: 'http://docs.marchdown.net', port: 3000 },
+          { label: 'Forum (443)', url: 'https://forum.marchdown.net', port: 443 }
+        ]
+      },
+      {
+        domain: 'dissemblage.art',
+        capacity: 'Digital Art & Creative Experiments',
+        discovery: 'Internal scanning & manual entries',
+        live: 'https://ollama.dissemblage.art',
+        github: 'https://github.com/uprootiny/dissemblage.art',
+        services: [
+          { label: 'API (443)', url: 'https://api.dissemblage.art', port: 443 },
+          { label: 'Ollama (443)', url: 'https://ollama.dissemblage.art', port: 443 },
+          { label: 'Studio (8080)', url: 'http://studio.dissemblage.art', port: 8080 },
+          { label: 'Gallery (80)', url: 'http://gallery.dissemblage.art', port: 80 },
+          { label: 'Lab (443)', url: 'https://lab.dissemblage.art', port: 443 },
+          { label: 'Docs (5000)', url: 'http://docs.dissemblage.art', port: 5000 },
+          { label: 'Press (443)', url: 'https://press.dissemblage.art', port: 443 },
+          { label: 'News (443)', url: 'https://news.dissemblage.art', port: 443 },
+          { label: 'Events (5050)', url: 'http://events.dissemblage.art', port: 5050 },
+          { label: 'Archive (80)', url: 'http://archive.dissemblage.art', port: 80 },
+          { label: 'Beta (443)', url: 'https://beta.dissemblage.art', port: 443 },
+          { label: 'Support (443)', url: 'https://support.dissemblage.art', port: 443 }
+        ]
+      },
+      {
+        domain: 'hyperstitious.org',
+        capacity: 'High Security & Private Networking',
+        discovery: 'Manual with internal probes',
+        live: 'https://homeserver.hyperstitious.org',
+        github: 'https://github.com/uprootiny/hyperstitious.org',
+        services: [
+          { label: 'Homeserver (443)', url: 'https://homeserver.hyperstitious.org', port: 443 },
+          { label: 'Cloud (80)', url: 'http://cloud.hyperstitious.org', port: 80 },
+          { label: 'Monitor (443)', url: 'https://monitor.hyperstitious.org', port: 443 },
+          { label: 'Dev (3000)', url: 'http://dev.hyperstitious.org', port: 3000 },
+          { label: 'Research (5000)', url: 'http://research.hyperstitious.org', port: 5000 },
+          { label: 'Docs (443)', url: 'https://docs.hyperstitious.org', port: 443 },
+          { label: 'Beta (443)', url: 'https://beta.hyperstitious.org', port: 443 },
+          { label: 'Forum (443)', url: 'https://forum.hyperstitious.org', port: 443 },
+          { label: 'API (5050)', url: 'http://api.hyperstitious.org', port: 5050 },
+          { label: 'Cloud2 (80)', url: 'http://cloud2.hyperstitious.org', port: 80 },
+          { label: 'Archive (443)', url: 'https://archive.hyperstitious.org', port: 443 },
+          { label: 'Support (443)', url: 'https://support.hyperstitious.org', port: 443 }
+        ]
+      },
+      {
+        domain: 'xenoethics.info',
+        capacity: 'Experimental & Avant-Garde',
+        discovery: 'Manual, creative curation',
+        live: 'https://xenoethics.info',
+        github: 'https://github.com/uprootiny/xenoethics.info',
+        services: [
+          { label: 'Main Site (443)', url: 'https://xenoethics.info', port: 443 },
+          { label: 'Articles (80)', url: 'http://articles.xenoethics.info', port: 80 },
+          { label: 'Blog (443)', url: 'https://blog.xenoethics.info', port: 443 },
+          { label: 'Forum (8080)', url: 'http://forum.xenoethics.info', port: 8080 },
+          { label: 'Docs (5000)', url: 'http://docs.xenoethics.info', port: 5000 },
+          { label: 'Events (5050)', url: 'http://events.xenoethics.info', port: 5050 },
+          { label: 'API (7777)', url: 'http://api.xenoethics.info', port: 7777 },
+          { label: 'Beta (443)', url: 'https://beta.xenoethics.info', port: 443 },
+          { label: 'Gallery (80)', url: 'http://gallery.xenoethics.info', port: 80 },
+          { label: 'Archive (443)', url: 'https://archive.xenoethics.info', port: 443 },
+          { label: 'Shop (3000)', url: 'http://shop.xenoethics.info', port: 3000 },
+          { label: 'Dev (5050)', url: 'http://dev.xenoethics.info', port: 5050 }
+        ]
+      },
+      {
+        domain: 'xenoethics.org',
+        capacity: 'Experimental & Avant-Garde',
+        discovery: 'Manual, creative curation',
+        live: 'https://xenoethics.org',
+        github: 'https://github.com/uprootiny/xenoethics.org',
+        services: [
+          { label: 'Main Site (443)', url: 'https://xenoethics.org', port: 443 },
+          { label: 'News (80)', url: 'http://news.xenoethics.org', port: 80 },
+          { label: 'Articles (443)', url: 'https://articles.xenoethics.org', port: 443 },
+          { label: 'Forum (8080)', url: 'http://forum.xenoethics.org', port: 8080 },
+          { label: 'Docs (5000)', url: 'http://docs.xenoethics.org', port: 5000 },
+          { label: 'Events (5050)', url: 'http://events.xenoethics.org', port: 5050 },
+          { label: 'API (7777)', url: 'http://api.xenoethics.org', port: 7777 },
+          { label: 'Beta (443)', url: 'https://beta.xenoethics.org', port: 443 },
+          { label: 'Community (80)', url: 'http://community.xenoethics.org', port: 80 },
+          { label: 'Archive (443)', url: 'https://archive.xenoethics.org', port: 443 },
+          { label: 'Support (443)', url: 'https://support.xenoethics.org', port: 443 },
+          { label: 'Dev (5050)', url: 'http://dev.xenoethics.org', port: 5050 }
+        ]
+      }
     ];
     
-    // Create a container reference.
-    const matrixContainer = document.getElementById('matrix');
-    
-    // Create a light (matrix item) for each endpoint.
-    endpoints.forEach((ep, index) => {
-      const item = document.createElement('div');
-      item.className = 'matrix-item';
-      // Use data attributes to store label, port, and URL (for tooltip and on click).
-      item.setAttribute('data-label', `${ep.label}`);
-      item.setAttribute('data-url', ep.url);
-      // When clicked, open the service in a new window.
-      item.addEventListener('click', () => {
-        window.open(ep.url, '_blank');
+    // Initialize each service's history array.
+    domains.forEach(domain => {
+      domain.services.forEach(service => {
+        service.history = [];
       });
-      // Insert a short label (or index) for visual reference.
-      item.textContent = index + 1;
-      matrixContainer.appendChild(item);
-      // Save a reference for later status updates.
-      ep._element = item;
     });
     
-    // Function to ping an endpoint using HEAD (with a timeout).
-    async function pingEndpoint(url, timeout = 5000) {
+    /**
+     * Draw a sparkline chart on a canvas element.
+     * @param {HTMLCanvasElement} canvas - The canvas element.
+     * @param {number[]} data - Array of numeric data points.
+     */
+    function drawSparkline(canvas, data) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width, height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      if (data.length === 0) return;
+      const maxVal = Math.max(...data, 1);
+      const minVal = Math.min(...data, 0);
+      const range = maxVal - minVal || 1;
+      const step = width / (data.length - 1);
+      ctx.beginPath();
+      ctx.moveTo(0, height - ((data[0] - minVal) / range) * height);
+      for (let i = 1; i < data.length; i++) {
+        const x = i * step;
+        const y = height - ((data[i] - minVal) / range) * height;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#007bff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    
+    /**
+     * Ping a service using a HEAD request with timeout.
+     * @param {string} url - The endpoint URL.
+     * @param {number} timeout - Timeout in milliseconds.
+     * @returns {Promise<object>} - A status object.
+     */
+    async function pingService(url, timeout = 5000) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
       const start = performance.now();
@@ -184,26 +345,127 @@
       }
     }
     
-    // Refresh the status of all endpoints and update the lights.
-    async function refreshMatrix() {
-      for (const ep of endpoints) {
-        const result = await pingEndpoint(ep.url);
-        // Update the light: add class "up" if service is up, otherwise "down".
-        if (result.status === 'up') {
-          ep._element.classList.remove('down');
-          ep._element.classList.add('up');
-        } else {
-          ep._element.classList.remove('up');
-          ep._element.classList.add('down');
+    /**
+     * Refresh the status of all services.
+     */
+    async function refreshDashboard() {
+      for (const domain of domains) {
+        for (const service of domain.services) {
+          const result = await pingService(service.url);
+          service.status = result.status;
+          service.responseTime = result.responseTime;
+          service.statusCode = result.statusCode;
+          service.error = result.error || '';
+          if (typeof result.responseTime === 'number') {
+            service.history.push(result.responseTime);
+            if (service.history.length > 20) service.history.shift();
+          }
         }
       }
+      renderDashboard();
       document.getElementById('lastRefreshed').textContent = 'Last refreshed: ' + new Date().toLocaleString();
     }
     
-    // Refresh every 2 minutes (or adjust as needed)
-    setInterval(refreshMatrix, 2 * 60 * 1000);
-    // Initial refresh.
-    refreshMatrix();
+    /**
+     * Render the dashboard as an accordion with a table per domain.
+     */
+    function renderDashboard() {
+      const container = document.getElementById('dashboard-container');
+      container.innerHTML = '';
+      domains.forEach(domain => {
+        // Create accordion header.
+        const acc = document.createElement('button');
+        acc.className = 'accordion';
+        acc.textContent = `${domain.domain} (${domain.capacity})`;
+        acc.addEventListener('click', function() {
+          this.classList.toggle('active');
+          const panel = this.nextElementSibling;
+          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        });
+        container.appendChild(acc);
+        
+        // Create panel for domain details.
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<strong>Discovery:</strong> ${domain.discovery}`;
+        panel.appendChild(meta);
+        
+        // Create table for services.
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>Service</th>
+            <th>URL</th>
+            <th>Port</th>
+            <th>Status</th>
+            <th>Response (ms)</th>
+            <th>Sparkline</th>
+            <th>Links</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        domain.services.forEach(service => {
+          const tr = document.createElement('tr');
+          
+          // Service label.
+          const tdLabel = document.createElement('td');
+          tdLabel.textContent = service.label;
+          tr.appendChild(tdLabel);
+          
+          // URL with live link.
+          const tdUrl = document.createElement('td');
+          tdUrl.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">${service.url}</a>`;
+          tr.appendChild(tdUrl);
+          
+          // Port.
+          const tdPort = document.createElement('td');
+          tdPort.textContent = service.port;
+          tr.appendChild(tdPort);
+          
+          // Status.
+          const tdStatus = document.createElement('td');
+          tdStatus.textContent = service.status ? service.status.toUpperCase() : 'N/A';
+          tdStatus.className = 'status ' + (service.status || '');
+          tr.appendChild(tdStatus);
+          
+          // Response time.
+          const tdResponse = document.createElement('td');
+          tdResponse.textContent = service.responseTime || 'N/A';
+          tr.appendChild(tdResponse);
+          
+          // Sparkline.
+          const tdGraph = document.createElement('td');
+          const sparkCanvas = document.createElement('canvas');
+          sparkCanvas.className = 'sparkline';
+          sparkCanvas.width = 100;
+          sparkCanvas.height = 30;
+          tdGraph.appendChild(sparkCanvas);
+          if (service.history && service.history.length > 0) {
+            drawSparkline(sparkCanvas, service.history);
+          }
+          tr.appendChild(tdGraph);
+          
+          // Links: Live and GitHub.
+          const tdLinks = document.createElement('td');
+          tdLinks.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">Live</a>` +
+            (domain.github ? ` | <a class="live-link" href="${domain.github}" target="_blank">GitHub</a>` : '');
+          tr.appendChild(tdLinks);
+          
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        panel.appendChild(table);
+        container.appendChild(panel);
+      });
+    }
+    
+    // Auto-refresh every 5 minutes.
+    setInterval(refreshDashboard, 0.2 * 60 * 1000);
+    refreshDashboard();
   </script>
 </body>
 </html>

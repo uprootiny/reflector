@@ -1,0 +1,42 @@
+/* rose.css – Styles for the Project Flower page */
+body {
+  font-family: 'Segoe UI', sans-serif;
+  background: #f4f4f8;
+  color: #333;
+  padding: 20px;
+  text-align: center;
+}
+header, footer {
+  margin-bottom: 20px;
+}
+h1 {
+  margin-bottom: 10px;
+  font-weight: 300;
+  color: #2c3e50;
+}
+.intro {
+  font-size: 16px;
+  color: #7f8c8d;
+  margin-bottom: 20px;
+}
+.glass-panel {
+  background: rgba(255, 255, 255, 0.9);
+  border-radius: 12px;
+  padding: 20px;
+  max-width: 500px;
+  margin: 0 auto 20px;
+  box-shadow: 0 4px 10px rgba(0,0,0,0.1);
+  backdrop-filter: blur(10px);
+}
+svg {
+  display: block;
+  margin: 20px auto;
+}
+.back-link a {
+  text-decoration: none;
+  color: #3498db;
+  font-weight: 500;
+}
+.back-link a:hover {
+  text-decoration: underline;
+}

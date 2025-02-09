@@ -4,85 +4,64 @@
   <meta charset="UTF-8">
   <title>Project Flower</title>
   <meta name="viewport" content="width=device-width, initial-scale=1.0">
-  <style>
-    :root {
-      --primary: #3498db;
-      --bg-glass: rgba(255, 255, 255, 0.9);
-      --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.1);
-    }
-    body {
-      font-family: 'Segoe UI', sans-serif;
-      background: #f4f4f8;
-      color: #333;
-      padding: 20px;
-      text-align: center;
-    }
-    h1 {
-      margin-bottom: 20px;
-      font-weight: 300;
-    }
-    .glass-panel {
-      background: var(--bg-glass);
-      border-radius: 12px;
-      padding: 20px;
-      box-shadow: var(--shadow-light);
-      margin: 0 auto;
-      max-width: 500px;
-      backdrop-filter: blur(10px);
-    }
-    svg {
-      display: block;
-      margin: 0 auto;
-    }
-    p.info {
-      margin-top: 20px;
-      font-size: 14px;
-      color: #555;
-    }
-    a.back-link {
-      text-decoration: none;
-      color: var(--primary);
-      font-weight: 500;
-    }
-  </style>
+  <!-- Link to the external CSS file -->
+  <link rel="stylesheet" href="rose.css">
 </head>
 <body>
-  <h1>Project Flower</h1>
-  <div class="glass-panel" id="flowerPanel">
-    <!-- The generative SVG will appear here -->
+  <header>
+    <h1>Project Flower</h1>
+    <p class="intro">
+      Each petal represents a milestone in our projects. Hover over a petal to see details.
+    </p>
+  </header>
+  
+  <div id="flower-container" class="glass-panel">
+    <!-- The generative SVG will be injected here -->
   </div>
-  <p class="info">Each petal represents a project milestone. Colors and positions are generated using a golden-angle spiral algorithm.</p>
-  <p><a class="back-link" href="index.html">← Back to Dashboard</a></p>
+  
+  <footer>
+    <p class="back-link"><a href="index.html">← Back to Dashboard</a></p>
+  </footer>
+  
   <script>
-    // Sample timeline events: (in a real scenario, you might fetch this from a data API or from git history)
+    // Sample timeline events – replace or expand with real data as needed.
     const timelineProjects = [
-      { date: "2023-08-15", title: "Portfolio Redesign", description: "Redesigned portfolio on GitHub Pages." },
-      { date: "2023-08-05", title: "API Deployment", description: "New API service for dissemblage.art deployed." },
-      { date: "2023-07-25", title: "Dashboard Aggregation", description: "Integrated endpoints into a central dashboard." },
-      { date: "2023-07-10", title: "Reverse Proxy Update", description: "Updated Nginx proxy settings." },
-      { date: "2023-06-30", title: "Marchdown Experiment", description: "Launched experimental project." },
-      { date: "2023-06-15", title: "Hyperstitious Upgrade", description: "Enhanced internal monitoring." },
-      { date: "2023-05-20", title: "Xenoethics Revamp", description: "Refreshed editorial content and APIs." },
-      { date: "2023-05-05", title: "Containerization", description: "Started containerizing services." },
-      { date: "2023-04-15", title: "Automated Monitoring", description: "Integrated auto-refresh and status checking." },
-      { date: "2023-04-01", title: "Dashboard Launch", description: "Initial multi-domain dashboard deployed." }
+      { date: "2023-08-15", title: "Portfolio Redesign", description: "Launched the redesigned portfolio on GitHub Pages." },
+      { date: "2023-08-05", title: "API Service Deployment", description: "Deployed a new API service for dissemblage.art." },
+      { date: "2023-07-25", title: "Dashboard Aggregation", description: "Integrated endpoints into the central dashboard." },
+      { date: "2023-07-10", title: "Nginx Proxy Update", description: "Updated reverse proxy settings for improved load balancing." },
+      { date: "2023-06-30", title: "Marchdown Experiment", description: "Launched an experimental project on marchdown.net." },
+      { date: "2023-06-15", title: "Hyperstitious Upgrade", description: "Enhanced internal monitoring on hyperstitious.org." },
+      { date: "2023-05-20", title: "Xenoethics Revamp", description: "Refreshed editorial content and API endpoints." },
+      { date: "2023-05-05", title: "Containerization Initiative", description: "Started containerizing services for rapid deployment." },
+      { date: "2023-04-15", title: "Automated Monitoring", description: "Integrated auto-refresh and HEAD-checking into the dashboard." },
+      { date: "2023-04-01", title: "Initial Dashboard Launch", description: "Deployed the first version of the multi-domain dashboard." }
     ];
-    
-    // Generate the flower SVG using the golden angle.
+
+    /**
+     * Generate the "Project Flower" SVG.
+     * Each timeline event produces one petal in a spiral using the golden angle.
+     */
     function generateFlowerSVG() {
       const svgNS = "http://www.w3.org/2000/svg";
       const width = 400, height = 400;
       const svg = document.createElementNS(svgNS, "svg");
       svg.setAttribute("width", width);
       svg.setAttribute("height", height);
+      svg.setAttribute("viewBox", `0 0 ${width} ${height}`);
       
+      // Center of the flower.
       const cx = width / 2, cy = height / 2;
+      // Golden angle in radians.
       const goldenAngle = 137.5 * Math.PI / 180;
-      const scale = 10;
+      // Scale factor for the spiral (adjust for spacing).
+      const scale = 12;
       
       // Sort events in chronological order.
       const events = timelineProjects.slice().sort((a, b) => new Date(a.date) - new Date(b.date));
+      
       events.forEach((event, i) => {
+        // Calculate polar coordinates.
         const angle = i * goldenAngle;
         const r = scale * Math.sqrt(i);
         const x = cx + r * Math.cos(angle);
@@ -94,30 +73,35 @@
         petal.setAttribute("cy", y);
         petal.setAttribute("rx", 20);
         petal.setAttribute("ry", 8);
+        // Rotate the petal so it aligns with the spiral.
         petal.setAttribute("transform", `rotate(${angle * 180/Math.PI}, ${x}, ${y})`);
         
-        // Color based on index.
+        // Determine a vibrant color based on index (modify formula as desired).
         const hue = (i * 36) % 360;
-        petal.setAttribute("fill", `hsl(${hue}, 70%, 60%)`);
+        petal.setAttribute("fill", `hsl(${hue}, 80%, 60%)`);
         petal.setAttribute("stroke", "white");
         petal.setAttribute("stroke-width", "1");
         
-        // Tooltip with event info.
+        // Tooltip: Use the <title> element to show milestone details on hover.
         const title = document.createElementNS(svgNS, "title");
-        title.textContent = `${event.date} - ${event.title}: ${event.description}`;
+        title.textContent = `${new Date(event.date).toLocaleDateString()} - ${event.title}: ${event.description}`;
         petal.appendChild(title);
+        
+        // Optionally add a subtle CSS animation (flickering or gentle pulse) via inline style.
+        petal.style.transition = "transform 0.3s ease";
         
         svg.appendChild(petal);
       });
       return svg;
     }
-    
+
     function renderFlower() {
-      const container = document.getElementById("flowerPanel");
-      container.innerHTML = "";
+      const container = document.getElementById("flower-container");
+      container.innerHTML = ""; // Clear previous content.
       container.appendChild(generateFlowerSVG());
     }
-    
+
+    // Render the flower on page load.
     renderFlower();
   </script>
 </body>

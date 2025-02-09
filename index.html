@@ -16,7 +16,7 @@
       --text-muted: #7f8c8d;
       --shadow-light: 0 4px 10px rgba(0, 0, 0, 0.1);
     }
-    
+
     /* Global Reset & Base Styles */
     * {
       box-sizing: border-box;
@@ -27,8 +27,8 @@
       font-family: 'Segoe UI', Menlo, Tahoma, Geneva, Verdana, sans-serif;
       background: #f4f4f8;
       color: #333;
-      line-height: 1.6;
       padding: 20px;
+      line-height: 1.6;
     }
     h1 {
       text-align: center;
@@ -41,7 +41,7 @@
       color: var(--text-muted);
       margin-bottom: 20px;
     }
-    
+
     /* Glass Panel (Skeuomorphic) */
     .glass-panel {
       background: var(--bg-glass);
@@ -51,8 +51,8 @@
       backdrop-filter: blur(10px);
       margin-bottom: 20px;
     }
-    
-    /* Accordion (Domain Sections) */
+
+    /* Accordion Styles */
     .accordion {
       background: var(--primary);
       color: #fff;
@@ -80,15 +80,14 @@
       box-shadow: var(--shadow-light);
       backdrop-filter: blur(8px);
     }
-    
-    /* Domain-Specific Color Coding */
+    /* Domain-Specific Color Coding (via border accent) */
     .domain-cyrillrafael { border-left: 5px solid #2980b9; }
     .domain-marchdown { border-left: 5px solid #e67e22; }
     .domain-dissemblage { border-left: 5px solid var(--accent); }
     .domain-hyperstitious { border-left: 5px solid #16a085; }
     .domain-xenoethics { border-left: 5px solid #c0392b; }
     .domain-dashboard { border-left: 5px solid #8e44ad; }
-    
+
     /* Table Styles */
     table {
       width: 100%;
@@ -107,38 +106,43 @@
       text-transform: uppercase;
       font-weight: 500;
     }
-    
+
     /* Status Indicators & Sparkline */
-    .status {
-      font-weight: 600;
-    }
+    .status { font-weight: 600; }
     .status.up {
       color: var(--success);
       animation: breathing 2s infinite;
     }
-    .status.down {
-      color: var(--danger);
-    }
+    .status.down { color: var(--danger); }
     @keyframes breathing {
       0% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
       50% { box-shadow: 0 0 15px 4px rgba(39,174,96,1); }
       100% { box-shadow: 0 0 5px 2px rgba(39,174,96,0.7); }
     }
-    .sparkline {
-      width: 100px;
-      height: 30px;
-    }
-    
+    .sparkline { width: 100px; height: 30px; }
+
     /* Link Styles */
     .live-link {
       text-decoration: none;
       color: var(--primary);
       font-weight: 500;
     }
-    .live-link:hover {
-      text-decoration: underline;
+    .live-link:hover { text-decoration: underline; }
+
+    /* Deploy Button */
+    .deploy-btn {
+      background: var(--accent);
+      color: #fff;
+      border: none;
+      padding: 6px 10px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 13px;
+      margin-left: 8px;
+      transition: background 0.3s;
     }
-    
+    .deploy-btn:hover { background: #8e44ad; }
+
     /* Refresh Timestamp */
     .refresh-timestamp {
       text-align: right;
@@ -146,7 +150,7 @@
       color: var(--text-muted);
       margin-top: 10px;
     }
-    
+
     /* Cheatsheet Section */
     #cheatsheet {
       max-width: 800px;
@@ -160,19 +164,43 @@
       color: #333;
       backdrop-filter: blur(5px);
     }
-    #cheatsheet h2 {
-      margin-top: 0;
-      font-weight: 400;
-      color: var(--secondary);
+    #cheatsheet h2 { margin-top: 0; font-weight: 400; color: var(--secondary); }
+    #cheatsheet ul { list-style-type: disc; padding-left: 20px; }
+    code { background: #f0f0f0; padding: 2px 4px; border-radius: 2px; }
+
+    /* Modal Styles for Deployment Instructions */
+    #instructionModal {
+      display: none;
+      position: fixed;
+      z-index: 1000;
+      left: 0;
+      top: 0;
+      width: 100%;
+      height: 100%;
+      overflow: auto;
+      background-color: rgba(0,0,0,0.5);
     }
-    #cheatsheet ul {
-      list-style-type: disc;
-      padding-left: 20px;
+    #instructionModal .modal-content {
+      background-color: #fff;
+      margin: 10% auto;
+      padding: 20px;
+      border: 1px solid #888;
+      border-radius: 8px;
+      width: 90%;
+      max-width: 600px;
+      box-shadow: var(--shadow-light);
     }
-    code {
-      background: #f0f0f0;
-      padding: 2px 4px;
-      border-radius: 2px;
+    #instructionModal .close {
+      color: #aaa;
+      float: right;
+      font-size: 28px;
+      font-weight: bold;
+      cursor: pointer;
+    }
+    #instructionModal .close:hover,
+    #instructionModal .close:focus {
+      color: #000;
+      text-decoration: none;
     }
   </style>
 </head>
@@ -191,20 +219,30 @@
       <li>DNS lookup: <code>nslookup &lt;domain&gt;</code></li>
       <li>View logs: <code>tail -f /var/log/nginx/access.log</code></li>
       <li>Deploy updates: <code>git commit -am "Update endpoints" && git push</code></li>
-      <li>Refresh manually: Press F5 to reload the dashboard.</li>
+      <li>Refresh manually: Press F5 to reload this page.</li>
     </ul>
   </section>
   
+  <!-- Modal for Deployment Instructions -->
+  <div id="instructionModal">
+    <div class="modal-content">
+      <span class="close" id="modalClose">&times;</span>
+      <div id="modalBody">
+        <!-- Instructions will be injected here -->
+      </div>
+    </div>
+  </div>
+  
   <script>
     /**
-     * Data Model: Each domain object includes:
-     * - domain: The domain name.
-     * - capacity: A human-friendly tagline or usage description.
-     * - discovery: A note on how the services were discovered/configured.
-     * - live: The primary live URL (e.g., portfolio page) if applicable.
-     * - github: The GitHub URL for the project.
-     * - colorClass: A CSS class for domain-specific color coding.
-     * - services: An array of service objects, each with a label, URL, and port.
+     * Data Model: Each domain includes:
+     *  - domain: The domain name.
+     *  - capacity: A short, human-friendly tagline.
+     *  - discovery: How the services were discovered or configured.
+     *  - live: The primary live URL (if applicable).
+     *  - github: A GitHub URL for the project (if applicable).
+     *  - colorClass: A CSS class for color-coding.
+     *  - services: An array of service objects with label, url, and port.
      */
     const domains = [
       {
@@ -226,7 +264,7 @@
       {
         domain: 'marchdown.net',
         capacity: 'Experimental & Edgy',
-        discovery: 'Registrar API with manual tweaks.',
+        discovery: 'Registrar API + manual tweaks.',
         live: 'http://void.marchdown.net',
         github: 'https://github.com/uprootiny/marchdown',
         colorClass: 'domain-marchdown',
@@ -250,7 +288,6 @@
           { label: 'Ollama (443)', url: 'https://ollama.dissemblage.art', port: 443 },
           { label: 'Studio (8080)', url: 'http://studio.dissemblage.art', port: 8080 },
           { label: 'Lab (443)', url: 'https://lab.dissemblage.art', port: 443 },
-          // Example: a link to a specific dashboard page hosted via nginx:
           { label: 'Dashboard (80)', url: 'http://dashboard.dissemblage.art', port: 80 }
         ]
       },
@@ -306,7 +343,7 @@
         capacity: 'Central Dashboard Hub',
         discovery: 'Aggregated status from creative projects.',
         live: 'https://dashboard.dissemblage.art',
-        github: '',  // If available, add repo link here.
+        github: '', // Add GitHub repo URL if available.
         colorClass: 'domain-dashboard',
         services: [
           { label: 'Main Dashboard (443)', url: 'https://dashboard.dissemblage.art', port: 443 },
@@ -315,16 +352,16 @@
         ]
       }
     ];
-    
+
     // Initialize each service's history array.
     domains.forEach(domain => {
       domain.services.forEach(service => {
         service.history = [];
       });
     });
-    
+
     /**
-     * Draw a sparkline chart on a canvas.
+     * Draw a minimal sparkline chart on a canvas.
      * @param {HTMLCanvasElement} canvas - The canvas element.
      * @param {number[]} data - Array of numeric data points.
      */
@@ -348,9 +385,9 @@
       ctx.lineWidth = 1;
       ctx.stroke();
     }
-    
+
     /**
-     * Ping a service using a HEAD request with a timeout.
+     * Ping a service using a HEAD request with timeout.
      * @param {string} url - The endpoint URL.
      * @param {number} timeout - Timeout in milliseconds.
      * @returns {Promise<object>} - A status object.
@@ -373,9 +410,54 @@
         return { status: 'down', responseTime: 'N/A', statusCode: 'N/A', error: error.name === 'AbortError' ? 'Timeout' : error.message };
       }
     }
-    
+
     /**
-     * Refresh the status for all services.
+     * Returns a generic set of deployment instructions for a service.
+     * You can expand this function to provide more dynamic or algorithmically generated instructions.
+     * @param {object} service - The service object.
+     * @returns {string} - HTML string with instructions.
+     */
+    function getDeploymentInstructions(service) {
+      return `
+        <h3>Deployment Instructions for ${service.label}</h3>
+        <p>To deploy your application at <strong>${service.url}</strong> on port <strong>${service.port}</strong>, follow these steps:</p>
+        <ol>
+          <li>Configure DNS for this endpoint. For example, create a record for <code>${service.url}</code> pointing to your server's IP address.</li>
+          <li>Set up your web server (e.g., Nginx) with a virtual host for <code>${service.url}</code>. If needed, configure a reverse proxy.</li>
+          <li>If deploying a dynamic application, use your preferred deployment method. For example, if using Docker:
+            <pre><code>docker run -d -p ${service.port}:${service.port} your-docker-image</code></pre>
+          </li>
+          <li>Test the endpoint: <code>curl -I ${service.url}</code> or visit it in your browser.</li>
+          <li>Monitor logs and performance (e.g., using <code>tail -f /var/log/nginx/access.log</code>).</li>
+        </ol>
+        <p>Adjust these steps as necessary for your specific technology stack.</p>
+      `;
+    }
+
+    /**
+     * Show the deployment instructions in a modal dialog.
+     * @param {object} service - The service object.
+     */
+    function showInstructions(service) {
+      const modal = document.getElementById('instructionModal');
+      const modalBody = document.getElementById('modalBody');
+      modalBody.innerHTML = getDeploymentInstructions(service);
+      modal.style.display = 'block';
+    }
+
+    // Modal close handling.
+    document.getElementById('modalClose').onclick = function() {
+      document.getElementById('instructionModal').style.display = 'none';
+    };
+    window.onclick = function(event) {
+      const modal = document.getElementById('instructionModal');
+      if (event.target === modal) {
+        modal.style.display = 'none';
+      }
+    };
+
+    /**
+     * Refresh the status of all services.
      */
     async function refreshDashboard() {
       for (const domain of domains) {
@@ -394,7 +476,7 @@
       renderDashboard();
       document.getElementById('lastRefreshed').textContent = 'Last refreshed: ' + new Date().toLocaleString();
     }
-    
+
     /**
      * Render the dashboard as an accordion with a table per domain.
      */
@@ -402,7 +484,7 @@
       const container = document.getElementById('dashboard-container');
       container.innerHTML = '';
       domains.forEach(domain => {
-        // Create accordion header.
+        // Accordion header.
         const acc = document.createElement('button');
         acc.className = `accordion ${domain.colorClass}`;
         acc.textContent = `${domain.domain} (${domain.capacity})`;
@@ -412,15 +494,15 @@
           panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
         });
         container.appendChild(acc);
-        
-        // Create panel for domain details.
+
+        // Panel for domain details.
         const panel = document.createElement('div');
         panel.className = 'panel';
         const meta = document.createElement('div');
         meta.className = 'meta';
         meta.innerHTML = `<strong>Discovery:</strong> ${domain.discovery}`;
         panel.appendChild(meta);
-        
+
         // Create table for services.
         const table = document.createElement('table');
         const thead = document.createElement('thead');
@@ -433,39 +515,40 @@
             <th>Response (ms)</th>
             <th>Sparkline</th>
             <th>Links</th>
+            <th>Deploy</th>
           </tr>
         `;
         table.appendChild(thead);
         const tbody = document.createElement('tbody');
         domain.services.forEach(service => {
           const tr = document.createElement('tr');
-          
+
           // Service label.
           const tdLabel = document.createElement('td');
           tdLabel.textContent = service.label;
           tr.appendChild(tdLabel);
-          
+
           // URL with live link.
           const tdUrl = document.createElement('td');
           tdUrl.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">${service.url}</a>`;
           tr.appendChild(tdUrl);
-          
+
           // Port.
           const tdPort = document.createElement('td');
           tdPort.textContent = service.port;
           tr.appendChild(tdPort);
-          
+
           // Status.
           const tdStatus = document.createElement('td');
           tdStatus.textContent = service.status ? service.status.toUpperCase() : 'N/A';
           tdStatus.className = 'status ' + (service.status || '');
           tr.appendChild(tdStatus);
-          
+
           // Response time.
           const tdResponse = document.createElement('td');
           tdResponse.textContent = service.responseTime || 'N/A';
           tr.appendChild(tdResponse);
-          
+
           // Sparkline.
           const tdGraph = document.createElement('td');
           const sparkCanvas = document.createElement('canvas');
@@ -477,13 +560,22 @@
             drawSparkline(sparkCanvas, service.history);
           }
           tr.appendChild(tdGraph);
-          
+
           // Links: Live and GitHub.
           const tdLinks = document.createElement('td');
           tdLinks.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">Live</a>` +
             (domain.github ? ` | <a class="live-link" href="${domain.github}" target="_blank">GitHub</a>` : '');
           tr.appendChild(tdLinks);
-          
+
+          // Deploy Button.
+          const tdDeploy = document.createElement('td');
+          const deployBtn = document.createElement('button');
+          deployBtn.className = 'deploy-btn';
+          deployBtn.textContent = 'Deploy';
+          deployBtn.onclick = () => showInstructions(service);
+          tdDeploy.appendChild(deployBtn);
+          tr.appendChild(tdDeploy);
+
           tbody.appendChild(tr);
         });
         table.appendChild(tbody);
@@ -491,7 +583,7 @@
         container.appendChild(panel);
       });
     }
-    
+
     // Auto-refresh every 5 minutes.
     setInterval(refreshDashboard, 5 * 60 * 1000);
     refreshDashboard();

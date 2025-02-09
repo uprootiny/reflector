@@ -2,7 +2,7 @@
 <html lang="en">
 <head>
   <meta charset="UTF-8">
-  <title>Enhanced Endpoint Monitoring Dashboard</title>
+  <title>Comprehensive Endpoint Dashboard</title>
   <style>
     body { 
       font-family: Menlo, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
@@ -13,186 +13,327 @@
       text-align: center;
       margin-bottom: 20px;
     }
-    table {
-      border-collapse: collapse;
-      width: 100%;
-      background-color: #fff;
-      box-shadow: 0 2px 3px rgba(0,0,0,0.1);
-    }
-    th, td {
-      padding: 12px;
-      text-align: left;
-      border-bottom: 1px solid #e0e0e0;
-    }
-    th {
+    /* Accordion button styles */
+    .accordion {
       background-color: #3498db;
       color: white;
-      font-weight: 600;
+      cursor: pointer;
+      padding: 12px;
+      width: 100%;
+      border: none;
+      text-align: left;
+      outline: none;
+      font-size: 18px;
+      transition: background-color 0.3s ease;
+      margin-bottom: 5px;
+    }
+    .accordion:hover {
+      background-color: #2980b9;
+    }
+    .accordion.active {
+      background-color: #2980b9;
+    }
+    .panel {
+      padding: 0 12px;
+      background-color: white;
+      display: none;
+      overflow: hidden;
+      border: 1px solid #ccc;
+      margin-bottom: 10px;
+    }
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      margin-bottom: 10px;
+    }
+    th, td {
+      padding: 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 14px;
+    }
+    th {
+      background-color: #2c3e50;
+      color: white;
       text-transform: uppercase;
     }
-    tr:nth-child(even) {
-      background-color: #f9f9f9;
+    .status {
+      font-weight: bold;
     }
-    .up {
+    .status.up {
       color: green;
-      font-weight: bold;
+      /* Breathing light animation */
+      animation: breathing 2s infinite;
     }
-    .down {
+    .status.down {
       color: red;
+    }
+    @keyframes breathing {
+      0% { box-shadow: 0 0 5px green; }
+      50% { box-shadow: 0 0 15px green; }
+      100% { box-shadow: 0 0 5px green; }
+    }
+    .sparkline {
+      width: 100px;
+      height: 30px;
+    }
+    .live-link {
+      text-decoration: none;
+      color: #007bff;
       font-weight: bold;
     }
-    .error {
-      color: orange;
-    }
-    button {
-      margin-bottom: 10px;
-      padding: 8px 16px;
-      background-color: #007bff;
-      color: white;
-      border: none;
-      border-radius: 4px;
-      cursor: pointer;
-    }
-    input[type="text"] {
-      padding: 8px;
-      width: 300px;
-      margin-right: 5px;
-      border: 1px solid #ccc;
-      border-radius: 4px;
+    .meta {
+      font-size: 13px;
+      color: #555;
+      margin-bottom: 8px;
     }
     .refresh-timestamp {
-      font-size: 0.9em;
-      color: #555;
       text-align: right;
-      padding: 10px;
+      font-size: 0.9em;
+      color: #333;
+      margin-top: 10px;
     }
   </style>
 </head>
 <body>
-  <h1>Enhanced Endpoint Monitoring Dashboard</h1>
+  <h1>Comprehensive Endpoint Dashboard</h1>
+  <p class="meta">
+    This dashboard monitors multiple domains and their services. Click a domain header to expand its details.
+  </p>
   
-  <!-- Dynamic endpoint input -->
-  <div style="text-align: center; margin-bottom: 20px;">
-    <input type="text" id="newEndpoint" placeholder="Enter new endpoint URL">
-    <button onclick="addEndpoint()">Add Endpoint</button>
-    <button onclick="refreshDashboard()">Refresh Now</button>
+  <div id="dashboard-container">
+    <!-- Dynamic content will be injected here -->
   </div>
-
-  <table id="dashboard" aria-live="polite">
-    <thead>
-      <tr>
-        <th>Endpoint</th>
-        <th>Status</th>
-        <th>Response Time (ms)</th>
-        <th>HTTP Status</th>
-        <th>Error</th>
-      </tr>
-    </thead>
-    <tbody id="dashboard-body">
-      <!-- Dynamic results go here -->
-    </tbody>
-    <tfoot>
-      <tr>
-        <td colspan="5" class="refresh-timestamp" id="lastRefreshed"></td>
-      </tr>
-    </tfoot>
-  </table>
-
+  
+  <div class="refresh-timestamp" id="lastRefreshed">Last refreshed: --</div>
+  
   <script>
-    // Initial list of endpoints
-    const endpoints = [
-      'https://cyrillrafael.com',
-      'https://cyrillrafael.org',
-      'https://marchdown.net',
-      'https://thepresence.org',
-      'https://xenoethics.info',
-      'https://xenoethics.org'
+    // Define your domains, each with service endpoints and metadata.
+    const domains = [
+      {
+        domain: 'cyrillrafael.com',
+        capacity: 'High throughput, low latency',
+        discovery: 'Auto-discovered via DNS',
+        services: [
+          { label: 'Homepage', url: 'https://cyrillrafael.com', port: 443 },
+          { label: 'API', url: 'https://cyrillrafael.com/api', port: 443 },
+          { label: 'Custom Service', url: 'http://cyrillrafael.com', port: 8080 }
+        ]
+      },
+      {
+        domain: 'cyrillrafael.org',
+        capacity: 'Standard capacity',
+        discovery: 'Manual configuration',
+        services: [
+          { label: 'Homepage', url: 'https://cyrillrafael.org', port: 443 },
+          { label: 'Blog', url: 'https://cyrillrafael.org/blog', port: 443 }
+        ]
+      },
+      {
+        domain: 'marchdown.net',
+        capacity: 'Medium load',
+        discovery: 'Auto via registrar API',
+        services: [
+          { label: 'Site', url: 'https://marchdown.net', port: 443 }
+        ]
+      },
+      {
+        domain: 'thepresence.org',
+        capacity: 'Light usage',
+        discovery: 'Manual',
+        services: [
+          { label: 'Main Site', url: 'https://thepresence.org', port: 443 }
+        ]
+      },
+      {
+        domain: 'xenoethics.info',
+        capacity: 'Experimental',
+        discovery: 'Manual',
+        services: [
+          { label: 'Info', url: 'https://xenoethics.info', port: 443 }
+        ]
+      },
+      {
+        domain: 'xenoethics.org',
+        capacity: 'Experimental',
+        discovery: 'Manual',
+        services: [
+          { label: 'Org Site', url: 'https://xenoethics.org', port: 443 }
+        ]
+      }
     ];
-
-    // Function to perform a HEAD request with timeout
-    async function pingEndpoint(url, timeout = 5000) {
+    
+    // For each service, maintain a history array for sparkline (latest 20 response times).
+    domains.forEach(domain => {
+      domain.services.forEach(service => {
+        service.history = [];
+      });
+    });
+    
+    // Draw a simple sparkline in a canvas based on an array of numbers.
+    function drawSparkline(canvas, data) {
+      const ctx = canvas.getContext('2d');
+      const width = canvas.width, height = canvas.height;
+      ctx.clearRect(0, 0, width, height);
+      if (data.length === 0) return;
+      const maxVal = Math.max(...data, 1);
+      const minVal = Math.min(...data, 0);
+      const range = maxVal - minVal || 1;
+      const step = width / (data.length - 1);
+      ctx.beginPath();
+      ctx.moveTo(0, height - ((data[0] - minVal) / range) * height);
+      for (let i = 1; i < data.length; i++) {
+        const x = i * step;
+        const y = height - ((data[i] - minVal) / range) * height;
+        ctx.lineTo(x, y);
+      }
+      ctx.strokeStyle = '#007bff';
+      ctx.lineWidth = 1;
+      ctx.stroke();
+    }
+    
+    // Ping a service using a HEAD request with timeout.
+    async function pingService(url, timeout = 5000) {
       const controller = new AbortController();
       const timeoutId = setTimeout(() => controller.abort(), timeout);
       const start = performance.now();
       try {
-        // Remove mode: 'no-cors' if your endpoints have proper CORS headers.
         const response = await fetch(url, { method: 'HEAD', signal: controller.signal });
         clearTimeout(timeoutId);
         const duration = Math.round(performance.now() - start);
         if (response.ok) {
-          return { url, status: 'up', responseTime: duration, statusCode: response.status };
+          return { status: 'up', responseTime: duration, statusCode: response.status };
         } else {
-          return { url, status: 'down', responseTime: 'N/A', statusCode: response.status, error: `HTTP ${response.status}` };
+          return { status: 'down', responseTime: 'N/A', statusCode: response.status, error: `HTTP ${response.status}` };
         }
       } catch (error) {
         clearTimeout(timeoutId);
-        console.error(`Error pinging ${url}:`, error);
-        return { url, status: 'down', responseTime: 'N/A', statusCode: 'N/A', error: error.name === 'AbortError' ? 'Timeout' : error.message };
+        return { status: 'down', responseTime: 'N/A', statusCode: 'N/A', error: error.name === 'AbortError' ? 'Timeout' : error.message };
       }
     }
-
-    // Refresh the dashboard and update the table
+    
+    // Refresh all service statuses.
     async function refreshDashboard() {
-      const tbody = document.getElementById('dashboard-body');
-      tbody.innerHTML = '';  // Clear previous results
-      
-      // Display a loading row
-      const loadingRow = document.createElement('tr');
-      loadingRow.innerHTML = '<td colspan="5">Checking endpoints...</td>';
-      tbody.appendChild(loadingRow);
-
-      try {
-        // Use Promise.allSettled for robust handling
-        const results = await Promise.allSettled(endpoints.map(url => pingEndpoint(url)));
-        tbody.innerHTML = '';  // Clear loading indicator
-
-        results.forEach(result => {
-          if (result.status === 'fulfilled') {
-            const data = result.value;
-            const tr = document.createElement('tr');
-            // Set the status class based on the result
-            let statusClass = data.status;
-            tr.innerHTML = `
-              <td>${data.url}</td>
-              <td class="${statusClass}">${data.status.toUpperCase()}</td>
-              <td>${data.responseTime}</td>
-              <td>${data.statusCode}</td>
-              <td>${data.error || ''}</td>
-            `;
-            tbody.appendChild(tr);
-          } else {
-            // In case a promise is rejected unexpectedly
-            console.error('Unexpected error:', result.reason);
+      // For each domain and each service, ping the service.
+      for (const domain of domains) {
+        for (const service of domain.services) {
+          const result = await pingService(service.url);
+          service.status = result.status;
+          service.responseTime = result.responseTime;
+          service.statusCode = result.statusCode;
+          service.error = result.error || '';
+          // If numeric response, record in history.
+          if (typeof result.responseTime === 'number') {
+            service.history.push(result.responseTime);
+            if (service.history.length > 20) service.history.shift();
           }
-        });
-      } catch (error) {
-        console.error('Dashboard refresh failed:', error);
+        }
       }
-
-      // Update the "Last refreshed" timestamp
+      renderDashboard();
       document.getElementById('lastRefreshed').textContent = 'Last refreshed: ' + new Date().toLocaleString();
     }
-
-    // Function to add a new endpoint from user input
-    function addEndpoint() {
-      const newEndpointInput = document.getElementById('newEndpoint');
-      const newEndpoint = newEndpointInput.value.trim();
-      if (newEndpoint !== '' && !endpoints.includes(newEndpoint)) {
-        endpoints.push(newEndpoint);
-        newEndpointInput.value = ''; // Clear the input field
-        refreshDashboard(); // Immediately refresh to include the new endpoint
-      }
+    
+    // Render the dashboard by creating accordion sections for each domain.
+    function renderDashboard() {
+      const container = document.getElementById('dashboard-container');
+      container.innerHTML = '';
+      domains.forEach(domain => {
+        // Accordion button for the domain.
+        const acc = document.createElement('button');
+        acc.className = 'accordion';
+        acc.textContent = `${domain.domain} (${domain.capacity})`;
+        acc.addEventListener('click', function() {
+          this.classList.toggle('active');
+          const panel = this.nextElementSibling;
+          panel.style.display = panel.style.display === 'block' ? 'none' : 'block';
+        });
+        container.appendChild(acc);
+        
+        // Panel container for service details.
+        const panel = document.createElement('div');
+        panel.className = 'panel';
+        // Domain metadata.
+        const meta = document.createElement('div');
+        meta.className = 'meta';
+        meta.innerHTML = `<strong>Discovery:</strong> ${domain.discovery}`;
+        panel.appendChild(meta);
+        
+        // Table for services.
+        const table = document.createElement('table');
+        const thead = document.createElement('thead');
+        thead.innerHTML = `
+          <tr>
+            <th>Service</th>
+            <th>URL</th>
+            <th>Port</th>
+            <th>Status</th>
+            <th>Response (ms)</th>
+            <th>Sparkline</th>
+            <th>Links</th>
+          </tr>
+        `;
+        table.appendChild(thead);
+        const tbody = document.createElement('tbody');
+        domain.services.forEach(service => {
+          const tr = document.createElement('tr');
+          
+          // Service label.
+          const tdLabel = document.createElement('td');
+          tdLabel.textContent = service.label;
+          tr.appendChild(tdLabel);
+          
+          // URL.
+          const tdUrl = document.createElement('td');
+          tdUrl.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">${service.url}</a>`;
+          tr.appendChild(tdUrl);
+          
+          // Port.
+          const tdPort = document.createElement('td');
+          tdPort.textContent = service.port;
+          tr.appendChild(tdPort);
+          
+          // Status.
+          const tdStatus = document.createElement('td');
+          tdStatus.textContent = service.status ? service.status.toUpperCase() : 'N/A';
+          tdStatus.className = 'status ' + (service.status || '');
+          tr.appendChild(tdStatus);
+          
+          // Response time.
+          const tdResponse = document.createElement('td');
+          tdResponse.textContent = service.responseTime || 'N/A';
+          tr.appendChild(tdResponse);
+          
+          // Sparkline graph.
+          const tdGraph = document.createElement('td');
+          const sparkCanvas = document.createElement('canvas');
+          sparkCanvas.className = 'sparkline';
+          sparkCanvas.width = 100;
+          sparkCanvas.height = 30;
+          tdGraph.appendChild(sparkCanvas);
+          if (service.history && service.history.length > 0) {
+            drawSparkline(sparkCanvas, service.history);
+          }
+          tr.appendChild(tdGraph);
+          
+          // Live links.
+          const tdLinks = document.createElement('td');
+          // Here we assume a placeholder GitHub repo URL based on the domain.
+          tdLinks.innerHTML = `<a class="live-link" href="${service.url}" target="_blank">Live</a> | 
+                               <a class="live-link" href="https://github.com/uprootiny/${domain.domain}" target="_blank">GitHub</a>`;
+          tr.appendChild(tdLinks);
+          
+          tbody.appendChild(tr);
+        });
+        table.appendChild(tbody);
+        panel.appendChild(table);
+        container.appendChild(panel);
+      });
     }
-
-    // Start periodic refresh (e.g., every 5 minutes)
-    function startPeriodicRefresh(intervalMinutes = 5) {
-      refreshDashboard();  // Initial load
-      setInterval(refreshDashboard, intervalMinutes * 60 * 1000);
-    }
-
-    window.addEventListener('load', () => {
-      startPeriodicRefresh(5);
-    });
+    
+    // Start periodic refresh every 5 minutes.
+    setInterval(refreshDashboard, 5 * 60 * 1000);
+    // Initial load.
+    refreshDashboard();
   </script>
 </body>
 </html>

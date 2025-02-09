@@ -1,0 +1,198 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Enhanced Endpoint Monitoring Dashboard</title>
+  <style>
+    body { 
+      font-family: Menlo, 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; 
+      margin: 20px; 
+      background-color: #f4f4f4;
+    }
+    h1 {
+      text-align: center;
+      margin-bottom: 20px;
+    }
+    table {
+      border-collapse: collapse;
+      width: 100%;
+      background-color: #fff;
+      box-shadow: 0 2px 3px rgba(0,0,0,0.1);
+    }
+    th, td {
+      padding: 12px;
+      text-align: left;
+      border-bottom: 1px solid #e0e0e0;
+    }
+    th {
+      background-color: #3498db;
+      color: white;
+      font-weight: 600;
+      text-transform: uppercase;
+    }
+    tr:nth-child(even) {
+      background-color: #f9f9f9;
+    }
+    .up {
+      color: green;
+      font-weight: bold;
+    }
+    .down {
+      color: red;
+      font-weight: bold;
+    }
+    .error {
+      color: orange;
+    }
+    button {
+      margin-bottom: 10px;
+      padding: 8px 16px;
+      background-color: #007bff;
+      color: white;
+      border: none;
+      border-radius: 4px;
+      cursor: pointer;
+    }
+    input[type="text"] {
+      padding: 8px;
+      width: 300px;
+      margin-right: 5px;
+      border: 1px solid #ccc;
+      border-radius: 4px;
+    }
+    .refresh-timestamp {
+      font-size: 0.9em;
+      color: #555;
+      text-align: right;
+      padding: 10px;
+    }
+  </style>
+</head>
+<body>
+  <h1>Enhanced Endpoint Monitoring Dashboard</h1>
+  
+  <!-- Dynamic endpoint input -->
+  <div style="text-align: center; margin-bottom: 20px;">
+    <input type="text" id="newEndpoint" placeholder="Enter new endpoint URL">
+    <button onclick="addEndpoint()">Add Endpoint</button>
+    <button onclick="refreshDashboard()">Refresh Now</button>
+  </div>
+
+  <table id="dashboard" aria-live="polite">
+    <thead>
+      <tr>
+        <th>Endpoint</th>
+        <th>Status</th>
+        <th>Response Time (ms)</th>
+        <th>HTTP Status</th>
+        <th>Error</th>
+      </tr>
+    </thead>
+    <tbody id="dashboard-body">
+      <!-- Dynamic results go here -->
+    </tbody>
+    <tfoot>
+      <tr>
+        <td colspan="5" class="refresh-timestamp" id="lastRefreshed"></td>
+      </tr>
+    </tfoot>
+  </table>
+
+  <script>
+    // Initial list of endpoints
+    const endpoints = [
+      'https://cyrillrafael.com',
+      'https://cyrillrafael.org',
+      'https://marchdown.net',
+      'https://thepresence.org',
+      'https://xenoethics.info',
+      'https://xenoethics.org'
+    ];
+
+    // Function to perform a HEAD request with timeout
+    async function pingEndpoint(url, timeout = 5000) {
+      const controller = new AbortController();
+      const timeoutId = setTimeout(() => controller.abort(), timeout);
+      const start = performance.now();
+      try {
+        // Remove mode: 'no-cors' if your endpoints have proper CORS headers.
+        const response = await fetch(url, { method: 'HEAD', signal: controller.signal });
+        clearTimeout(timeoutId);
+        const duration = Math.round(performance.now() - start);
+        if (response.ok) {
+          return { url, status: 'up', responseTime: duration, statusCode: response.status };
+        } else {
+          return { url, status: 'down', responseTime: 'N/A', statusCode: response.status, error: `HTTP ${response.status}` };
+        }
+      } catch (error) {
+        clearTimeout(timeoutId);
+        console.error(`Error pinging ${url}:`, error);
+        return { url, status: 'down', responseTime: 'N/A', statusCode: 'N/A', error: error.name === 'AbortError' ? 'Timeout' : error.message };
+      }
+    }
+
+    // Refresh the dashboard and update the table
+    async function refreshDashboard() {
+      const tbody = document.getElementById('dashboard-body');
+      tbody.innerHTML = '';  // Clear previous results
+      
+      // Display a loading row
+      const loadingRow = document.createElement('tr');
+      loadingRow.innerHTML = '<td colspan="5">Checking endpoints...</td>';
+      tbody.appendChild(loadingRow);
+
+      try {
+        // Use Promise.allSettled for robust handling
+        const results = await Promise.allSettled(endpoints.map(url => pingEndpoint(url)));
+        tbody.innerHTML = '';  // Clear loading indicator
+
+        results.forEach(result => {
+          if (result.status === 'fulfilled') {
+            const data = result.value;
+            const tr = document.createElement('tr');
+            // Set the status class based on the result
+            let statusClass = data.status;
+            tr.innerHTML = `
+              <td>${data.url}</td>
+              <td class="${statusClass}">${data.status.toUpperCase()}</td>
+              <td>${data.responseTime}</td>
+              <td>${data.statusCode}</td>
+              <td>${data.error || ''}</td>
+            `;
+            tbody.appendChild(tr);
+          } else {
+            // In case a promise is rejected unexpectedly
+            console.error('Unexpected error:', result.reason);
+          }
+        });
+      } catch (error) {
+        console.error('Dashboard refresh failed:', error);
+      }
+
+      // Update the "Last refreshed" timestamp
+      document.getElementById('lastRefreshed').textContent = 'Last refreshed: ' + new Date().toLocaleString();
+    }
+
+    // Function to add a new endpoint from user input
+    function addEndpoint() {
+      const newEndpointInput = document.getElementById('newEndpoint');
+      const newEndpoint = newEndpointInput.value.trim();
+      if (newEndpoint !== '' && !endpoints.includes(newEndpoint)) {
+        endpoints.push(newEndpoint);
+        newEndpointInput.value = ''; // Clear the input field
+        refreshDashboard(); // Immediately refresh to include the new endpoint
+      }
+    }
+
+    // Start periodic refresh (e.g., every 5 minutes)
+    function startPeriodicRefresh(intervalMinutes = 5) {
+      refreshDashboard();  // Initial load
+      setInterval(refreshDashboard, intervalMinutes * 60 * 1000);
+    }
+
+    window.addEventListener('load', () => {
+      startPeriodicRefresh(5);
+    });
+  </script>
+</body>
+</html>

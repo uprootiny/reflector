@@ -1,0 +1,1136 @@
+<!doctype html>
+<html lang="en">
+    <head>
+        <meta charset="UTF-8" />
+        <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+        <title>Project Dashboard | lab.dissemblage.art</title>
+        <style>
+            /* Base variables */
+            :root {
+                --font-menlo: "Menlo", monospace;
+                --background-dark: #080c14;
+                --background-darker: #050a10;
+                --text-primary: rgba(255, 255, 255, 0.95);
+                --text-secondary: rgba(255, 255, 255, 0.75);
+                --text-tertiary: rgba(255, 255, 255, 0.6);
+
+                /* Glow colors */
+                --glow-cyan: rgba(64, 224, 208, 0.85);
+                --glow-blue: rgba(64, 128, 255, 0.85);
+                --glow-indigo: rgba(128, 64, 255, 0.85);
+                --glow-purple: rgba(192, 64, 255, 0.85);
+                --glow-magenta: rgba(255, 64, 192, 0.85);
+                --glow-rose: rgba(255, 64, 128, 0.85);
+                --glow-amber: rgba(255, 192, 64, 0.85);
+                --glow-green: rgba(64, 192, 128, 0.85);
+
+                /* Sizing and spacing */
+                --spacing-xs: 0.5rem;
+                --spacing-sm: 1rem;
+                --spacing-md: 1.5rem;
+                --spacing-lg: 2.5rem;
+                --spacing-xl: 4rem;
+                --header-height: 4rem;
+                --sidebar-width: 280px;
+                --card-border-radius: 16px;
+                --card-inner-radius: 12px;
+
+                /* Animation */
+                --transition-speed: 0.3s;
+                --breathe-duration: 4s;
+                --pulse-duration: 6s;
+                --glitch-duration: 0.2s;
+            }
+
+            /* Reset and base styles */
+            * {
+                box-sizing: border-box;
+                margin: 0;
+                padding: 0;
+            }
+
+            body {
+                font-family: var(--font-menlo);
+                background: var(--background-dark);
+                background-image:
+                    radial-gradient(
+                        circle at 20% 20%,
+                        rgba(64, 128, 255, 0.05) 0%,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        circle at 80% 60%,
+                        rgba(255, 64, 128, 0.05) 0%,
+                        transparent 50%
+                    ),
+                    radial-gradient(
+                        circle at 50% 100%,
+                        rgba(64, 224, 208, 0.05) 0%,
+                        transparent 50%
+                    );
+                color: var(--text-primary);
+                line-height: 1.6;
+                min-height: 100vh;
+                display: flex;
+                flex-direction: column;
+            }
+
+            /* Header styles */
+            header {
+                height: var(--header-height);
+                background-color: rgba(5, 10, 15, 0.8);
+                backdrop-filter: blur(8px);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                position: fixed;
+                top: 0;
+                width: 100%;
+                z-index: 100;
+                display: flex;
+                align-items: center;
+                justify-content: space-between;
+                padding: 0 var(--spacing-md);
+            }
+
+            .header-logo {
+                display: flex;
+                align-items: center;
+            }
+
+            .logo-icon {
+                width: 32px;
+                height: 32px;
+                background-color: rgba(64, 128, 255, 0.1);
+                border-radius: 8px;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                box-shadow: 0 0 10px rgba(64, 128, 255, 0.3);
+            }
+
+            .logo-text {
+                font-size: 1.25rem;
+                font-weight: 600;
+                background: linear-gradient(
+                    135deg,
+                    var(--glow-cyan),
+                    var(--glow-blue)
+                );
+                background-clip: text;
+                -webkit-background-clip: text;
+                color: transparent;
+                margin-left: var(--spacing-xs);
+            }
+
+            .header-controls {
+                display: flex;
+                align-items: center;
+                gap: var(--spacing-md);
+            }
+
+            .system-status {
+                display: flex;
+                align-items: center;
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+            }
+
+            .status-indicator {
+                width: 8px;
+                height: 8px;
+                border-radius: 50%;
+                background-color: #4ade80;
+                box-shadow: 0 0 10px #4ade80;
+                margin-right: 8px;
+                animation: pulse var(--pulse-duration) infinite;
+            }
+
+            /* Layout containers */
+            .container {
+                width: 100%;
+                max-width: 1400px;
+                margin: 0 auto;
+                padding: var(--spacing-md);
+            }
+
+            .dashboard-grid {
+                display: grid;
+                grid-template-columns: var(--sidebar-width) 1fr;
+                gap: var(--spacing-md);
+                margin-top: var(--header-height);
+            }
+
+            /* Sidebar styles */
+            .sidebar {
+                background: rgba(5, 10, 15, 0.7);
+                border-radius: var(--card-border-radius);
+                border: 1px solid rgba(255, 255, 255, 0.1);
+                padding: var(--spacing-md);
+                height: calc(
+                    100vh - var(--header-height) - (var(--spacing-md) * 2)
+                );
+                position: sticky;
+                top: calc(var(--header-height) + var(--spacing-md));
+                overflow-y: auto;
+            }
+
+            .nav-section {
+                margin-bottom: var(--spacing-md);
+            }
+
+            .nav-title {
+                font-size: 0.8rem;
+                text-transform: uppercase;
+                letter-spacing: 1px;
+                color: var(--text-tertiary);
+                margin-bottom: var(--spacing-xs);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+                padding-bottom: var(--spacing-xs);
+            }
+
+            .nav-list {
+                list-style-type: none;
+            }
+
+            .nav-item {
+                margin-bottom: var(--spacing-xs);
+            }
+
+            .nav-link {
+                color: var(--text-secondary);
+                text-decoration: none;
+                font-size: 0.9rem;
+                display: flex;
+                align-items: center;
+                padding: var(--spacing-xs);
+                border-radius: 4px;
+                transition: background-color var(--transition-speed) ease;
+            }
+
+            .nav-link:hover {
+                background-color: rgba(255, 255, 255, 0.05);
+                color: var(--text-primary);
+            }
+
+            .nav-link.active {
+                background-color: rgba(64, 128, 255, 0.1);
+                color: var(--glow-blue);
+                border-left: 3px solid var(--glow-blue);
+                padding-left: calc(var(--spacing-xs) - 3px);
+            }
+
+            .nav-icon {
+                width: 18px;
+                height: 18px;
+                margin-right: 8px;
+                opacity: 0.7;
+            }
+
+            /* Status indicators */
+            .system-status {
+                display: flex;
+                align-items: center;
+                margin-top: var(--spacing-lg);
+                padding-top: var(--spacing-md);
+                border-top: 1px solid rgba(255, 255, 255, 0.1);
+            }
+
+            .status-text {
+                font-size: 0.8rem;
+                color: var(--text-secondary);
+            }
+
+            /* Main content area */
+            .main-content {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-lg);
+            }
+
+            /* Dashboard section styles */
+            .dashboard-section {
+                margin-bottom: var(--spacing-lg);
+            }
+
+            .section-header {
+                margin-bottom: var(--spacing-md);
+                position: relative;
+            }
+
+            .section-title {
+                font-size: 1.5rem;
+                margin-bottom: var(--spacing-xs);
+                color: var(--text-primary);
+            }
+
+            .section-subtitle {
+                font-size: 0.9rem;
+                color: var(--text-secondary);
+            }
+
+            /* Project grid */
+            .project-grid {
+                display: grid;
+                grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+                gap: var(--spacing-md);
+            }
+
+            .project-card {
+                background: rgba(5, 10, 15, 0.6);
+                border-radius: var(--card-border-radius);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                overflow: hidden;
+                transition: all var(--transition-speed) ease;
+                position: relative;
+            }
+
+            .project-card:hover {
+                transform: translateY(-4px);
+                box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+                border-color: rgba(255, 255, 255, 0.1);
+            }
+
+            .project-header {
+                padding: var(--spacing-sm);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: relative;
+            }
+
+            .project-header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 3px;
+                background: var(--project-glow);
+            }
+
+            .project-name {
+                font-size: 1.1rem;
+                font-weight: 600;
+            }
+
+            .project-score {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.85rem;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .project-content {
+                padding: var(--spacing-md);
+            }
+
+            .project-path {
+                font-size: 0.8rem;
+                color: var(--text-tertiary);
+                margin-bottom: var(--spacing-sm);
+                font-style: italic;
+            }
+
+            .project-description {
+                margin-bottom: var(--spacing-md);
+                color: var(--text-secondary);
+            }
+
+            .metrics-grid {
+                display: grid;
+                grid-template-columns: repeat(2, 1fr);
+                gap: var(--spacing-sm);
+                margin-bottom: var(--spacing-md);
+            }
+
+            .metric-item {
+                background: rgba(0, 0, 0, 0.2);
+                padding: var(--spacing-xs);
+                border-radius: 8px;
+            }
+
+            .metric-label {
+                font-size: 0.7rem;
+                color: var(--text-tertiary);
+                margin-bottom: 4px;
+                text-transform: uppercase;
+                letter-spacing: 0.5px;
+            }
+
+            .metric-value {
+                font-size: 1.2rem;
+                color: var(--text-primary);
+            }
+
+            .progress-track {
+                height: 6px;
+                background: rgba(255, 255, 255, 0.1);
+                border-radius: 3px;
+                margin-top: 6px;
+                overflow: hidden;
+            }
+
+            .progress-bar {
+                height: 100%;
+                border-radius: 3px;
+                transition: width 1s ease-out;
+            }
+
+            .tech-stack {
+                display: flex;
+                flex-wrap: wrap;
+                gap: 6px;
+                margin-top: var(--spacing-sm);
+            }
+
+            .tech-tag {
+                background: rgba(255, 255, 255, 0.05);
+                font-size: 0.7rem;
+                padding: 4px 8px;
+                border-radius: 4px;
+                color: var(--text-secondary);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            /* Project details */
+            .project-details {
+                background: rgba(5, 10, 15, 0.7);
+                border-radius: var(--card-border-radius);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                margin-bottom: var(--spacing-xl);
+                overflow: hidden;
+                backdrop-filter: blur(10px);
+            }
+
+            .details-header {
+                padding: var(--spacing-md);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                position: relative;
+            }
+
+            .details-header::before {
+                content: "";
+                position: absolute;
+                top: 0;
+                left: 0;
+                right: 0;
+                height: 4px;
+                background: var(--project-glow);
+                box-shadow: 0 0 15px var(--project-glow);
+            }
+
+            .details-title {
+                font-size: 1.5rem;
+            }
+
+            .details-meta {
+                display: flex;
+                gap: var(--spacing-sm);
+            }
+
+            .details-badge {
+                background: rgba(0, 0, 0, 0.3);
+                padding: 4px 10px;
+                border-radius: 12px;
+                font-size: 0.85rem;
+                display: flex;
+                align-items: center;
+                gap: 6px;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .details-content {
+                padding: var(--spacing-md);
+                display: grid;
+                grid-template-columns: 2fr 1fr;
+                gap: var(--spacing-lg);
+            }
+
+            .details-main {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .details-section {
+                margin-bottom: var(--spacing-md);
+            }
+
+            .details-section-title {
+                font-size: 1.1rem;
+                margin-bottom: var(--spacing-sm);
+
+                color: var(--text-primary);
+                display: flex;
+                align-items: center;
+                gap: 8px;
+            }
+
+            .details-section-title::after {
+                content: "";
+                flex-grow: 1;
+                height: 1px;
+                background: linear-gradient(
+                    to right,
+                    rgba(255, 255, 255, 0.1),
+                    transparent
+                );
+            }
+
+            .details-description {
+                color: var(--text-secondary);
+                margin-bottom: var(--spacing-md);
+                line-height: 1.6;
+            }
+
+            .details-sidebar {
+                display: flex;
+                flex-direction: column;
+                gap: var(--spacing-md);
+            }
+
+            .details-stats {
+                background: rgba(0, 0, 0, 0.2);
+                border-radius: var(--card-inner-radius);
+                padding: var(--spacing-md);
+                border: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .stat-grid {
+                display: grid;
+                grid-template-columns: 1fr;
+                gap: var(--spacing-md);
+            }
+
+            .stat-item {
+                display: flex;
+                justify-content: space-between;
+                align-items: center;
+                padding-bottom: var(--spacing-xs);
+                border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            }
+
+            .stat-label {
+                color: var(--text-tertiary);
+                font-size: 0.8rem;
+            }
+
+            .stat-value {
+                color: var(--text-primary);
+                font-weight: 600;
+            }
+
+            /* Deployment guide */
+            .deployment-guide {
+                margin-bottom: var(--spacing-xl);
+            }
+
+            .steps-container {
+                margin-top: var(--spacing-lg);
+            }
+
+            .step-item {
+                display: flex;
+                margin-bottom: var(--spacing-lg);
+                position: relative;
+            }
+
+            .step-number {
+                flex-shrink: 0;
+                width: 32px;
+                height: 32px;
+                background: var(--glow-indigo);
+                border-radius: 50%;
+                display: flex;
+                align-items: center;
+                justify-content: center;
+                font-size: 1rem;
+                margin-right: var(--spacing-md);
+                position: relative;
+                z-index: 1;
+                box-shadow: 0 0 10px var(--glow-indigo);
+            }
+
+            .step-connector {
+                position: absolute;
+                top: 32px;
+                left: 16px;
+                bottom: -32px;
+                width: 2px;
+                background: rgba(255, 255, 255, 0.1);
+                z-index: 0;
+            }
+
+            .step-item:last-child .step-connector {
+                display: none;
+            }
+
+            .step-content {
+                flex-grow: 1;
+                transform-style: preserve-3d;
+            }
+
+            .step-title {
+                font-size: 1.2rem;
+                margin-bottom: 4px;
+                color: var(--text-primary);
+            }
+
+            .step-description {
+                font-size: 0.9rem;
+                color: var(--text-secondary);
+                margin-bottom: var(--spacing-sm);
+            }
+
+            .step-code {
+                background: rgba(0, 0, 0, 0.3);
+                border-radius: 8px;
+                padding: var(--spacing-sm);
+                font-family: var(--font-menlo);
+                font-size: 0.85rem;
+                color: var(--text-tertiary);
+                overflow-x: auto;
+                border: 1px solid rgba(255, 255, 255, 0.05);
+                position: relative;
+                transform-style: preserve-3d;
+                transition: all var(--transition-speed) ease;
+            }
+
+            .step-code:hover {
+                transform: translateZ(5px);
+                box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3);
+                border-color: rgba(128, 64, 255, 0.3);
+            }
+
+            .code-comment {
+                color: #6b7280;
+            }
+
+            /* Animations */
+            @keyframes pulse {
+                0%,
+                100% {
+                    opacity: 1;
+                }
+                50% {
+                    opacity: 0.6;
+                }
+            }
+
+            @keyframes breathe {
+                0%,
+                100% {
+                    transform: scale(1);
+                }
+                50% {
+                    transform: scale(1.03);
+                }
+            }
+
+            @keyframes glow {
+                0%,
+                100% {
+                    box-shadow: 0 0 10px var(--glow-color);
+                }
+                50% {
+                    box-shadow: 0 0 20px var(--glow-color);
+                }
+            }
+
+            @keyframes glitch {
+                0%,
+                100% {
+                    transform: translate(0);
+                }
+                20% {
+                    transform: translate(2px, -2px);
+                }
+                40% {
+                    transform: translate(-2px, 2px);
+                }
+                60% {
+                    transform: translate(2px, 2px);
+                }
+                80% {
+                    transform: translate(-2px, -2px);
+                }
+            }
+
+            /* Responsive adjustments */
+            @media (max-width: 1200px) {
+                .details-content {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (max-width: 992px) {
+                .dashboard-sidebar {
+                    width: 220px;
+                }
+
+                .dashboard-content {
+                    margin-left: 220px;
+                }
+
+                .project-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+
+            @media (max-width: 768px) {
+                .dashboard-sidebar {
+                    transform: translateX(-100%);
+                    transition: transform var(--transition-speed) ease;
+                    z-index: 100;
+                }
+
+                .dashboard-sidebar.open {
+                    transform: translateX(0);
+                }
+
+                .dashboard-content {
+                    margin-left: 0;
+                }
+
+                .metrics-grid {
+                    grid-template-columns: 1fr;
+                }
+            }
+        </style>
+    </head>
+    <body>
+        <header>
+            <div class="header-logo">
+                <div class="logo-icon">
+                    <svg
+                        width="20"
+                        height="20"
+                        viewBox="0 0 24 24"
+                        fill="none"
+                        stroke="rgba(64, 128, 255, 0.9)"
+                        stroke-width="2"
+                        stroke-linecap="round"
+                        stroke-linejoin="round"
+                    >
+                        <rect x="3" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="3" width="7" height="7"></rect>
+                        <rect x="14" y="14" width="7" height="7"></rect>
+                        <rect x="3" y="14" width="7" height="7"></rect>
+                    </svg>
+                </div>
+                <span class="logo-text">lab.dissemblage.art</span>
+            </div>
+
+            <div class="header-controls">
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <span>System Online</span>
+                    <div class="status-links">
+                        <a
+                            href="https://lab.dissemblage.art"
+                            target="_blank"
+                            rel="noopener"
+                            >Main Site</a
+                        >
+                        <a
+                            href="https://github.com/uprootiny/lab-dashboard"
+                            target="_blank"
+                            rel="noopener"
+                            >GitHub Repo</a
+                        >
+                        <a
+                            href="https://uprootiny.github.io/lab-dashboard"
+                            target="_blank"
+                            rel="noopener"
+                            >GitHub Pages</a
+                        >
+                    </div>
+                </div>
+            </div>
+        </header>
+
+        <div class="container">
+            <div class="dashboard-grid">
+                <!-- Sidebar -->
+                <aside class="sidebar">
+                    <div class="nav-section">
+                        <h2 class="nav-title">Dashboard</h2>
+                        <ul class="nav-list">
+                            <li class="nav-item">
+                                <a href="#projects" class="nav-link active">
+                                    <svg
+                                        class="nav-icon"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <rect
+                                            x="3"
+                                            y="3"
+                                            width="7"
+                                            height="7"
+                                        ></rect>
+                                        <rect
+                                            x="14"
+                                            y="3"
+                                            width="7"
+                                            height="7"
+                                        ></rect>
+                                        <rect
+                                            x="14"
+                                            y="14"
+                                            width="7"
+                                            height="7"
+                                        ></rect>
+                                        <rect
+                                            x="3"
+                                            y="14"
+                                            width="7"
+                                            height="7"
+                                        ></rect>
+                                    </svg>
+                                    Projects Overview
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#deployment" class="nav-link">
+                                    <svg
+                                        class="nav-icon"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <path
+                                            d="M12 2L2 7l10 5 10-5-10-5z"
+                                        ></path>
+                                        <path d="M2 17l10 5 10-5"></path>
+                                        <path d="M2 12l10 5 10-5"></path>
+                                    </svg>
+                                    Deployment Guide
+                                </a>
+                            </li>
+                            <li class="nav-item">
+                                <a href="#monitoring" class="nav-link">
+                                    <svg
+                                        class="nav-icon"
+                                        xmlns="http://www.w3.org/2000/svg"
+                                        viewBox="0 0 24 24"
+                                        fill="none"
+                                        stroke="currentColor"
+                                        stroke-width="2"
+                                        stroke-linecap="round"
+                                        stroke-linejoin="round"
+                                    >
+                                        <polyline
+                                            points="22 12 18 12 15 21 9 3 6 12 2 12"
+                                        ></polyline>
+                                    </svg>
+                                    Monitoring
+                                </a>
+                            </li>
+                        </ul>
+                    </div>
+
+                    <div class="system-status">
+                        <div class="status-indicator"></div>
+                        <span class="status-text">System Online</span>
+                    </div>
+                </aside>
+
+                <!-- Main content area -->
+                <main class="main-content">
+                    <!-- Projects section -->
+                    <section id="projects" class="dashboard-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Projects Overview</h2>
+                            <p class="section-subtitle">
+                                Monitor development progress across repositories
+                            </p>
+                        </div>
+
+                        <div class="project-grid">
+                            <!-- Project cards will be dynamically generated here -->
+                        </div>
+                    </section>
+
+                    <!-- Deployment Guide Section -->
+                    <section id="deployment" class="dashboard-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Deployment Guide</h2>
+                            <p class="section-subtitle">
+                                Steps to deploy this dashboard on
+                                lab.dissemblage.art
+                            </p>
+                        </div>
+
+                        <div class="deployment-guide">
+                            <div class="steps-container">
+                                <!-- Deployment steps will be dynamically generated here -->
+                            </div>
+                        </div>
+                    </section>
+
+                    <!-- Monitoring Section -->
+                    <section id="monitoring" class="dashboard-section">
+                        <div class="section-header">
+                            <h2 class="section-title">Monitoring</h2>
+                            <p class="section-subtitle">
+                                Site performance, uptime, and error tracking
+                            </p>
+                        </div>
+                        <!-- Monitoring content, e.g., metrics, charts, etc. -->
+                    </section>
+                </main>
+            </div>
+        </div>
+
+        <script>
+            // Fetch project data from GitHub API and local reconnaissance
+            const fetchProjectData = async () => {
+                try {
+                    // GitHub API request for user's repositories
+                    const githubResponse = await fetch(
+                        "https://api.github.com/users/uprootiny/repos",
+                    );
+                    const githubRepos = await githubResponse.json();
+
+                    // Local reconnaissance for projects on servers and subdomains
+                    // (Placeholder - replace with actual implementation)
+                    const localProjects = [
+                        {
+                            name: "project1",
+                            url: "https://project1.dissemblage.art",
+                            // ...
+                        },
+                        // ...
+                    ];
+
+                    // Combine and process project data
+                    const projects = [...githubRepos, ...localProjects];
+                    // Process and enhance project data as needed
+
+                    return projects;
+                } catch (error) {
+                    console.error("Error fetching project data:", error);
+                    return [];
+                }
+            };
+
+            // Render project cards
+            const renderProjectCards = (projects) => {
+                const projectGrid = document.querySelector(".project-grid");
+                projectGrid.innerHTML = "";
+
+                projects.forEach((project) => {
+                    const projectCard = `
+                        <div class="project-card">
+                            <div class="project-header" style="--project-glow: var(--glow-cyan);">
+                                <h3 class="project-name">${project.name}</h3>
+                                <span class="project-score">${project.score || "N/A"}%</span>
+                            </div>
+                            <div class="project-content">
+                                <p class="project-path">${project.path || project.url}</p>
+                                <p class="project-description">${project.description || "No description available"}</p>
+                                <div class="project-checks">
+                                    ${getProjectChecks(project)}
+                                </div>
+                                <div class="tech-stack">
+                                    ${getProjectTechStack(project)}
+                                </div>
+                            </div>
+                        </div>
+                    `;
+
+                    projectGrid.insertAdjacentHTML("beforeend", projectCard);
+                });
+            };
+
+            // Get project checks HTML
+            const getProjectChecks = (project) => {
+                const checks = [
+                    {
+                        label: "Repository",
+                        status: project.repositoryStatus || "unknown",
+                    },
+                    {
+                        label: "Environment",
+                        status: project.environmentStatus || "unknown",
+                    },
+                    {
+                        label: "Deployment",
+                        status: project.deploymentStatus || "unknown",
+                    },
+                    {
+                        label: "Subdomain",
+                        status: project.subdomainStatus || "unknown",
+                    },
+                    {
+                        label: "API Spec",
+                        status: project.apiSpecStatus || "unknown",
+                    },
+                    {
+                        label: "API Conformance",
+                        status: project.apiConformanceStatus || "unknown",
+                    },
+                    {
+                        label: "Documentation",
+                        status: project.documentationStatus || "unknown",
+                    },
+                    {
+                        label: "GitHub Pages",
+                        status: project.githubPagesStatus || "unknown",
+                    },
+                ];
+
+                return checks
+                    .map(
+                        (check) => `
+                    <div class="check-item">
+                        <div class="check-icon" style="color: ${getStatusColor(check.status)};">
+                            ${getStatusIcon(check.status)}
+                        </div>
+                        <span class="check-label">${check.label}</span>
+                    </div>
+                `,
+                    )
+                    .join("");
+            };
+
+            // Get project tech stack HTML
+            const getProjectTechStack = (project) => {
+                const techStack = project.techStack || [];
+                return techStack
+                    .map((tech) => `<span class="tech-tag">${tech}</span>`)
+                    .join("");
+            };
+
+            // Get status color based on status value
+            const getStatusColor = (status) => {
+                switch (status.toLowerCase()) {
+                    case "success":
+                    case "pass":
+                    case "passed":
+                    case "ok":
+                        return "var(--glow-green)";
+                    case "warning":
+                    case "warn":
+                        return "var(--glow-amber)";
+                    case "error":
+                    case "fail":
+                    case "failed":
+                        return "var(--glow-rose)";
+                    default:
+                        return "var(--glow-indigo)";
+                }
+            };
+
+            // Get status icon based on status value
+            const getStatusIcon = (status) => {
+                switch (status.toLowerCase()) {
+                    case "success":
+                    case "pass":
+                    case "passed":
+                    case "ok":
+                        return `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <path d="M22 11.08V12a10 10 0 1 1-5.93-9.14"></path>
+                                <polyline points="22 4 12 14.01 9 11.01"></polyline>
+                            </svg>
+                        `;
+                    case "warning":
+                    case "warn":
+                        return `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="8" x2="12" y2="12"></line>
+                                <line x1="12" y1="16" x2="12.01" y2="16"></line>
+                            </svg>
+                        `;
+                    case "error":
+                    case "fail":
+                    case "failed":
+                        return `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <line x1="18" y1="6" x2="6" y2="18"></line>
+                                <line x1="6" y1="6" x2="18" y2="18"></line>
+                            </svg>
+                        `;
+                    default:
+                        return `
+                            <svg xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                <circle cx="12" cy="12" r="10"></circle>
+                                <line x1="12" y1="16" x2="12" y2="12"></line>
+                                <line x1="12" y1="8" x2="12.01" y2="8"></line>
+                            </svg>
+                        `;
+                }
+            };
+
+            // Render deployment steps
+            const renderDeploymentSteps = () => {
+                const stepsContainer =
+                    document.querySelector(".steps-container");
+                const steps = [
+                    {
+                        number: 1,
+                        title: "Setup Repository",
+                        description:
+                            "Initialize and configure Git repository for the project",
+                        code: `
+                            # Create a new repository
+                            mkdir -p ~/projects/dashboard
+                            cd ~/projects/dashboard
+
+                            # Initialize git repository
+                            git init
+                            git remote add origin https://github.com/uprootiny/lab-dashboard.git
+
+                            # Create basic structure
+                            mkdir -p {src,public,config}
+                            touch README.md .gitignore
+                        `,
+                    },
+                    // Add more deployment steps...
+                ];
+
+                steps.forEach((step) => {
+                    const stepItem = `
+                        <div class="step-item">
+                            <div class="step-number">${step.number}</div>
+                            <div class="step-connector"></div>
+                            <div class="step-content">
+                                <h3 class="step-title">${step.title}</h3>
+                                <p class="step-description">${step.description}</p>
+                                <pre class="step-code">${step.code.trim()}</pre>
+                            </div>
+                        </div>
+                    `;
+
+                    stepsContainer.insertAdjacentHTML("beforeend", stepItem);
+                });
+            };
+
+            // Initialize dashboard
+            const initializeDashboard = async () => {
+                const projects = await fetchProjectData();
+                renderProjectCards(projects);
+                renderDeploymentSteps();
+            };
+
+            // Call initialization function when the page loads
+            window.addEventListener("load", initializeDashboard);
+        </script>
+    </body>
+</html>

@@ -1,0 +1,1444 @@
+I'd like a page like that recomposed from scratch with more elaborate project scorecards and effortful actionable buttons triggers and edit fields on them
+
+I'd like the sections in the left-side navigation menu to be distinctly colored and relate relevant lore and useful snippets for our financial modeling data gathering statistics persistent topology analysis forecast system
+
+
+
+naturally the "DNS" ("Porkbun") section should contain scorecards for my subdomains and UI to designate, create, assign new ones — tie them to the projects by committing CNAME to their GitHub, set up redirects, compose deployment conf and scripts and so on. 
+
+Tags should naturally be clickable and lead into a filtering interface which is not present as well — implement it — add links to several latest commits and relevant domain names, live instances, landing pages, if any. Mention actionable.
+
+The visuals. Bring back the gradients, glows and shadows, diverse color highlights on-hover effects, professionally laid out markup proportions with structured use of negative space, and so on and so forth. 
+
+
+
+
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Project Dashboard | lab.dissemblage.art</title>
+    <style>
+        /* Base variables */
+        :root {
+            --font-menlo: 'Menlo', monospace;
+            --background-dark: #080c14;
+            --background-darker: #050a10;
+            --text-primary: rgba(255, 255, 255, 0.95);
+            --text-secondary: rgba(255, 255, 255, 0.75);
+            --text-tertiary: rgba(255, 255, 255, 0.6);
+            
+            /* Glow colors */
+            --glow-cyan: rgba(64, 224, 208, 0.85);
+            --glow-blue: rgba(64, 128, 255, 0.85);
+            --glow-indigo: rgba(128, 64, 255, 0.85);
+            --glow-purple: rgba(192, 64, 255, 0.85);
+            --glow-magenta: rgba(255, 64, 192, 0.85);
+            --glow-rose: rgba(255, 64, 128, 0.85);
+            --glow-amber: rgba(255, 192, 64, 0.85);
+            
+            /* Sizing and spacing */
+            --spacing-xs: 0.5rem;
+            --spacing-sm: 1rem;
+            --spacing-md: 1.5rem;
+            --spacing-lg: 2.5rem;
+            --spacing-xl: 4rem;
+            --card-border-radius: 16px;
+            --card-inner-radius: 12px;
+            
+            /* Animation */
+            --transition-speed: 0.3s;
+            --breathe-duration: 4s;
+        }
+        
+        /* Reset and base styles */
+        * {
+            box-sizing: border-box;
+            margin: 0;
+            padding: 0;
+        }
+        
+        body {
+            font-family: var(--font-menlo);
+            background: var(--background-dark);
+            background-image: 
+                radial-gradient(circle at 20% 20%, rgba(64, 128, 255, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 80% 60%, rgba(255, 64, 128, 0.05) 0%, transparent 50%),
+                radial-gradient(circle at 50% 100%, rgba(64, 224, 208, 0.05) 0%, transparent 50%);
+            color: var(--text-primary);
+            line-height: 1.6;
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+        
+        /* Layout containers */
+        .container {
+            width: 100%;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: var(--spacing-md);
+        }
+        
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 300px 1fr;
+            gap: var(--spacing-md);
+        }
+        
+        /* Header styles */
+        header {
+            padding: var(--spacing-md) 0;
+            position: relative;
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .site-title {
+            font-size: 1.75rem;
+            margin-bottom: var(--spacing-xs);
+            background: linear-gradient(
+                135deg,
+                var(--glow-cyan),
+                var(--glow-blue)
+            );
+            background-clip: text;
+            -webkit-background-clip: text;
+            color: transparent;
+            display: inline-block;
+        }
+        
+        .site-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Sidebar styles */
+        .sidebar {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--card-border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-md);
+            height: fit-content;
+            position: sticky;
+            top: var(--spacing-md);
+        }
+        
+        .nav-section {
+            margin-bottom: var(--spacing-md);
+        }
+        
+        .nav-title {
+            font-size: 0.8rem;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+            color: var(--text-tertiary);
+            margin-bottom: var(--spacing-xs);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+            padding-bottom: var(--spacing-xs);
+        }
+        
+        .nav-list {
+            list-style-type: none;
+        }
+        
+        .nav-item {
+            margin-bottom: var(--spacing-xs);
+        }
+        
+        .nav-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            font-size: 0.9rem;
+            display: flex;
+            align-items: center;
+            padding: var(--spacing-xs);
+            border-radius: 4px;
+            transition: background-color var(--transition-speed) ease;
+        }
+        
+        .nav-link:hover {
+            background-color: rgba(255, 255, 255, 0.05);
+            color: var(--text-primary);
+        }
+        
+        .nav-link.active {
+            background-color: rgba(64, 128, 255, 0.1);
+            color: var(--glow-blue);
+            border-left: 3px solid var(--glow-blue);
+            padding-left: calc(var(--spacing-xs) - 3px);
+        }
+        
+        .nav-icon {
+            width: 18px;
+            height: 18px;
+            margin-right: 8px;
+            opacity: 0.7;
+        }
+        
+        /* Status indicators */
+        .system-status {
+            display: flex;
+            align-items: center;
+            margin-top: var(--spacing-lg);
+            padding-top: var(--spacing-md);
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+        }
+        
+        .status-indicator {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 8px;
+            background-color: #4ade80; /* Green for online */
+            box-shadow: 0 0 10px #4ade80;
+        }
+        
+        .status-text {
+            font-size: 0.8rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Main content area */
+        .main-content {
+            display: flex;
+            flex-direction: column;
+            gap: var(--spacing-lg);
+        }
+        
+        /* Dashboard section styles */
+        .dashboard-section {
+            margin-bottom: var(--spacing-lg);
+        }
+        
+        .section-header {
+            margin-bottom: var(--spacing-md);
+            position: relative;
+        }
+        
+        .section-title {
+            font-size: 1.5rem;
+            margin-bottom: var(--spacing-xs);
+            color: var(--text-primary);
+        }
+        
+        .section-subtitle {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+        }
+        
+        /* Project grid */
+        .project-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+            gap: var(--spacing-md);
+        }
+        
+        .project-card {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--card-border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            overflow: hidden;
+            transition: all var(--transition-speed) ease;
+            position: relative;
+        }
+        
+        .project-card:hover {
+            transform: translateY(-4px);
+            box-shadow: 0 4px 20px rgba(0, 0, 0, 0.3);
+            border-color: rgba(255, 255, 255, 0.2);
+        }
+        
+        .project-header {
+            padding: var(--spacing-sm);
+            border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+        
+        .project-name {
+            font-size: 1.1rem;
+            color: var(--text-primary);
+        }
+        
+        .project-score {
+            background: rgba(0, 0, 0, 0.3);
+            padding: 4px 8px;
+            border-radius: 12px;
+            font-size: 0.8rem;
+        }
+        
+        .score-10 { color: #ef4444; }
+        .score-20 { color: #f97316; }
+        .score-30 { color: #eab308; }
+        .score-40 { color: #84cc16; }
+        .score-50 { color: #22c55e; }
+        
+        .project-content {
+            padding: var(--spacing-sm);
+        }
+        
+        .project-path {
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            margin-bottom: var(--spacing-sm);
+            font-style: italic;
+        }
+        
+        .metrics-grid {
+            display: grid;
+            grid-template-columns: repeat(2, 1fr);
+            gap: var(--spacing-xs);
+            margin-bottom: var(--spacing-sm);
+        }
+        
+        .metric-item {
+            background: rgba(0, 0, 0, 0.1);
+            padding: var(--spacing-xs);
+            border-radius: 8px;
+        }
+        
+        .metric-label {
+            font-size: 0.7rem;
+            color: var(--text-tertiary);
+            margin-bottom: 4px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .metric-value {
+            font-size: 1.2rem;
+            color: var(--text-primary);
+        }
+        
+        .progress-track {
+            height: 6px;
+            background: rgba(255, 255, 255, 0.1);
+            border-radius: 3px;
+            margin-top: var(--spacing-xs);
+            overflow: hidden;
+        }
+        
+        .progress-bar {
+            height: 100%;
+            border-radius: 3px;
+        }
+        
+        .tech-stack {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 6px;
+            margin-top: var(--spacing-sm);
+        }
+        
+        .tech-tag {
+            background: rgba(255, 255, 255, 0.05);
+            font-size: 0.7rem;
+            padding: 4px 8px;
+            border-radius: 4px;
+            color: var(--text-secondary);
+        }
+        
+        /* Deployment section */
+        .deployment-section {
+            background: rgba(0, 0, 0, 0.2);
+            border-radius: var(--card-border-radius);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            padding: var(--spacing-md);
+        }
+        
+        .steps-container {
+            margin-top: var(--spacing-md);
+        }
+        
+        .step-item {
+            display: flex;
+            margin-bottom: var(--spacing-md);
+            position: relative;
+        }
+        
+        .step-number {
+            flex-shrink: 0;
+            width: 28px;
+            height: 28px;
+            background: var(--glow-indigo);
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 0.9rem;
+            margin-right: var(--spacing-sm);
+            position: relative;
+            z-index: 1;
+        }
+        
+        .step-content {
+            flex-grow: 1;
+        }
+        
+        .step-title {
+            font-size: 1rem;
+            color: var(--text-primary);
+            margin-bottom: 4px;
+        }
+        
+        .step-description {
+            font-size: 0.9rem;
+            color: var(--text-secondary);
+            margin-bottom: 8px;
+        }
+        
+        .step-code {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 8px;
+            padding: var(--spacing-sm);
+            font-family: var(--font-menlo);
+            font-size: 0.85rem;
+            color: var(--text-tertiary);
+            overflow-x: auto;
+            border: 1px solid rgba(255, 255, 255, 0.05);
+        }
+        
+        .code-comment {
+            color: #6b7280;
+        }
+        
+        /* Timeline connector */
+        .step-connector {
+            position: absolute;
+            top: 28px;
+            left: 14px;
+            bottom: -28px;
+            width: 2px;
+            background: rgba(255, 255, 255, 0.1);
+            z-index: 0;
+        }
+        
+        .step-item:last-child .step-connector {
+            display: none;
+        }
+        
+        /* Footer styles */
+        footer {
+            margin-top: auto;
+            padding: var(--spacing-md) 0;
+            border-top: 1px solid rgba(255, 255, 255, 0.1);
+            font-size: 0.8rem;
+            color: var(--text-tertiary);
+            text-align: center;
+        }
+        
+        .footer-links {
+            display: flex;
+            justify-content: center;
+            gap: var(--spacing-md);
+            margin-top: var(--spacing-xs);
+        }
+        
+        .footer-link {
+            color: var(--text-secondary);
+            text-decoration: none;
+            transition: color var(--transition-speed) ease;
+        }
+        
+        .footer-link:hover {
+            color: var(--text-primary);
+        }
+        
+        /* Responsive styles */
+        @media (max-width: 1024px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .sidebar {
+                position: static;
+                margin-bottom: var(--spacing-md);
+            }
+            
+            .nav-section {
+                margin-bottom: var(--spacing-sm);
+            }
+        }
+        
+        @media (max-width: 768px) {
+            .project-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .metrics-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+    </style>
+</head>
+<body>
+    <header>
+        <div class="container">
+            <h1 class="site-title">Project Dashboard</h1>
+            <p class="site-subtitle">lab.dissemblage.art | Self-deploying system monitor</p>
+        </div>
+    </header>
+
+    <div class="container">
+        <div class="dashboard-grid">
+            <!-- Sidebar navigation -->
+            <aside class="sidebar">
+                <div class="nav-section">
+                    <h2 class="nav-title">Dashboard</h2>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="#projects" class="nav-link active">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="3" width="7" height="7"></rect>
+                                    <rect x="14" y="14" width="7" height="7"></rect>
+                                    <rect x="3" y="14" width="7" height="7"></rect>
+                                </svg>
+                                Projects Overview
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#deployment" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M12 2L2 7l10 5 10-5-10-5z"></path>
+                                    <path d="M2 17l10 5 10-5"></path>
+                                    <path d="M2 12l10 5 10-5"></path>
+                                </svg>
+                                Deployment Guide
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#github" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M9 19c-5 1.5-5-2.5-7-3m14 6v-3.87a3.37 3.37 0 0 0-.94-2.61c3.14-.35 6.44-1.54 6.44-7A5.44 5.44 0 0 0 20 4.77 5.07 5.07 0 0 0 19.91 1S18.73.65 16 2.48a13.38 13.38 0 0 0-7 0C6.27.65 5.09 1 5.09 1A5.07 5.07 0 0 0 5 4.77a5.44 5.44 0 0 0-1.5 3.78c0 5.42 3.3 6.61 6.44 7A3.37 3.37 0 0 0 9 18.13V22"></path>
+                                </svg>
+                                GitHub Integration
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#domain" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <circle cx="12" cy="12" r="10"></circle>
+                                    <line x1="2" y1="12" x2="22" y2="12"></line>
+                                    <path d="M12 2a15.3 15.3 0 0 1 4 10 15.3 15.3 0 0 1-4 10 15.3 15.3 0 0 1-4-10 15.3 15.3 0 0 1 4-10z"></path>
+                                </svg>
+                                Domain Management
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="nav-section">
+                    <h2 class="nav-title">Tools</h2>
+                    <ul class="nav-list">
+                        <li class="nav-item">
+                            <a href="#nginx" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="2" y="2" width="20" height="8" rx="2" ry="2"></rect>
+                                    <rect x="2" y="14" width="20" height="8" rx="2" ry="2"></rect>
+                                    <line x1="6" y1="6" x2="6.01" y2="6"></line>
+                                    <line x1="6" y1="18" x2="6.01" y2="18"></line>
+                                </svg>
+                                Nginx Configuration
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#porkbun" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <path d="M20.59 13.41l-7.17 7.17a2 2 0 0 1-2.83 0L2 12V2h10l8.59 8.59a2 2 0 0 1 0 2.82z"></path>
+                                    <line x1="7" y1="7" x2="7.01" y2="7"></line>
+                                </svg>
+                                Porkbun API
+                            </a>
+                        </li>
+                        <li class="nav-item">
+                            <a href="#certbot" class="nav-link">
+                                <svg class="nav-icon" xmlns="http://www.w3.org/2000/svg" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+                                    <rect x="3" y="11" width="18" height="11" rx="2" ry="2"></rect>
+                                    <path d="M7 11V7a5 5 0 0 1 10 0v4"></path>
+                                </svg>
+                                SSL Configuration
+                            </a>
+                        </li>
+                    </ul>
+                </div>
+                
+                <div class="system-status">
+                    <div class="status-indicator"></div>
+                    <span class="status-text">System Online</span>
+                </div>
+            </aside>
+
+            <!-- Main content area -->
+            <main class="main-content">
+                <!-- Projects section -->
+                <section id="projects" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Projects Overview</h2>
+                        <p class="section-subtitle">Monitor development progress across repositories</p>
+                    </div>
+                    
+                    <div class="project-grid">
+                        <!-- Project card: domain-workbench -->
+                        <div class="project-card">
+                            <div class="project-header">
+                                <h3 class="project-name">domain-workbench</h3>
+                                <span class="project-score score-40">46%</span>
+                            </div>
+                            <div class="project-content">
+                                <p class="project-path">/home/uprootiny/Feb2025/domain-workbench</p>
+                                
+                                <div class="metrics-grid">
+                                    <div class="metric-item">
+                                        <div class="metric-label">Essentials</div>
+                                        <div class="metric-value">3/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 60%; background: var(--glow-cyan);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Recommended</div>
+                                        <div class="metric-value">2/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 40%; background: var(--glow-purple);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Advanced</div>
+                                        <div class="metric-value">2/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 40%; background: var(--glow-blue);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Deployment</div>
+                                        <div class="metric-value">Staged</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 50%; background: var(--glow-amber);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tech-stack">
+                                    <span class="tech-tag">React</span>
+                                    <span class="tech-tag">Node.js</span>
+                                    <span class="tech-tag">Express</span>
+                                    <span class="tech-tag">MongoDB</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Project card: chatgpt-mvp -->
+                        <div class="project-card">
+                            <div class="project-header">
+                                <h3 class="project-name">chatgpt-mvp</h3>
+                                <span class="project-score score-30">36%</span>
+                            </div>
+                            <div class="project-content">
+                                <p class="project-path">/home/uprootiny/Feb2025/chatgpt-mvp</p>
+                                
+                                <div class="metrics-grid">
+                                    <div class="metric-item">
+                                        <div class="metric-label">Essentials</div>
+                                        <div class="metric-value">2/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 40%; background: var(--glow-cyan);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Recommended</div>
+                                        <div class="metric-value">2/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 40%; background: var(--glow-purple);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Advanced</div>
+                                        <div class="metric-value">1/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-blue);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Deployment</div>
+                                        <div class="metric-value">Local</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-amber);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tech-stack">
+                                    <span class="tech-tag">Node.js</span>
+                                    <span class="tech-tag">OpenAI API</span>
+                                    <span class="tech-tag">TUI</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Project card: lab.dissemblage.art -->
+                        <div class="project-card">
+                            <div class="project-header">
+                                <h3 class="project-name">lab.dissemblage.art</h3>
+                                <span class="project-score score-20">16%</span>
+                            </div>
+                            <div class="project-content">
+                                <p class="project-path">/var/www/lab.dissemblage.art</p>
+                                
+                                <div class="metrics-grid">
+                                    <div class="metric-item">
+                                        <div class="metric-label">Essentials</div>
+                                        <div class="metric-value">1/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-cyan);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Recommended</div>
+                                        <div class="metric-value">0/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 0%; background: var(--glow-purple);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Advanced</div>
+                                        <div class="metric-value">0/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 0%; background: var(--glow-blue);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Deployment</div>
+                                        <div class="metric-value">Live</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 80%; background: var(--glow-amber);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tech-stack">
+                                    <span class="tech-tag">HTML</span>
+                                    <span class="tech-tag">CSS</span>
+                                    <span class="tech-tag">JavaScript</span>
+                                    <span class="tech-tag">NGINX</span>
+                                    <span class="tech-tag">Let's Encrypt</span>
+                                </div>
+                            </div>
+                        </div>
+                        
+                        <!-- Project card: flashcards-pwa -->
+                        <div class="project-card">
+                            <div class="project-header">
+                                <h3 class="project-name">flashcards-pwa</h3>
+                                <span class="project-score score-20">20%</span>
+                            </div>
+                            <div class="project-content">
+                                <p class="project-path">/home/uprootiny/flashcards/flashcards-pwa</p>
+                                
+                                <div class="metrics-grid">
+                                    <div class="metric-item">
+                                        <div class="metric-label">Essentials</div>
+                                        <div class="metric-value">1/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-cyan);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Recommended</div>
+                                        <div class="metric-value">1/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-purple);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Advanced</div>
+                                        <div class="metric-value">1/5</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 20%; background: var(--glow-blue);"></div>
+                                        </div>
+                                    </div>
+                                    <div class="metric-item">
+                                        <div class="metric-label">Deployment</div>
+                                        <div class="metric-value">Partial</div>
+                                        <div class="progress-track">
+                                            <div class="progress-bar" style="width: 40%; background: var(--glow-amber);"></div>
+                                        </div>
+                                    </div>
+                                </div>
+                                
+                                <div class="tech-stack">
+                                    <span class="tech-tag">PWA</span>
+                                    <span class="tech-tag">HTML5</span>
+                                    <span class="tech-tag">JavaScript</span>
+                                    <span class="tech-tag">Service Worker</span>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- Deployment Guide Section -->
+                <section id="deployment" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Self-Deployment Guide</h2>
+                        <p class="section-subtitle">Steps to deploy this dashboard on lab.dissemblage.art</p>
+                    </div>
+                    
+                    <div class="deployment-section">
+                        <div class="steps-container">
+                            <!-- Step 1: Setup GitHub Repository -->
+                            <div class="step-item">
+                                <div class="step-number">1</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Create GitHub Repository</h3>
+                                    <p class="step-description">Initialize and push the repository to GitHub for version control</p>
+                                    <pre class="step-code"><span class="code-comment"># Create a new GitHub repository at https://github.com/new</span>
+<span class="code-comment"># Clone it locally and add the dashboard files</span>
+mkdir -p ~/projects/dashboard
+cd ~/projects/dashboard
+
+<span class="code-comment"># Initialize git repository</span>
+git init
+git remote add origin https://github.com/uprootiny/lab-dashboard.git
+
+<span class="code-comment"># Add all files and make initial commit</span>
+git add .
+git commit -m "Initial commit of lab dashboard"
+git push -u origin main</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 2: Configure Subdomain with Porkbun API -->
+                            <div class="step-item">
+                                <div class="step-number">2</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Configure Subdomain with Porkbun API</h3>
+                                    <p class="step-description">Create a subdomain using the Porkbun API</p>
+                                    <pre class="step-code"><span class="code-comment"># Create a Porkbun API script (porkbun-create-subdomain.sh)</span>
+#!/bin/bash
+set -euo pipefail
+
+# Porkbun API credentials - store these securely!
+API_KEY="pk1_..."
+SECRET_KEY="sk1_..."
+DOMAIN="dissemblage.art"
+SUBDOMAIN="dashboard"
+TARGET_IP="$(curl -s ifconfig.me)"
+
+cat > request.json << EOF
+{
+  "secretapikey": "$SECRET_KEY",
+  "apikey": "$API_KEY",
+  "name": "$SUBDOMAIN",
+  "type": "A",
+  "content": "$TARGET_IP",
+  "ttl": "600"
+}
+EOF
+
+# Make API request to create subdomain
+curl -X POST "https://porkbun.com/api/json/v3/dns/create/$DOMAIN" \
+  -H "Content-Type: application/json" \
+  --data @request.json
+
+# Clean up
+rm request.json
+
+echo "✅ Subdomain $SUBDOMAIN.$DOMAIN created and pointed to $TARGET_IP"</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 3: Configure NGINX -->
+                            <div class="step-item">
+                                <div class="step-number">3</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Configure NGINX Virtual Host</h3>
+                                    <p class="step-description">Setup NGINX configuration for the dashboard subdomain</p>
+                                    <pre class="step-code"><span class="code-comment"># Create NGINX configuration file</span>
+sudo cat > /etc/nginx/sites-available/dashboard.dissemblage.art << 'EOF'
+server {
+    listen 80;
+    server_name dashboard.dissemblage.art;
+    root /var/www/dashboard.dissemblage.art;
+    index index.html;
+
+    location / {
+        try_files $uri $uri/ =404;
+    }
+
+    # Security headers
+    add_header X-Frame-Options "SAMEORIGIN";
+    add_header X-Content-Type-Options "nosniff";
+    add_header X-XSS-Protection "1; mode=block";
+    add_header Referrer-Policy "strict-origin-when-cross-origin";
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:;";
+}
+EOF
+
+<span class="code-comment"># Create web directory</span>
+sudo mkdir -p /var/www/dashboard.dissemblage.art
+
+<span class="code-comment"># Enable site and test configuration</span>
+sudo ln -s /etc/nginx/sites-available/dashboard.dissemblage.art /etc/nginx/sites-enabled/
+sudo nginx -t
+sudo systemctl reload nginx</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 4: Obtain SSL Certificate -->
+                            <div class="step-item">
+                                <div class="step-number">4</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Obtain SSL Certificate</h3>
+                                    <p class="step-description">Secure the subdomain with Let's Encrypt SSL certificate</p>
+                                    <pre class="step-code"><span class="code-comment"># Install certbot if not already installed</span>
+sudo apt update
+sudo apt install -y certbot python3-certbot-nginx
+
+<span class="code-comment"># Obtain and configure SSL certificate</span>
+sudo certbot --nginx -d dashboard.dissemblage.art
+
+<span class="code-comment"># Verify auto-renewal is configured</span>
+sudo systemctl status certbot.timer</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 5: Deploy Dashboard Files -->
+                            <div class="step-item">
+                                <div class="step-number">5</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Deploy Dashboard Files</h3>
+                                    <p class="step-description">Copy dashboard files to web server directory</p>
+                                    <pre class="step-code"><span class="code-comment"># Copy dashboard files to web directory</span>
+sudo rsync -av --delete ~/projects/dashboard/ /var/www/dashboard.dissemblage.art/
+
+<span class="code-comment"># Set proper permissions</span>
+sudo chown -R www-data:www-data /var/www/dashboard.dissemblage.art
+sudo chmod -R 755 /var/www/dashboard.dissemblage.art</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 6: Create Deployment Script -->
+                            <div class="step-item">
+                                <div class="step-number">6</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Create Automated Deployment Script</h3>
+                                    <p class="step-description">Setup automated deployment from GitHub to the server</p>
+                                    <pre class="step-code"><span class="code-comment"># Create deployment script (deploy.sh)</span>
+cat > ~/projects/dashboard/deploy.sh << 'EOF'
+#!/bin/bash
+set -euo pipefail
+
+# Configuration
+REPO_URL="https://github.com/uprootiny/lab-dashboard.git"
+PROJECT_DIR="$HOME/projects/dashboard"
+DEPLOY_DIR="/var/www/dashboard.dissemblage.art"
+LOG_FILE="/var/log/dashboard-deploy.log"
+
+# Ensure log file exists
+sudo touch $LOG_FILE
+sudo chown $(whoami) $LOG_FILE
+
+# Log deployment start
+echo "[$(date)] Starting deployment" >> $LOG_FILE
+
+# Update local repository
+if [ -d "$PROJECT_DIR/.git" ]; then
+  cd $PROJECT_DIR
+  git pull origin main
+else
+  mkdir -p $PROJECT_DIR
+  git clone $REPO_URL $PROJECT_DIR
+  cd $PROJECT_DIR
+fi
+
+# Deploy to web directory
+sudo rsync -av --delete --exclude='.git' --exclude='deploy.sh' \
+  $PROJECT_DIR/ $DEPLOY_DIR/
+
+# Fix permissions
+sudo chown -R www-data:www-data $DEPLOY_DIR
+sudo chmod -R 755 $DEPLOY_DIR
+
+# Log successful deployment
+echo "[$(date)] Deployment completed successfully" >> $LOG_FILE
+
+# Optional: Notify about successful deployment
+curl -X POST \
+  -H "Content-Type: application/json" \
+  -d '{"text":"Dashboard deployment completed successfully"}' \
+  https://hooks.slack.com/services/YOUR_SLACK_WEBHOOK_URL
+EOF
+
+<span class="code-comment"># Make script executable</span>
+chmod +x ~/projects/dashboard/deploy.sh
+
+<span class="code-comment"># Set up cron job for regular deployment</span>
+(crontab -l 2>/dev/null; echo "0 */6 * * * $HOME/projects/dashboard/deploy.sh") | crontab -</pre>
+                                </div>
+                            </div>
+                            
+                            <!-- Step 7: Setup GitHub Pages Integration -->
+                            <div class="step-item">
+                                <div class="step-number">7</div>
+                                <div class="step-connector"></div>
+                                <div class="step-content">
+                                    <h3 class="step-title">Configure GitHub Pages Integration</h3>
+                                    <p class="step-description">Deploy to GitHub Pages as a fallback/alternative access point</p>
+                                    <pre class="step-code"><span class="code-comment"># Create GitHub workflow file for GitHub Pages</span>
+mkdir -p ~/projects/dashboard/.github/workflows
+cat > ~/projects/dashboard/.github/workflows/github-pages.yml << 'EOF'
+name: Deploy to GitHub Pages
+
+on:
+  push:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v3
+
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          
+      - name: Add CNAME file
+        run: |
+          echo "dashboard.dissemblage.art" > CNAME
+          
+      - name: Deploy to GitHub Pages
+        uses: JamesIves/github-pages-deploy-action@v4
+        with:
+          branch: gh-pages
+          folder: .
+EOF
+
+<span class="code-comment"># Add GitHub Pages setup to repository</span>
+git add .github/workflows/github-pages.yml
+git commit -m "Add GitHub Pages workflow"
+git push origin main
+
+<span class="code-comment"># Enable GitHub Pages in repository settings
+# Go to https://github.com/uprootiny/lab-dashboard/settings/pages
+# Set source branch to gh-pages
+# GitHub Pages will be available at https://uprootiny.github.io/lab-dashboard/</span></pre>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+                </section>
+                
+                <!-- GitHub Integration Section -->
+                <section id="github" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">GitHub Integration</h2>
+                        <p class="section-subtitle">Repository management and automated workflows</p>
+                    </div>
+                    
+                    <div class="deployment-section">
+                        <p>Link this dashboard to GitHub with these repository URLs:</p>
+                        
+                        <ul style="margin: 20px 0; line-height: 1.8;">
+                            <li><strong>Main Repository:</strong> <a href="https://github.com/uprootiny/lab-dashboard" style="color: var(--glow-blue);">https://github.com/uprootiny/lab-dashboard</a></li>
+                            <li><strong>GitHub Pages:</strong> <a href="https://uprootiny.github.io/lab-dashboard" style="color: var(--glow-blue);">https://uprootiny.github.io/lab-dashboard</a></li>
+                        </ul>
+                        
+                        <h3 style="margin: 20px 0 10px;">GitHub Workflow Configuration</h3>
+                        <pre class="step-code"># .github/workflows/update-projects.yml
+name: Update Project Statuses
+
+on:
+  schedule:
+    - cron: '0 */12 * * *'  # Run every 12 hours
+  workflow_dispatch:        # Allow manual trigger
+
+jobs:
+  update-projects:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v3
+      
+      - name: Setup Node.js
+        uses: actions/setup-node@v3
+        with:
+          node-version: '16'
+          
+      - name: Install dependencies
+        run: npm install
+        
+      - name: Run update script
+        run: node scripts/update-projects.js
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          
+      - name: Commit changes if any
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add data/
+          git diff --quiet && git diff --staged --quiet || git commit -m "Auto-update project statuses"
+          
+      - name: Push changes
+        uses: ad-m/github-push-action@master
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          branch: main</pre>
+                    </div>
+                </section>
+                
+                <!-- Domain Management Section -->
+                <section id="domain" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">Domain Management</h2>
+                        <p class="section-subtitle">Porkbun API integration for subdomain management</p>
+                    </div>
+                    
+                    <div class="deployment-section">
+                        <h3 style="margin-bottom: 15px;">Porkbun API Integration</h3>
+                        <p>The dashboard uses Porkbun's API for domain management. Here's a complete script to manage your subdomains:</p>
+                        
+                        <pre class="step-code">#!/bin/bash
+# porkbun-domain-manager.sh - Manage dissemblage.art subdomains
+set -euo pipefail
+
+# Configuration
+API_KEY="pk1_YOUR_API_KEY"  # Replace with your actual API key
+SECRET_KEY="sk1_YOUR_SECRET_KEY"  # Replace with your actual secret key
+DOMAIN="dissemblage.art"
+CONFIG_FILE="$HOME/.config/porkbun-domains.json"
+
+# Ensure config directory exists
+mkdir -p "$(dirname "$CONFIG_FILE")"
+
+# Helper function for API requests
+porkbun_api() {
+  local endpoint=$1
+  local data=$2
+  
+  curl -s -X POST "https://porkbun.com/api/json/v3/$endpoint" \
+    -H "Content-Type: application/json" \
+    --data "$data"
+}
+
+# Create subdomain
+create_subdomain() {
+  local subdomain=$1
+  local type=${2:-"A"}
+  local content=${3:-"$(curl -s ifconfig.me)"}
+  local ttl=${4:-"600"}
+  
+  echo "Creating $subdomain.$DOMAIN ($type record)..."
+  
+  local request=$(cat <<EOF
+{
+  "secretapikey": "$SECRET_KEY",
+  "apikey": "$API_KEY",
+  "name": "$subdomain",
+  "type": "$type",
+  "content": "$content",
+  "ttl": "$ttl"
+}
+EOF
+)
+
+  local response=$(porkbun_api "dns/create/$DOMAIN" "$request")
+  echo "$response" | grep -q "success" && echo "✅ Created successfully" || echo "❌ Failed: $response"
+  
+  # Update local config
+  if [ -f "$CONFIG_FILE" ]; then
+    local temp_file=$(mktemp)
+    jq --arg subdomain "$subdomain" --arg type "$type" --arg content "$content" \
+      '.subdomains += [{"name": $subdomain, "type": $type, "content": $content, "created": (now | todate)}]' \
+      "$CONFIG_FILE" > "$temp_file"
+    mv "$temp_file" "$CONFIG_FILE"
+  else
+    # Create new config file
+    cat > "$CONFIG_FILE" <<EOF
+{
+  "domain": "$DOMAIN",
+  "subdomains": [
+    {
+      "name": "$subdomain",
+      "type": "$type", 
+      "content": "$content",
+      "created": "$(date -Iseconds)"
+    }
+  ]
+}
+EOF
+  fi
+}
+
+# List subdomains
+list_subdomains() {
+  echo "Fetching subdomains for $DOMAIN..."
+  
+  local request=$(cat <<EOF
+{
+  "secretapikey": "$SECRET_KEY",
+  "apikey": "$API_KEY"
+}
+EOF
+)
+
+  local response=$(porkbun_api "dns/retrieve/$DOMAIN" "$request")
+  echo "$response" | jq -r '.records[] | "\(.name).\(.domain) (\(.type)) -> \(.content)"'
+  
+  # Update local cache
+  echo "$response" | jq '{domain: .domain, subdomains: .records}' > "$CONFIG_FILE"
+}
+
+# Delete subdomain
+delete_subdomain() {
+  local subdomain=$1
+  local record_ids=$(get_record_ids "$subdomain")
+  
+  if [ -z "$record_ids" ]; then
+    echo "❌ No records found for $subdomain.$DOMAIN"
+    return 1
+  fi
+  
+  for id in $record_ids; do
+    echo "Deleting record $id for $subdomain.$DOMAIN..."
+    
+    local request=$(cat <<EOF
+{
+  "secretapikey": "$SECRET_KEY",
+  "apikey": "$API_KEY",
+  "id": "$id"
+}
+EOF
+)
+
+    local response=$(porkbun_api "dns/delete/$DOMAIN/$id" "$request")
+    echo "$response" | grep -q "success" && echo "✅ Deleted successfully" || echo "❌ Failed: $response"
+  done
+  
+  # Update local config
+  if [ -f "$CONFIG_FILE" ]; then
+    local temp_file=$(mktemp)
+    jq --arg subdomain "$subdomain" '.subdomains = [.subdomains[] | select(.name != $subdomain)]' \
+      "$CONFIG_FILE" > "$temp_file"
+    mv "$temp_file" "$CONFIG_FILE"
+  fi
+}
+
+# Helper to get record IDs for a subdomain
+get_record_ids() {
+  local subdomain=$1
+  
+  local request=$(cat <<EOF
+{
+  "secretapikey": "$SECRET_KEY",
+  "apikey": "$API_KEY"
+}
+EOF
+)
+
+  local response=$(porkbun_api "dns/retrieve/$DOMAIN" "$request")
+  echo "$response" | jq -r --arg subdomain "$subdomain" \
+    '.records[] | select(.name == $subdomain) | .id'
+}
+
+# Show usage if no arguments
+if [ $# -eq 0 ]; then
+  echo "Usage: $0 [create|list|delete] [args...]"
+  echo "  create <subdomain> [type] [content] [ttl]  - Create new subdomain"
+  echo "  list                                       - List all subdomains"
+  echo "  delete <subdomain>                         - Delete subdomain"
+  exit 1
+fi
+
+# Process commands
+case "$1" in
+  create)
+    if [ $# -lt 2 ]; then
+      echo "❌ Missing subdomain name"
+      exit 1
+    fi
+    create_subdomain "${@:2}"
+    ;;
+  list)
+    list_subdomains
+    ;;
+  delete)
+    if [ $# -lt 2 ]; then
+      echo "❌ Missing subdomain name"
+      exit 1
+    fi
+    delete_subdomain "$2"
+    ;;
+  *)
+    echo "❌ Unknown command: $1"
+    exit 1
+    ;;
+esac</pre>
+                    </div>
+                </section>
+                
+                <!-- NGINX Configuration Section -->
+                <section id="nginx" class="dashboard-section">
+                    <div class="section-header">
+                        <h2 class="section-title">NGINX Configuration</h2>
+                        <p class="section-subtitle">Optimal web server setup for the dashboard</p>
+                    </div>
+                    
+                    <div class="deployment-section">
+                        <p>Complete NGINX configuration with performance and security optimizations:</p>
+                        
+                        <pre class="step-code"># /etc/nginx/sites-available/dashboard.dissemblage.art
+server {
+    listen 80;
+    server_name dashboard.dissemblage.art;
+    
+    # Redirect all HTTP requests to HTTPS
+    location / {
+        return 301 https://$host$request_uri;
+    }
+}
+
+server {
+    listen 443 ssl http2;
+    server_name dashboard.dissemblage.art;
+    
+    # SSL configuration (managed by Certbot)
+    ssl_certificate /etc/letsencrypt/live/dashboard.dissemblage.art/fullchain.pem;
+    ssl_certificate_key /etc/letsencrypt/live/dashboard.dissemblage.art/privkey.pem;
+    include /etc/letsencrypt/options-ssl-nginx.conf;
+    ssl_dhparam /etc/letsencrypt/ssl-dhparams.pem;
+    
+    # SSL optimizations
+    ssl_session_cache shared:SSL:10m;
+    ssl_session_timeout 1d;
+    ssl_session_tickets off;
+    ssl_stapling on;
+    ssl_stapling_verify on;
+    resolver 8.8.8.8 8.8.4.4 valid=300s;
+    resolver_timeout 5s;
+    
+    # Security headers
+    add_header Strict-Transport-Security "max-age=31536000; includeSubDomains; preload" always;
+    add_header X-Frame-Options "SAMEORIGIN" always;
+    add_header X-Content-Type-Options "nosniff" always;
+    add_header X-XSS-Protection "1; mode=block" always;
+    add_header Referrer-Policy "strict-origin-when-cross-origin" always;
+    add_header Content-Security-Policy "default-src 'self'; script-src 'self' 'unsafe-inline'; style-src 'self' 'unsafe-inline'; img-src 'self' data:; font-src 'self'; connect-src 'self' https://api.github.com;" always;
+    add_header Permissions-Policy "camera=(), microphone=(), geolocation=(), payment=()" always;
+    
+    # Document root
+    root /var/www/dashboard.dissemblage.art;
+    index index.html;
+    
+    # Optimized static file serving
+    location ~* \.(jpg|jpeg|png|gif|ico|css|js)$ {
+        expires 30d;
+        add_header Cache-Control "public, no-transform";
+        try_files $uri =404;
+    }
+    
+    # Main location block
+    location / {
+        try_files $uri $uri/ /index.html;
+    }
+    
+    # Error pages
+    error_page 404 /404.html;
+    location = /404.html {
+        internal;
+    }
+    
+    error_page 500 502 503 504 /50x.html;
+    location = /50x.html {
+        internal;
+    }
+    
+    # Disable access to hidden files
+    location ~ /\.(?!well-known) {
+        deny all;
+    }
+    
+    # Rate limiting
+    limit_req_zone $binary_remote_addr zone=dashboard_limit:10m rate=10r/s;
+    limit_req zone=dashboard_limit burst=20 nodelay;
+    
+    # Gzip compression
+    gzip on;
+    gzip_vary on;
+    gzip_proxied any;
+    gzip_comp_level 6;
+    gzip_types text/plain text/css application/json application/javascript text/xml application/xml application/xml+rss text/javascript;
+}</pre>
+                    </div>
+                </section>
+            </main>
+        </div>
+    </div>
+    
+    <footer>
+        <div class="container">
+            <p>&copy; 2025 lab.dissemblage.art | Self-Deploying Project Dashboard</p>
+            <div class="footer-links">
+                <a href="https://github.com/uprootiny/lab-dashboard" class="footer-link">GitHub Repository</a>
+                <a href="https://uprootiny.github.io/lab-dashboard" class="footer-link">GitHub Pages</a>
+                <a href="https://lab.dissemblage.art" class="footer-link">Main Site</a>
+            </div>
+        </div>
+    </footer>
+    
+    <script>
+        // Simple dashboard functionality
+        document.addEventListener('DOMContentLoaded', () => {
+            // Navigation link handling
+            const navLinks = document.querySelectorAll('.nav-link');
+            
+            navLinks.forEach(link => {
+                link.addEventListener('click', (e) => {
+                    // Remove active class from all links
+                    navLinks.forEach(l => l.classList.remove('active'));
+                    
+                    // Add active class to clicked link
+                    link.classList.add('active');
+                    
+                    // Smooth scroll to section
+                    const targetId = link.getAttribute('href').substring(1);
+                    const targetSection = document.getElementById(targetId);
+                    
+                    if (targetSection) {
+                        e.preventDefault();
+                        window.scrollTo({
+                            top: targetSection.offsetTop - 20,
+                            behavior: 'smooth'
+                        });
+                    }
+                });
+            });
+            
+            // Automatically update status display timestamp
+            const updateStatusTimestamp = () => {
+                const statusText = document.querySelector('.status-text');
+                if (statusText) {
+                    statusText.textContent = `System Online • Last checked: ${new Date().toLocaleTimeString()}`;
+                }
+            };
+            
+            updateStatusTimestamp();
+            setInterval(updateStatusTimestamp, 60000); // Update every minute
+        });
+    </script>
+</body>
+</html>

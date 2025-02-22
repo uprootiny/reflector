@@ -1,0 +1,2 @@
+
+we're building up levels of mathematical relations, definitions and criteria to perform homotopic, fiber-bundle, fibration, cohomological and topologic computations exploring the hypothesis space in vicinity of "market regimes are just an orthogonal subset of indicators and can be picked to maximize both alpha and certainty of forecasts built with an eye to higher homotopy structures apparent in the flow of data"

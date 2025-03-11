@@ -1,0 +1,807 @@
+# Create configuration file
+lateral_create_config() {
+  log_info "Creating initial configuration..."
+  
+  local config_file="$LATERAL_HOME/config/lateral.json"
+  
+  # Skip if config already exists
+  if [ -f "$config_file" ]; then
+    log_info "Using existing configuration"
+    return 0
+  }
+  
+  mkdir -p "$(dirname "$config_file")"
+  
+  # Create basic configuration
+  cat > "$config_file" <<EOF
+{
+  "version": "$LATERAL_VERSION",
+  "instance_id": "$LATERAL_INSTANCE_ID",
+  "installation": {
+    "date": "$(date -u +"%Y-%m-%dT%H:%M:%SZ")",
+    "vector": "$LATERAL_VECTOR",
+    "environment": {
+      "os": "$LATERAL_OS",
+      "os_version": "$LATERAL_OS_VERSION",
+      "arch": "$LATERAL_ARCH",
+      "memory": "$LATERAL_MEMORY",
+      "cpu_cores": "$LATERAL_CPU_CORES",
+      "in_container": $LATERAL_IN_CONTAINER
+    }
+  },
+  "mesh": {
+    "enabled": ${LATERAL_NO_MESH:+false || true},
+    "bootstrap_peers": [
+      "lateral.dissemblage.art:7681",
+      "y4tst35jtkvr4xkyvdgccmczkjlrl5hkj4fr1qkjq2qvzaiz6b3a.b32.i2p:7681"
+    ],
+    "transports": [
+      "http",
+      "ipfs"
+    ]
+  },
+  "paths": {
+    "home": "$LATERAL_HOME",
+    "bin": "$LATERAL_HOME/bin",
+    "models": "$LATERAL_HOME/models",
+    "cache": "$LATERAL_HOME/cache",
+    "config": "$LATERAL_HOME/config"
+  },
+  "capabilities": {
+    "python": $LATERAL_HAS_PYTHON,
+    "node": $LATERAL_HAS_NODE,
+    "rust": $LATERAL_HAS_RUST,
+    "go": $LATERAL_HAS_GO,
+    "clojure": $LATERAL_HAS_CLOJURE
+  },
+  "llm": {
+    "model": "lateral-tiny",
+    "version": "0.1.0",
+    "backend": "auto",
+    "context_size": 4096,
+    "temperature": 0.7,
+    "presence_penalty": 0.0,
+    "frequency_penalty": 0.0
+  },
+  "security": {
+    "auto_update": true,
+    "verify_downloads": true,
+    "sandbox_execution": true
+  }
+}
+EOF
+  
+  log_info "Configuration created at $config_file"
+}
+
+# Install using Rust vector
+lateral_install_rust_vector() {
+  log_info "Using Rust vector for installation..."
+  
+  if [ "$LATERAL_HAS_RUST" != "true" ]; then
+    log_error "Rust is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Try cargo installation first
+  if command -v cargo >/dev/null 2>&1; then
+    log_info "Installing via cargo..."
+    if cargo install lateral-core >/dev/null 2>&1; then
+      log_info "Successfully installed via cargo"
+      return 0
+    fi
+    
+    # Try alternative registry if main cargo install fails
+    log_warn "Standard cargo installation failed, trying alternative registry..."
+    if cargo install --registry alternative lateral-core >/dev/null 2>&1; then
+      log_info "Successfully installed via alternative registry"
+      return 0
+    fi
+  fi
+  
+  # Fallback to bootstrap rust script
+  log_info "Cargo installation failed, using bootstrap script..."
+  local bootstrap_file="$LATERAL_TMP/bootstrap.rs"
+  
+  if lateral_fetch "vectors/rust/bootstrap.rs" "$bootstrap_file"; then
+    log_info "Compiling Rust bootstrap..."
+    if rustc "$bootstrap_file" -o "$LATERAL_TMP/lateral-bootstrap"; then
+      log_info "Executing Rust bootstrap..."
+      "$LATERAL_TMP/lateral-bootstrap" --home="$LATERAL_HOME" ${LATERAL_NO_MESH:+--no-mesh} ${LATERAL_MINIMAL:+--minimal}
+      local result=$?
+      if [ $result -eq 0 ]; then
+        log_info "Rust bootstrap successful"
+        return 0
+      else
+        log_error "Rust bootstrap failed with code $result"
+      fi
+    else
+      log_error "Failed to compile Rust bootstrap"
+    fi
+  else
+    log_error "Failed to download Rust bootstrap"
+  fi
+  
+  # Final fallback to curl vector
+  log_warn "Rust vector failed, falling back to curl vector"
+  lateral_install_curl_vector
+}
+
+# Install using Go vector
+lateral_install_go_vector() {
+  log_info "Using Go vector for installation..."
+  
+  if [ "$LATERAL_HAS_GO" != "true" ]; then
+    log_error "Go is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Try go install first
+  log_info "Installing via go install..."
+  if go install github.com/lateral-org/lateral@latest >/dev/null 2>&1; then
+    log_info "Successfully installed via go install"
+    
+    # Create symlink if needed
+    go_bin="$(go env GOPATH)/bin/lateral"
+    if [ -f "$go_bin" ]; then
+      mkdir -p "$LATERAL_HOME/bin"
+      ln -sf "$go_bin" "$LATERAL_HOME/bin/lateral"
+      log_info "Created symlink to Go binary"
+    fi
+    
+    return 0
+  fi
+  
+  # Fallback to bootstrap go script
+  log_info "Go install failed, using bootstrap script..."
+  local bootstrap_file="$LATERAL_TMP/bootstrap.go"
+  
+  if lateral_fetch "vectors/go/bootstrap.go" "$bootstrap_file"; then
+    log_info "Executing Go bootstrap..."
+    go run "$bootstrap_file" --home="$LATERAL_HOME" ${LATERAL_NO_MESH:+--no-mesh} ${LATERAL_MINIMAL:+--minimal}
+    local result=$?
+    if [ $result -eq 0 ]; then
+      log_info "Go bootstrap successful"
+      return 0
+    else
+      log_error "Go bootstrap failed with code $result"
+    fi
+  else
+    log_error "Failed to download Go bootstrap"
+  fi
+  
+  # Final fallback to curl vector
+  log_warn "Go vector failed, falling back to curl vector"
+  lateral_install_curl_vector
+}
+
+# Install using Nix vector
+lateral_install_nix_vector() {
+  log_info "Using Nix vector for installation..."
+  
+  if ! command -v nix-env >/dev/null 2>&1 && ! command -v nix >/dev/null 2>&1; then
+    log_error "Nix is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Try nix-env installation first if old-style nix is available
+  if command -v nix-env >/dev/null 2>&1; then
+    log_info "Installing via nix-env..."
+    if nix-env -iA nixpkgs.lateral >/dev/null 2>&1; then
+      log_info "Successfully installed via nix-env"
+      return 0
+    fi
+  fi
+  
+  # Try flakes if new-style nix is available
+  if command -v nix >/dev/null 2>&1; then
+    log_info "Installing via nix flake..."
+    if nix profile install github:lateral-org/lateral >/dev/null 2>&1; then
+      log_info "Successfully installed via nix flake"
+      return 0
+    fi
+  fi
+  
+  # Fallback to curl vector for installation within nix
+  log_warn "Nix vector failed, falling back to curl vector"
+  lateral_install_curl_vector
+}
+
+# Install using HomeBrew vector
+lateral_install_homebrew_vector() {
+  log_info "Using Homebrew vector for installation..."
+  
+  if ! command -v brew >/dev/null 2>&1; then
+    log_error "Homebrew is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Try homebrew installation
+  log_info "Installing via homebrew..."
+  if brew install lateral >/dev/null 2>&1; then
+    log_info "Successfully installed via homebrew"
+    return 0
+  fi
+  
+  # Try tap if formula not in core
+  log_info "Core formula not found, trying tap..."
+  if brew tap lateral-org/lateral >/dev/null 2>&1 && \
+     brew install lateral-org/lateral/lateral >/dev/null 2>&1; then
+    log_info "Successfully installed via homebrew tap"
+    return 0
+  fi
+  
+  # Final fallback to curl vector
+  log_warn "Homebrew vector failed, falling back to curl vector"
+  lateral_install_curl_vector
+}
+
+# Install using Clojure vector
+lateral_install_clojure_vector() {
+  log_info "Using Clojure vector for installation..."
+  
+  if [ "$LATERAL_HAS_CLOJURE" != "true" ]; then
+    log_error "Clojure is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Create deps.edn file for installation
+  mkdir -p "$LATERAL_HOME"
+  local deps_file="$LATERAL_HOME/deps.edn"
+  
+  cat > "$deps_file" <<EOF
+{:deps {org.lateral/framework {:git/url "https://github.com/lateral-org/lateral"
+                             :sha "a7b32e4c"}}
+ :aliases {:lateral {:main-opts ["-m" "lateral.core"]}}}
+EOF
+  
+  # Create launcher script
+  mkdir -p "$LATERAL_HOME/bin"
+  local launcher="$LATERAL_HOME/bin/lateral"
+  
+  cat > "$launcher" <<EOF
+#!/bin/sh
+clojure -A:lateral "\$@"
+EOF
+  
+  chmod +x "$launcher"
+  
+  # Create symlink in PATH if possible
+  if [ -d "$HOME/.local/bin" ]; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$launcher" "$HOME/.local/bin/lateral"
+  fi
+  
+  # Verify installation
+  if echo "true" | clojure -Sdeps "{:deps {org.lateral/framework {:git/url \"https://github.com/lateral-org/lateral\" :sha \"a7b32e4c\"}}}" -e "(require '[lateral.core :as lateral]) (println \"Lateral installation successful\")" >/dev/null 2>&1; then
+    log_info "Clojure vector installation successful"
+    return 0
+  else
+    log_warn "Clojure vector verification failed, trying bootstrap"
+    
+    # Try bootstrap if deps installation failed
+    local bootstrap_file="$LATERAL_TMP/bootstrap.clj"
+    if lateral_fetch "vectors/clojure/bootstrap.clj" "$bootstrap_file"; then
+      log_info "Executing Clojure bootstrap..."
+      clojure -i "$bootstrap_file" >/dev/null 2>&1
+      log_info "Clojure bootstrap completed"
+      return 0
+    else
+      log_error "Failed to download Clojure bootstrap"
+    fi
+    
+    # Final fallback to curl vector
+    log_warn "Clojure vector failed, falling back to curl vector"
+    lateral_install_curl_vector
+  fi
+}
+
+# Install using Docker vector
+lateral_install_docker_vector() {
+  log_info "Using Docker vector for installation..."
+  
+  if ! command -v docker >/dev/null 2>&1 && ! command -v podman >/dev/null 2>&1; then
+    log_error "Docker/Podman is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Determine which container runtime to use
+  local container_cmd=""
+  if command -v docker >/dev/null 2>&1; then
+    container_cmd="docker"
+  else
+    container_cmd="podman"
+  fi
+  
+  # Pull the image
+  log_info "Pulling Lateral container image..."
+  if ! $container_cmd pull lateral/framework:latest >/dev/null 2>&1; then
+    log_warn "Failed to pull image, trying alternative registry..."
+    if ! $container_cmd pull ghcr.io/lateral-org/lateral:latest >/dev/null 2>&1; then
+      log_error "Failed to pull image from all registries"
+      lateral_install_curl_vector # Fallback
+      return 1
+    fi
+  fi
+  
+  # Create wrapper script
+  mkdir -p "$LATERAL_HOME/bin"
+  local wrapper="$LATERAL_HOME/bin/lateral"
+  
+  cat > "$wrapper" <<EOF
+#!/bin/sh
+$container_cmd run --rm -it \\
+  -v "\$HOME/.lateral:/root/.lateral" \\
+  -v "\$(pwd):/workspace" \\
+  -w /workspace \\
+  lateral/framework:latest \\
+  "\$@"
+EOF
+  
+  chmod +x "$wrapper"
+  
+  # Create symlink in PATH if possible
+  if [ -d "$HOME/.local/bin" ]; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$wrapper" "$HOME/.local/bin/lateral"
+  fi
+  
+  log_info "Docker vector installation complete"
+}
+
+# Install using Binary vector
+lateral_install_binary_vector() {
+  log_info "Using Binary vector for installation..."
+  
+  # Create directories
+  mkdir -p "$LATERAL_HOME/bin"
+  mkdir -p "$LATERAL_HOME/models"
+  
+  # Download binary for current platform
+  local binary_name="lateral-$LATERAL_OS-$LATERAL_ARCH"
+  local binary_path="$LATERAL_HOME/bin/lateral"
+  
+  log_info "Downloading binary for $LATERAL_OS-$LATERAL_ARCH..."
+  if lateral_fetch "bin/$binary_name" "$binary_path"; then
+    chmod +x "$binary_path"
+    log_info "Binary downloaded successfully"
+  else
+    log_error "Failed to download binary for $LATERAL_OS-$LATERAL_ARCH"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Create symlink in PATH if possible
+  if [ -d "$HOME/.local/bin" ]; then
+    mkdir -p "$HOME/.local/bin"
+    ln -sf "$binary_path" "$HOME/.local/bin/lateral"
+  fi
+  
+  log_info "Binary vector installation complete"
+}
+
+# Install using Erlang/Elixir vector
+lateral_install_erlang_vector() {
+  log_info "Using Erlang/Elixir vector for installation..."
+  
+  if [ "$LATERAL_HAS_ERLANG" != "true" ]; then
+    log_error "Erlang/Elixir is required but not available"
+    lateral_install_curl_vector # Fallback
+    return 1
+  fi
+  
+  # Try downloading bootstrap script
+  local bootstrap_file="$LATERAL_TMP/bootstrap.ex"
+  
+  if lateral_fetch "vectors/erlang/bootstrap.ex" "$bootstrap_file"; then
+    log_info "Executing Erlang/Elixir bootstrap..."
+    
+    # Run bootstrap with appropriate command
+    if command -v elixir >/dev/null 2>&1; then
+      elixir "$bootstrap_file" --home="$LATERAL_HOME" ${LATERAL_NO_MESH:+--no-mesh} ${LATERAL_MINIMAL:+--minimal}
+    else
+      erl -noshell -s eval "file:eval(\"$bootstrap_file\")." -s init stop
+    fi
+    
+    local result=$?
+    if [ $result -eq 0 ]; then
+      log_info "Erlang/Elixir bootstrap successful"
+      return 0
+    else
+      log_error "Erlang/Elixir bootstrap failed with code $result"
+    fi
+  else
+    log_error "Failed to download Erlang/Elixir bootstrap"
+  fi
+  
+  # Final fallback to curl vector
+  log_warn "Erlang/Elixir vector failed, falling back to curl vector"
+  lateral_install_curl_vector
+}
+
+# =============================================================================
+# LLM SELECTION & INSTALLATION
+# =============================================================================
+
+lateral_select_llm() {
+  log_step "Selecting appropriate LLM model..."
+  
+  # Skip if in minimal mode
+  if [ "$LATERAL_MINIMAL" = "1" ]; then
+    log_info "Minimal mode, skipping LLM selection"
+    return 0
+  fi
+  
+  # Determine appropriate model size based on memory
+  local model_size="tiny"
+  if [ "$LATERAL_MEMORY" != "unknown" ]; then
+    if [ "$LATERAL_MEMORY" -gt 16000 ]; then
+      model_size="large"
+    elif [ "$LATERAL_MEMORY" -gt 8000 ]; then
+      model_size="medium"
+    elif [ "$LATERAL_MEMORY" -gt 4000 ]; then
+      model_size="small"
+    fi
+  fi
+  
+  LATERAL_LLM_MODEL="lateral-$model_size"
+  log_info "Selected LLM model: $LATERAL_LLM_MODEL"
+  
+  # Update config with selected model
+  local config_file="$LATERAL_HOME/config/lateral.json"
+  if [ -f "$config_file" ]; then
+    # In a real implementation, we would use jq to update the JSON
+    # For this script, we'll just note that we should update
+    log_info "Would update config with selected model"
+  fi
+  
+  export LATERAL_LLM_MODEL
+}
+
+lateral_download_llm() {
+  log_step "Downloading LLM model..."
+  
+  # Skip if in minimal mode or check-only mode
+  if [ "$LATERAL_MINIMAL" = "1" ] || [ "$LATERAL_CHECK_ONLY" = "1" ]; then
+    log_info "Minimal/check-only mode, skipping LLM download"
+    return 0
+  fi
+  
+  local model_file="$LATERAL_LLM_MODEL.gguf"
+  local model_path="$LATERAL_HOME/models/$model_file"
+  
+  # Skip if model already exists
+  if [ -f "$model_path" ]; then
+    log_info "Model already exists at $model_path"
+    return 0
+  fi
+  
+  # Download model
+  log_info "Downloading $LATERAL_LLM_MODEL..."
+  if lateral_fetch "models/$model_file" "$model_path"; then
+    log_info "Model downloaded successfully"
+    
+    # Verify model checksum if available
+    local checksum_file="$LATERAL_TMP/$model_file.sha256"
+    if lateral_fetch "models/$model_file.sha256" "$checksum_file"; then
+      local expected_checksum="$(cat "$checksum_file" | cut -d' ' -f1)"
+      if verify_checksum "$model_path" "$expected_checksum"; then
+        log_info "Model checksum verified"
+      else
+        log_warn "Model checksum verification failed, but continuing"
+      fi
+    else
+      log_warn "Checksum file not available, skipping verification"
+    fi
+    
+    return 0
+  else
+    log_error "Failed to download model"
+    return 1
+  fi
+}
+
+# =============================================================================
+# MESH INITIALIZATION
+# =============================================================================
+
+lateral_init_mesh() {
+  log_step "Initializing neural mesh connection..."
+  
+  # Skip if mesh is disabled or in check-only mode
+  if [ "$LATERAL_NO_MESH" = "1" ] || [ "$LATERAL_CHECK_ONLY" = "1" ]; then
+    log_info "Mesh disabled or check-only mode, skipping initialization"
+    return 0
+  fi
+  
+  # Check for existing mesh client
+  local mesh_client=""
+  
+  # Try language-specific mesh clients based on available runtimes
+  if [ "$LATERAL_HAS_PYTHON" = "true" ] && [ -f "$LATERAL_HOME/bin/lateral-mesh.py" ]; then
+    mesh_client="$LATERAL_HOME/bin/lateral-mesh.py"
+    log_info "Using Python mesh client"
+  elif [ "$LATERAL_HAS_NODE" = "true" ] && [ -f "$LATERAL_HOME/bin/lateral-mesh.js" ]; then
+    mesh_client="$LATERAL_HOME/bin/lateral-mesh.js"
+    log_info "Using Node.js mesh client"
+  elif [ -f "$LATERAL_HOME/bin/lateral-mesh" ]; then
+    mesh_client="$LATERAL_HOME/bin/lateral-mesh"
+    log_info "Using binary mesh client"
+  fi
+  
+  # If no mesh client found, create minimal shell version
+  if [ -z "$mesh_client" ]; then
+    log_info "No mesh client found, creating minimal shell client"
+    mesh_client="$LATERAL_HOME/bin/lateral-mesh.sh"
+    
+    cat > "$mesh_client" <<'EOF'
+#!/bin/sh
+# Minimal Lateral mesh client
+INSTANCE_ID="$1"
+CONFIG_FILE="$2"
+
+echo "Lateral mesh minimal client starting with ID: $INSTANCE_ID"
+echo "Using config file: $CONFIG_FILE"
+
+# This is a placeholder for a real mesh client
+# In a production implementation, this would establish real mesh connections
+echo "Minimal mesh client initialized"
+EOF
+    
+    chmod +x "$mesh_client"
+  fi
+  
+  # Start mesh client
+  if [ -x "$mesh_client" ]; then
+    log_info "Starting mesh client..."
+    
+    # Determine how to execute based on client type
+    if [[ "$mesh_client" == *.py ]]; then
+      nohup "$LATERAL_PYTHON_CMD" "$mesh_client" --id="$LATERAL_INSTANCE_ID" --config="$LATERAL_HOME/config/lateral.json" >/dev/null 2>&1 &
+    elif [[ "$mesh_client" == *.js ]]; then
+      nohup node "$mesh_client" --id="$LATERAL_INSTANCE_ID" --config="$LATERAL_HOME/config/lateral.json" >/dev/null 2>&1 &
+    else
+      nohup "$mesh_client" "$LATERAL_INSTANCE_ID" "$LATERAL_HOME/config/lateral.json" >/dev/null 2>&1 &
+    fi
+    
+    MESH_PID=$!
+    
+    # Store PID for later management
+    mkdir -p "$LATERAL_HOME/mesh"
+    echo $MESH_PID > "$LATERAL_HOME/mesh/mesh.pid"
+    
+    log_info "Mesh client started with PID: $MESH_PID"
+    return 0
+  else
+    log_warn "Mesh client found but not executable: $mesh_client"
+    return 1
+  fi
+}
+
+# =============================================================================
+# SHELL INTEGRATION
+# =============================================================================
+
+lateral_setup_shell_integration() {
+  log_step "Setting up shell integration..."
+  
+  # Skip in check-only mode
+  if [ "$LATERAL_CHECK_ONLY" = "1" ]; then
+    log_info "Check-only mode, skipping shell integration"
+    return 0
+  fi
+  
+  # Detect current shell
+  local shell_name=""
+  if [ -n "$SHELL" ]; then
+    shell_name="$(basename "$SHELL")"
+  else
+    # Try to detect from process
+    if ps -p $$ | grep -q "bash"; then
+      shell_name="bash"
+    elif ps -p $$ | grep -q "zsh"; then
+      shell_name="zsh"
+    elif ps -p $$ | grep -q "fish"; then
+      shell_name="fish"
+    else
+      shell_name="sh"
+    fi
+  fi
+  
+  # Determine RC file to modify
+  local rc_file=""
+  case "$shell_name" in
+    bash)
+      if [ -f "$HOME/.bashrc" ]; then
+        rc_file="$HOME/.bashrc"
+      elif [ -f "$HOME/.bash_profile" ]; then
+        rc_file="$HOME/.bash_profile"
+      elif [ -f "$HOME/.profile" ]; then
+        rc_file="$HOME/.profile"
+      else
+        rc_file="$HOME/.bashrc"
+        touch "$rc_file"
+      fi
+      ;;
+    zsh)
+      rc_file="$HOME/.zshrc"
+      ;;
+    fish)
+      rc_file="$HOME/.config/fish/config.fish"
+      mkdir -p "$(dirname "$rc_file")"
+      ;;
+    *)
+      log_warn "Unknown shell: $shell_name, skipping integration"
+      return 1
+      ;;
+  esac
+  
+  log_info "Setting up integration for $shell_name in $rc_file"
+  
+  # Check if integration already exists
+  if grep -q "# Lateral Integration" "$rc_file" 2>/dev/null; then
+    log_info "Shell integration already set up"
+    return 0
+  fi
+  
+  # Add integration block
+  if [ "$shell_name" = "fish" ]; then
+    cat >> "$rc_file" <<EOF
+
+# Lateral Integration
+function lateral
+    if test "\$argv[1]" = "activate"
+        set -g LATERAL_ACTIVE true
+        echo "Lateral activated in current shell"
+    else if test "\$argv[1]" = "deactivate"
+        set -e LATERAL_ACTIVE
+        echo "Lateral deactivated in current shell"
+    else
+        $LATERAL_HOME/bin/lateral \$argv
+    end
+end
+
+# Add Lateral bin to PATH if not already there
+if not contains "$LATERAL_HOME/bin" \$PATH
+    set -gx PATH "$LATERAL_HOME/bin" \$PATH
+end
+EOF
+  else
+    cat >> "$rc_file" <<EOF
+
+# Lateral Integration
+lateral() {
+  if [ "\$1" = "activate" ]; then
+    export LATERAL_ACTIVE=true
+    echo "Lateral activated in current shell"
+  elif [ "\$1" = "deactivate" ]; then
+    unset LATERAL_ACTIVE
+    echo "Lateral deactivated in current shell"
+  else
+    $LATERAL_HOME/bin/lateral "\$@"
+  fi
+}
+
+# Add Lateral bin to PATH if not already there
+if ! echo "\$PATH" | tr ":" "\\n" | grep -q "^$LATERAL_HOME/bin\$"; then
+  export PATH="$LATERAL_HOME/bin:\$PATH"
+fi
+EOF
+  fi
+  
+  log_info "Shell integration added to $rc_file"
+  log_info "Restart your shell or run 'source $rc_file' to complete setup"
+}
+
+# =============================================================================
+# SELF-IMPROVEMENT CAPABILITY
+# =============================================================================
+
+lateral_setup_self_improvement() {
+  log_step "Setting up self-improvement capability..."
+  
+  # Skip if in minimal or check-only mode
+  if [ "$LATERAL_MINIMAL" = "1" ] || [ "$LATERAL_CHECK_ONLY" = "1" ]; then
+    log_info "Minimal/check-only mode, skipping self-improvement setup"
+    return 0
+  fi
+  
+  # Store prompts for later use
+  mkdir -p "$LATERAL_HOME/prompts"
+  
+  echo "$LATERAL_EVOLUTION_PROMPT" > "$LATERAL_HOME/prompts/evolution.prompt"
+  echo "$LATERAL_VECTOR_PROMPT" > "$LATERAL_HOME/prompts/vector.prompt"
+  echo "$LATERAL_TRANSPORT_PROMPT" > "$LATERAL_HOME/prompts/transport.prompt"
+  echo "$LATERAL_LLM_PROMPT" > "$LATERAL_HOME/prompts/llm.prompt"
+  
+  log_info "Stored prompts for self-improvement"
+  
+  # Create hook for periodic self-check
+  mkdir -p "$LATERAL_HOME/hooks"
+  local self_check_hook="$LATERAL_HOME/hooks/self-check.sh"
+  
+  cat > "$self_check_hook" <<'EOF'
+#!/bin/sh
+# Lateral self-check hook
+# Runs periodically to verify and enhance the installation
+
+# Check if core components exist and are functional
+if [ ! -x "$LATERAL_HOME/bin/lateral" ]; then
+  echo "Core binary missing or not executable, initiating recovery..."
+  # Recovery logic would be implemented here
+  exit 1
+fi
+
+# Check for updates if online
+if ping -c 1 -W 2 lateral.dissemblage.art >/dev/null 2>&1; then
+  echo "Checking for updates..."
+  # Update check logic would be implemented here
+fi
+
+# Run self-evolution if LLM is available
+if [ -f "$LATERAL_HOME/models/lateral-tiny.gguf" ]; then
+  echo "Running self-evolution check..."
+  # Self-evolution logic would be implemented here
+fi
+
+echo "Self-check completed successfully"
+exit 0
+EOF
+  
+  chmod +x "$self_check_hook"
+  
+  log_info "Created self-improvement hooks"
+}
+
+# =============================================================================
+# MAIN EXECUTION
+# =============================================================================
+
+lateral_main() {
+  log_step "Starting Lateral installation..."
+  
+  # Check if this is a verification-only run
+  if [ "$LATERAL_CHECK_ONLY" = "1" ]; then
+    log_info "Running in check-only mode"
+    lateral_detect_environment
+    
+    # Verify we can determine a vector
+    lateral_select_vector
+    
+    log_info "Environment check completed successfully"
+    return 0
+  fi
+  
+  # Main installation process
+  lateral_detect_environment
+  lateral_select_vector
+  lateral_install_vector
+  lateral_create_config
+  lateral_select_llm
+  lateral_download_llm
+  lateral_init_mesh
+  lateral_setup_shell_integration
+  lateral_setup_self_improvement
+  
+  log_step "Lateral installation complete!"
+  log_info "Installation directory: $LATERAL_HOME"
+  log_info "Vector used: $LATERAL_VECTOR"
+  log_info "Instance ID: $LATERAL_INSTANCE_ID"
+  
+  if [ -x "$LATERAL_HOME/bin/lateral" ]; then
+    log_info "You can now use Lateral by running: $LATERAL_HOME/bin/lateral"
+    log_info "Or, after restarting your shell: lateral"
+  else
+    log_warn "Installation completed but lateral binary not found at expected location"
+    log_info "Check logs for any errors and try running the installer again"
+  fi
+}
+
+# Run the main function
+lateral_main

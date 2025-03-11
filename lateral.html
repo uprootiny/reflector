@@ -1,0 +1,1017 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Lateral Vector Health Matrix</title>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r134/three.min.js"></script>
+  <script src="https://cdnjs.cloudflare.com/ajax/libs/vanta/0.5.24/vanta.net.min.js"></script>
+  <style>
+    :root {
+      --primary: #6366f1;
+      --primary-dark: #4338ca;
+      --secondary: #06b6d4;
+      --tertiary: #10b981;
+      --success: #22c55e;
+      --warning: #eab308;
+      --danger: #ef4444;
+      --dark: #111827;
+      --light: #f1f5f9;
+      --background: #030712;
+      --text: #e2e8f0;
+      --terminal-bg: #0d1117;
+      --tooltip-bg: rgba(99, 102, 241, 0.9);
+    }
+    
+    * {
+      margin: 0;
+      padding: 0;
+      box-sizing: border-box;
+      font-family: 'Inter', -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, Oxygen, Ubuntu, Cantarell, 'Open Sans', 'Helvetica Neue', sans-serif;
+    }
+    
+    body {
+      background-color: var(--background);
+      color: var(--text);
+      min-height: 100vh;
+      overflow-x: hidden;
+    }
+    
+    #vanta-background {
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      z-index: -1;
+    }
+    
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 0 2rem;
+    }
+    
+    header {
+      padding: 2rem 0;
+      position: relative;
+      z-index: 10;
+    }
+    
+    nav {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+    }
+    
+    .logo {
+      font-size: 2rem;
+      font-weight: 700;
+      color: var(--primary);
+      text-decoration: none;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .logo-icon {
+      display: inline-block;
+      width: 2.5rem;
+      height: 2.5rem;
+      background: var(--primary);
+      border-radius: 0.5rem;
+      position: relative;
+    }
+    
+    .logo-icon::before,
+    .logo-icon::after {
+      content: '';
+      position: absolute;
+      background: var(--background);
+      border-radius: 1px;
+    }
+    
+    .logo-icon::before {
+      width: 1.5rem;
+      height: 0.25rem;
+      top: 1.125rem;
+      left: 0.5rem;
+    }
+    
+    .logo-icon::after {
+      width: 0.25rem;
+      height: 1.5rem;
+      top: 0.5rem;
+      left: 1.125rem;
+    }
+    
+    .nav-links {
+      display: flex;
+      gap: 2rem;
+    }
+    
+    .nav-link {
+      color: var(--text);
+      text-decoration: none;
+      font-weight: 500;
+      transition: color 0.2s ease;
+    }
+    
+    .nav-link:hover {
+      color: var(--primary);
+    }
+    
+    .btn {
+      display: inline-block;
+      padding: 0.75rem 1.5rem;
+      border-radius: 0.5rem;
+      font-weight: 600;
+      text-decoration: none;
+      cursor: pointer;
+      transition: all 0.2s ease;
+    }
+    
+    .btn-primary {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .btn-primary:hover {
+      background: var(--primary-dark);
+    }
+    
+    .hero {
+      padding: 4rem 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .hero h1 {
+      font-size: 3.5rem;
+      font-weight: 800;
+      line-height: 1.2;
+      margin-bottom: 1.5rem;
+      background: linear-gradient(to right, var(--primary), var(--secondary), var(--tertiary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+    }
+    
+    .hero p {
+      font-size: 1.25rem;
+      max-width: 800px;
+      margin-bottom: 2.5rem;
+      opacity: 0.9;
+    }
+    
+    .hero-buttons {
+      display: flex;
+      gap: 1rem;
+      margin-bottom: 4rem;
+    }
+    
+    .status-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+      margin-top: 4rem;
+    }
+    
+    .status-card {
+      background: rgba(17, 24, 39, 0.8);
+      border-radius: 1rem;
+      padding: 1.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+      transition: transform 0.3s ease, box-shadow 0.3s ease;
+    }
+    
+    .status-card:hover {
+      transform: translateY(-5px);
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .status-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+      display: flex;
+      align-items: center;
+      gap: 0.5rem;
+    }
+    
+    .status-indicator {
+      display: inline-block;
+      width: 1rem;
+      height: 1rem;
+      border-radius: 50%;
+      margin-right: 0.5rem;
+    }
+    
+    .status-healthy {
+      background-color: var(--success);
+    }
+    
+    .status-degraded {
+      background-color: var(--warning);
+    }
+    
+    .status-failed {
+      background-color: var(--danger);
+    }
+    
+    .status-card p {
+      margin-bottom: 1rem;
+      opacity: 0.9;
+    }
+    
+    .vector-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fill, minmax(150px, 1fr));
+      gap: 1rem;
+      margin-top: 1rem;
+    }
+    
+    .vector-item {
+      background: rgba(17, 24, 39, 0.5);
+      border-radius: 0.5rem;
+      padding: 1rem;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+      text-align: center;
+      gap: 0.5rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .vector-icon {
+      font-size: 1.5rem;
+      width: 2.5rem;
+      height: 2.5rem;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      border-radius: 0.5rem;
+      background: rgba(99, 102, 241, 0.2);
+      color: var(--primary);
+    }
+    
+    .vector-item span {
+      font-size: 0.9rem;
+      font-weight: 500;
+    }
+    
+    .vector-status {
+      display: inline-block;
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+    }
+    
+    .features {
+      padding: 6rem 0;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .section-title {
+      text-align: center;
+      margin-bottom: 3rem;
+    }
+    
+    .section-title h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1rem;
+      background: linear-gradient(to right, var(--primary), var(--secondary));
+      -webkit-background-clip: text;
+      background-clip: text;
+      color: transparent;
+      display: inline-block;
+    }
+    
+    .section-title p {
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto;
+      opacity: 0.9;
+    }
+    
+    .features-grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(300px, 1fr));
+      gap: 2rem;
+    }
+    
+    .feature-card {
+      background: rgba(17, 24, 39, 0.5);
+      border-radius: 1rem;
+      padding: 2rem;
+      border: 1px solid rgba(255, 255, 255, 0.05);
+      transition: transform 0.3s ease;
+    }
+    
+    .feature-card:hover {
+      transform: translateY(-5px);
+    }
+    
+    .feature-icon {
+      font-size: 2rem;
+      margin-bottom: 1rem;
+      color: var(--primary);
+    }
+    
+    .feature-card h3 {
+      font-size: 1.5rem;
+      margin-bottom: 1rem;
+    }
+    
+    .feature-card p {
+      opacity: 0.9;
+      line-height: 1.6;
+    }
+    
+    .cta {
+      padding: 6rem 0;
+      text-align: center;
+      position: relative;
+      z-index: 10;
+    }
+    
+    .cta h2 {
+      font-size: 2.5rem;
+      font-weight: 700;
+      margin-bottom: 1.5rem;
+    }
+    
+    .cta p {
+      font-size: 1.1rem;
+      max-width: 700px;
+      margin: 0 auto 2rem;
+      opacity: 0.9;
+    }
+    
+    footer {
+      padding: 3rem 0;
+      background: rgba(0, 0, 0, 0.3);
+      position: relative;
+      z-index: 10;
+    }
+    
+    .footer-content {
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      flex-wrap: wrap;
+      gap: 2rem;
+    }
+    
+    .footer-links {
+      display: flex;
+      gap: 1.5rem;
+    }
+    
+    .footer-link {
+      color: var(--text);
+      text-decoration: none;
+      opacity: 0.8;
+      transition: opacity 0.2s ease;
+    }
+    
+    .footer-link:hover {
+      opacity: 1;
+    }
+    
+    .copyright {
+      opacity: 0.7;
+    }
+    
+    /* Modal styles */
+    .modal {
+      display: none;
+      position: fixed;
+      top: 0;
+      left: 0;
+      width: 100%;
+      height: 100%;
+      background: rgba(0, 0, 0, 0.8);
+      z-index: 1000;
+      overflow-y: auto;
+      opacity: 0;
+      transition: opacity 0.3s ease;
+    }
+    
+    .modal.visible {
+      display: block;
+      opacity: 1;
+    }
+    
+    .modal-content {
+      background: var(--dark);
+      margin: 10vh auto;
+      width: 90%;
+      max-width: 800px;
+      border-radius: 0.5rem;
+      box-shadow: 0 15px 30px rgba(0, 0, 0, 0.3);
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      overflow: hidden;
+      animation: modalSlideIn 0.3s ease;
+    }
+    
+    @keyframes modalSlideIn {
+      from {
+        transform: translateY(-50px);
+        opacity: 0;
+      }
+      to {
+        transform: translateY(0);
+        opacity: 1;
+      }
+    }
+    
+    .modal-header {
+      padding: 1.5rem;
+      display: flex;
+      justify-content: space-between;
+      align-items: center;
+      background: rgba(0, 0, 0, 0.2);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+    }
+    
+    .modal-header h3 {
+      margin: 0;
+      color: var(--primary);
+    }
+    
+    .close-modal {
+      font-size: 1.5rem;
+      cursor: pointer;
+      color: var(--text);
+      opacity: 0.7;
+      transition: opacity 0.2s ease;
+    }
+    
+    .close-modal:hover {
+      opacity: 1;
+    }
+    
+    .modal-body {
+      padding: 1.5rem;
+    }
+    
+    .code-tab-container {
+      margin-top: 1rem;
+    }
+    
+    .code-tabs {
+      display: flex;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+      overflow-x: auto;
+      gap: 0.5rem;
+      padding-bottom: 0.5rem;
+    }
+    
+    .code-tab {
+      padding: 0.5rem 1rem;
+      cursor: pointer;
+      border-radius: 0.25rem 0.25rem 0 0;
+      transition: all 0.2s ease;
+      white-space: nowrap;
+    }
+    
+    .code-tab.active {
+      background: var(--primary);
+      color: white;
+    }
+    
+    .code-panel {
+      display: none;
+      margin-top: 1rem;
+    }
+    
+    .code-panel.active {
+      display: block;
+    }
+    
+    /* Advanced terminal for code snippets */
+    .code-snippet {
+      background: var(--terminal-bg);
+      border-radius: 0.5rem;
+      overflow: hidden;
+      margin-bottom: 1rem;
+      position: relative;
+    }
+    
+    .snippet-header {
+      display: flex;
+      justify-content: space-between;
+      padding: 0.75rem 1rem;
+      background: rgba(0, 0, 0, 0.3);
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .snippet-title {
+      font-size: 0.9rem;
+      color: var(--text);
+      opacity: 0.8;
+    }
+    
+    .snippet-copy {
+      cursor: pointer;
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+    }
+    
+    .snippet-copy:hover {
+      opacity: 1;
+    }
+    
+    .snippet-code {
+      padding: 1rem;
+      overflow-x: auto;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      font-size: 0.9rem;
+      line-height: 1.5;
+    }
+    
+    .snippet-code pre {
+      margin: 0;
+    }
+    
+    @media (max-width: 768px) {
+      .hero h1 {
+        font-size: 2.5rem;
+      }
+      
+      .hero p {
+        font-size: 1.1rem;
+      }
+      
+      .hero-buttons {
+        flex-direction: column;
+      }
+      
+      .modal-content {
+        width: 95%;
+        margin: 5vh auto;
+      }
+    }
+
+    /* Custom animation for node pulses */
+    @keyframes nodePulse {
+      0% { transform: scale(1); opacity: 1; }
+      50% { transform: scale(1.2); opacity: 0.7; }
+      100% { transform: scale(1); opacity: 1; }
+    }
+
+    .pulse-animation {
+      animation: nodePulse 2s infinite;
+    }
+
+    /* Terminal-style code display */
+    .terminal {
+      background: var(--terminal-bg);
+      border-radius: 0.5rem;
+      font-family: 'JetBrains Mono', 'Courier New', monospace;
+      overflow: hidden;
+      border: 1px solid rgba(255, 255, 255, 0.1);
+      margin: 2rem 0;
+      position: relative;
+      box-shadow: 0 10px 20px rgba(0, 0, 0, 0.2);
+    }
+    
+    .terminal-header {
+      background: rgba(0, 0, 0, 0.3);
+      padding: 0.75rem 1rem;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      border-bottom: 1px solid rgba(255, 255, 255, 0.05);
+    }
+    
+    .terminal-buttons {
+      display: flex;
+      gap: 0.5rem;
+    }
+    
+    .terminal-buttons span {
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      display: inline-block;
+    }
+    
+    .terminal-buttons span:nth-child(1) {
+      background: #ff5f56;
+    }
+    
+    .terminal-buttons span:nth-child(2) {
+      background: #ffbd2e;
+    }
+    
+    .terminal-buttons span:nth-child(3) {
+      background: #27c93f;
+    }
+    
+    .terminal-title {
+      color: var(--text);
+      opacity: 0.7;
+      font-size: 0.9rem;
+    }
+    
+    .copy-button {
+      cursor: pointer;
+      color: var(--text);
+      opacity: 0.5;
+      transition: opacity 0.2s ease;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+    }
+    
+    .copy-button:hover {
+      opacity: 1;
+    }
+    
+    .terminal pre {
+      margin: 0;
+      color: #a4ffb0;
+      padding: 1rem;
+      overflow-x: auto;
+    }
+    
+    .terminal .command {
+      color: #f1f5f9;
+    }
+    
+    .terminal .prompt {
+      color: #10b981;
+    }
+    
+    .terminal .output {
+      color: #94a3b8;
+    }
+    
+    .terminal-notification {
+      position: absolute;
+      bottom: 1rem;
+      right: 1rem;
+      background: var(--tooltip-bg);
+      color: white;
+      padding: 0.5rem 1rem;
+      border-radius: 0.25rem;
+      font-size: 0.9rem;
+      opacity: 0;
+      transform: translateY(1rem);
+      transition: opacity 0.3s ease, transform 0.3s ease;
+      pointer-events: none;
+    }
+    
+    .terminal-notification.visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+  </style>
+</head>
+<body>
+  <div id="vanta-background"></div>
+  
+  <header>
+    <div class="container">
+      <nav>
+        <a href="#" class="logo">
+          <span class="logo-icon"></span>
+          Lateral
+        </a>
+        <div class="nav-links">
+          <a href="#features" class="nav-link">Features</a>
+          <a href="#vectors" class="nav-link">Vectors</a>
+          <a href="#transports" class="nav-link">Transports</a>
+          <a href="#documentation" class="nav-link">Docs</a>
+        </div>
+        <a href="#" class="btn btn-primary">Get Started</a>
+      </nav>
+    </div>
+  </header>
+  
+  <section class="hero">
+    <div class="container">
+      <h1>Lateral Vector Health Matrix</h1>
+      <p>
+        A resilient, self-healing framework designed to operate across any environment.
+        Multiple installation vectors ensure maximum adaptability and reliability in all conditions.
+      </p>
+      <div class="hero-buttons">
+        <a href="https://lateral.dissemblage.art/install" class="btn btn-primary">Install Now</a>
+        <a href="https://docs.lateral.dissemblage.art/guide" class="btn" style="color: var(--primary); border: 1px solid var(--primary);">Learn More</a>
+      </div>
+      
+      <div class="terminal">
+        <div class="terminal-header">
+          <div class="terminal-buttons">
+            <span></span>
+            <span></span>
+            <span></span>
+          </div>
+          <div class="terminal-title">Terminal</div>
+          <div class="copy-button" onclick="copyToClipboard('install-command')">
+            <svg xmlns="http://www.w3.org/2000/svg" width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="9" y="9" width="13" height="13" rx="2" ry="2"></rect>
+              <path d="M5 15H4a2 2 0 0 1-2-2V4a2 2 0 0 1 2-2h9a2 2 0 0 1 2 2v1"></path>
+            </svg>
+          </div>
+        </div>
+        <pre id="install-command"><span class="prompt">$</span> <span class="command">curl -L https://lateral.dissemblage.art/install.sh | sh</span>
+
+<span class="output">Initializing Lateral Vector System...
+Detecting environment: Linux (x86_64)
+Selecting optimal installation vector: Python
+Verifying transport layer security...
+Establishing mesh connection...
+Installation complete. Lateral is now available.</span>
+
+<span class="prompt">$</span> <span class="command">lateral status</span>
+
+<span class="output">Lateral Vector Health Matrix
+━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━━
+√ All vectors operational
+√ Mesh participation: Full
+√ Transport layers: 7 active, 1 degraded
+√ Self-healing system: Enabled</span></pre>
+        <div class="terminal-notification" id="copy-notification">Copied to clipboard!</div>
+      </div>
+
+      <div id="vectors" class="status-grid">
+        <!-- Code Snippets Modal (hidden by default) -->
+        <div id="snippets-modal" class="modal">
+          <div class="modal-content">
+            <div class="modal-header">
+              <h3 id="modal-title">Vector Installation</h3>
+              <span class="close-modal">&times;</span>
+            </div>
+            <div class="modal-body" id="modal-body">
+              <!-- Content will be dynamically inserted here -->
+            </div>
+          </div>
+        </div>
+        <div class="status-card">
+          <h3>
+            <span class="status-indicator status-healthy"></span>
+            Vector Health
+          </h3>
+          <p>
+            All 15 installation vectors are constantly monitored for reliability,
+            with automatic regeneration when needed.
+          </p>
+          <div class="vector-grid">
+            <div class="vector-item">
+              <div class="vector-icon">C</div>
+              <span>Curl</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">N</div>
+              <span>NixOS</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">Py</div>
+              <span>Python</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">JS</div>
+              <span>Node.js</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">D</div>
+              <span>Docker</span>
+              <span class="vector-status status-degraded"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">Clj</div>
+              <span>Clojure</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+          </div>
+        </div>
+        
+        <div class="status-card">
+          <h3>
+            <span class="status-indicator status-healthy"></span>
+            Transport Layer
+          </h3>
+          <p>
+            8 transport protocols ensure connectivity in any environment, from 
+            fully online to completely air-gapped.
+          </p>
+          <div class="vector-grid">
+            <div class="vector-item">
+              <div class="vector-icon">H</div>
+              <span>HTTP/S</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">IP</div>
+              <span>IPFS</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">I2</div>
+              <span>I2P</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">HC</div>
+              <span>Hypercore</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">G</div>
+              <span>Git</span>
+              <span class="vector-status status-healthy"></span>
+            </div>
+            <div class="vector-item">
+              <div class="vector-icon">BC</div>
+              <span>Blockchain</span>
+              <span class="vector-status status-degraded"></span>
+            </div>
+          </div>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section id="features" class="features">
+    <div class="container">
+      <div class="section-title">
+        <h2>Resilient By Design</h2>
+        <p>
+          Lateral's architecture ensures it can operate in any environment, adapt to changing conditions,
+          and recover from failures automatically.
+        </p>
+      </div>
+      
+      <div class="features-grid">
+        <div class="feature-card">
+          <div class="feature-icon">⟳</div>
+          <h3>Self-Healing</h3>
+          <p>
+            Automatically detects and repairs compromised installation vectors
+            using embedded regeneration capabilities and neural mesh consensus.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">⎔</div>
+          <h3>Multiple Vectors</h3>
+          <p>
+            15 different installation methods ensure Lateral can be deployed in any
+            environment, from modern cloud platforms to air-gapped networks.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">⚡</div>
+          <h3>Transport Diversity</h3>
+          <p>
+            8 transport protocols allow Lateral to communicate across various
+            network conditions, ensuring connectivity even in restricted environments.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🔄</div>
+          <h3>Vector Regeneration</h3>
+          <p>
+            Each vector contains the ability to recreate itself and other vectors,
+            ensuring that the system can recover even from catastrophic failures.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">🔍</div>
+          <h3>Health Monitoring</h3>
+          <p>
+            Continuous distributed monitoring of all vectors and transports,
+            with real-time reporting and automatic recovery initiation.
+          </p>
+        </div>
+        
+        <div class="feature-card">
+          <div class="feature-icon">⏱️</div>
+          <h3>Real-Time Status</h3>
+          <p>
+            Live dashboard of vector health, allowing system operators to
+            visualize the overall state of the Lateral ecosystem.
+          </p>
+        </div>
+      </div>
+    </div>
+  </section>
+  
+  <section id="transports" class="cta">
+    <div class="container">
+      <h2>Join the Lateral Neural Mesh</h2>
+      <p>
+        Every Lateral node strengthens the network's resilience. Contribute to the
+        global consensus system and help maintain vector health across all environments.
+      </p>
+      <a href="https://lateral.dissemblage.art/deploy" class="btn btn-primary">Deploy Now</a>
+    </div>
+  </section>
+  
+  <footer>
+    <div class="container">
+      <div class="footer-content">
+        <div class="footer-links">
+          <a href="https://github.com/lateral-org/lateral" class="footer-link">GitHub</a>
+          <a href="https://docs.lateral.dissemblage.art" class="footer-link">Documentation</a>
+          <a href="https://community.lateral.dissemblage.art" class="footer-link">Community</a>
+          <a href="https://status.lateral.dissemblage.art" class="footer-link">Status</a>
+        </div>
+        <div class="copyright">
+          © 2025 Lateral Framework • Resilient By Design
+        </div>
+      </div>
+    </div>
+  </footer>
+
+  <script>
+    document.addEventListener('DOMContentLoaded', function() {
+      // Initialize Vanta.js NET effect for the background
+      VANTA.NET({
+        el: "#vanta-background",
+        mouseControls: true,
+        touchControls: true,
+        gyroControls: false,
+        minHeight: 200.00,
+        minWidth: 200.00,
+        scale: 1.00,
+        scaleMobile: 1.00,
+        color: 0x6366f1,
+        backgroundColor: 0x030712,
+        points: 12,
+        maxDistance: 25.00,
+        spacing: 18.00
+      });
+
+      // Add random pulse animations to some vector items
+      const vectorItems = document.querySelectorAll('.vector-item');
+      
+      vectorItems.forEach((item, index) => {
+        if (index % 3 === 0) {
+          setTimeout(() => {
+            item.querySelector('.vector-icon').classList.add('pulse-animation');
+          }, Math.random() * 2000);
+        }
+      });
+      
+      // Clipboard functionality for the terminal commands
+      window.copyToClipboard = function(elementId) {
+        const element = document.getElementById(elementId);
+        const text = element.textContent.replace(/^\$\s+/gm, ''); // Remove the prompt characters
+        
+        // Create a temporary textarea element to copy the text
+        const textarea = document.createElement('textarea');
+        textarea.value = text;
+        document.body.appendChild(textarea);
+        textarea.select();
+        document.execCommand('copy');
+        document.body.removeChild(textarea);
+        
+        // Show the notification
+        const notification = document.getElementById('copy-notification');
+        notification.classList.add('visible');
+        
+        // Hide the notification after 2 seconds
+        setTimeout(() => {
+          notification.classList.remove('visible');
+        }, 2000);
+      };
+      
+      // Add more code snippet sections
+      document.querySelectorAll('.vector-grid').forEach(grid => {
+        grid.addEventListener('click', (e) => {
+          const item = e.target.closest('.vector-item');
+          if (item) {
+            const vectorName = item.querySelector('span').textContent;
+            showVectorDetails(vectorName);
+          }
+        });
+      });
+      
+      function showVectorDetails(vectorName) {
+        // This would open a modal with vector-specific details and code snippets
+        // For now, we'll just log to console
+        console.log(`Showing details for ${vectorName} vector`);
+        // Future enhancement: Add modal implementation
+      }
+    });
+  </script>
+</body>
+</html>

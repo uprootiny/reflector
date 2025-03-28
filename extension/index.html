@@ -1,13 +1,26 @@
 <!DOCTYPE html>
 <html>
 <head>
-    <title>HUD Input</title>
+    <title>Reflector HUD</title>
     <link rel="stylesheet" href="style.css">
 </head>
 <body>
     <div id="hud-container" class="hud-hidden">
         <input type="text" id="hud-input" placeholder="Search...">
         <ul id="suggestions"></ul>
+        <div id="status-div"></div>
+
+        <div id="scraping-buttons">
+            <button id="scrape-chatgpt">Scrape ChatGPT</button>
+            <button id="scrape-claude">Scrape Claude</button>
+            <button id="scrape-perplexity">Scrape Perplexity</button>
+            <button id="scrape-find">Scrape Find</button>
+            <button id="scrape-mistral">Scrape Mistral</button>
+            <button id="scrape-grok">Scrape Grok</button>
+            <button id="scrape-lmarena">Scrape LMArena</button>
+            <button id="check-schemas">Check Schemas</button>
+            <button id="grab-page">Grab Page Content</button>
+        </div>
     </div>
     <script src="script.js"></script>
 </body>

@@ -1,28 +1,40 @@
-// script.js (modified for scraping, storage, search)
+// script.js (corrected to use background.js exclusively)
 
 const hudContainer = document.getElementById('hud-container');
 const hudInput = document.getElementById('hud-input');
 const suggestionsList = document.getElementById('suggestions');
 
-let suggestions = []; // Will be populated from IndexedDB
-let db; // IndexedDB database object
+let suggestions = [];
+let db;
+let scrapingStatus = {
+    total: 0,
+    processed: 0,
+    errors: [],
+    schemas: {
+        chatgpt: { working: false, lastChecked: null },
+        // Add more schemas as needed
+    },
+};
 
 // IndexedDB initialization
 const request = indexedDB.open('conversationDB', 1);
 
 request.onerror = (event) => {
     console.error('IndexedDB error:', event.target.errorCode);
+    reportStatus(`IndexedDB error: ${event.target.errorCode}`);
 };
 
 request.onupgradeneeded = (event) => {
     db = event.target.result;
     const objectStore = db.createObjectStore('conversations', { keyPath: 'id', autoIncrement: true });
-    objectStore.createIndex('text', 'text', { unique: false }); // Index for searching
+    objectStore.createIndex('text', 'text', { unique: false });
 };
 
 request.onsuccess = (event) => {
     db = event.target.result;
-    loadSuggestions(); // Load data from IndexedDB
+    loadSuggestions();
+    checkSchemas();
+    reportStatus('System initialized.');
 };
 
 function showHUD() {
@@ -35,7 +47,7 @@ function hideHUD() {
 }
 
 function updateSuggestions(query) {
-    suggestionsList.innerHTML = ''; // Clear previous suggestions
+    suggestionsList.innerHTML = '';
     const filteredSuggestions = suggestions.filter(suggestion =>
         suggestion.text.toLowerCase().includes(query.toLowerCase())
     );
@@ -51,7 +63,6 @@ function updateSuggestions(query) {
     });
 }
 
-// Keyboard shortcuts
 document.addEventListener('keydown', (event) => {
     if (event.ctrlKey && event.shiftKey && event.key === ' ') {
         if (hudContainer.classList.contains('hud-hidden')) {
@@ -64,20 +75,46 @@ document.addEventListener('keydown', (event) => {
     }
 });
 
-// Input event listener for filtering
 hudInput.addEventListener('input', () => {
     updateSuggestions(hudInput.value);
 });
 
-// Scraping ChatGPT conversations
 function scrapeChatGPT() {
-    const conversationElements = document.querySelectorAll('.text-base'); // Adjust selector as needed
-    const conversations = [];
-
-    conversationElements.forEach(element => {
-        conversations.push({ text: element.textContent }); // Basic text extraction
+    chrome.runtime.sendMessage({ action: 'scrapeChatGPT' }, (response) => {
+        if (response.error) {
+            reportStatus(`Scraping error: ${response.error}`);
+        } else {
+            storeConversations(response.results.conversations);
+            reportStatus(`Scraping: ${response.results.scrapingStatus.processed}/${response.results.scrapingStatus.total}`);
+            if (response.results.scrapingStatus.errors.length) {
+                reportStatus(`Errors: ${response.results.scrapingStatus.errors.join(', ')}`);
+            }
+            reportStatus('ChatGPT scraping completed.');
+        }
     });
-    storeConversations(conversations);
+}
+
+function checkSchemas() {
+    chrome.runtime.sendMessage({ action: 'checkSchemas' }, (response) => {
+        if (response.error) {
+            reportStatus(`Schema check error: ${response.error}`);
+        } else {
+            scrapingStatus.schemas.chatgpt.working = response.results.chatgpt;
+            scrapingStatus.schemas.chatgpt.lastChecked = new Date();
+            reportStatus(`ChatGPT schema: ${scrapingStatus.schemas.chatgpt.working ? 'Working' : 'Stale'}`);
+        }
+    });
+}
+
+function grabPageContent() {
+    chrome.runtime.sendMessage({ action: 'grabPageContent' }, (response) => {
+        if (response.error) {
+            reportStatus(`Grab page error: ${response.error}`);
+        } else {
+            console.log(response.results);
+            reportStatus('Page content logged to console.');
+        }
+    });
 }
 
 // Store conversations in IndexedDB
@@ -90,18 +127,19 @@ function storeConversations(conversations) {
     });
 
     transaction.oncomplete = () => {
-        console.log('Conversations stored in IndexedDB');
-        loadSuggestions(); // Reload suggestions after storing
+        loadSuggestions();
+        reportStatus('Conversations stored in IndexedDB.');
     };
 
     transaction.onerror = (event) => {
         console.error('Error storing conversations:', event.target.errorCode);
+        reportStatus(`Error storing conversations: ${event.target.errorCode}`);
     };
 }
 
 // Load suggestions from IndexedDB
 function loadSuggestions() {
-    suggestions = []; // Reset suggestions
+    suggestions = [];
     const objectStore = db.transaction(['conversations']).objectStore('conversations');
     objectStore.openCursor().onsuccess = (event) => {
         const cursor = event.target.result;
@@ -109,7 +147,7 @@ function loadSuggestions() {
             suggestions.push(cursor.value);
             cursor.continue();
         } else {
-            updateSuggestions(hudInput.value); // Update suggestions after loading
+            updateSuggestions(hudInput.value);
         }
     };
 }

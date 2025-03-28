@@ -1,40 +1,43 @@
 {
   "manifest_version": 3,
   "name": "Reflector HUD",
-  "version": "1.0",
-  "description": "HUD-like search for your conversations.",
+  "version": "1.0.0",
+  "description": "Enhances interaction with AI conversation platforms by providing a unified search and scraping interface.",
+  "icons": {
+    "16": "icon16.png",
+    "48": "icon48.png",
+    "128": "icon128.png"
+  },
   "action": {
     "default_popup": "index.html",
     "default_icon": {
-      "16": "https://api.dicebear.com/7.x/identicon/png?size=16&seed=reflector",
-      "48": "https://api.dicebear.com/7.x/identicon/png?size=48&seed=reflector",
-      "128": "https://api.dicebear.com/7.x/identicon/png?size=128&seed=reflector"
+      "16": "icon16.png",
+      "48": "icon48.png",
+      "128": "icon128.png"
     }
   },
-  "icons": {
-    "16": "https://api.dicebear.com/7.x/identicon/png?size=16&seed=reflector",
-    "48": "https://api.dicebear.com/7.x/identicon/png?size=48&seed=reflector",
-    "128": "https://api.dicebear.com/7.x/identicon/png?size=128&seed=reflector"
-  },
   "permissions": [
+    "storage",
     "activeTab",
-    "storage"
+    "scripting",
+    "tabs"
+  ],
+  "host_permissions": [
+    "*://*/*"
   ],
   "background": {
     "service_worker": "background.js"
   },
-  "commands": {
-    "_execute_action": {
-      "suggested_key": {
-        "default": "Ctrl+Shift+Space",
-        "mac": "Command+Shift+Space"
-      },
-      "description": "Open Reflector HUD"
+  "content_scripts": [
+    {
+      "matches": ["<all_urls>"],
+      "js": ["content.js"],
+      "run_at": "document_end"
     }
-  },
+  ],
   "web_accessible_resources": [
     {
-      "resources": ["style.css", "script.js"],
+      "resources": ["style.css"],
       "matches": ["<all_urls>"]
     }
   ]

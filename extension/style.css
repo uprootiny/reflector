@@ -1,0 +1,48 @@
+body {
+    margin: 0;
+    font-family: sans-serif;
+}
+
+#hud-container {
+    position: fixed;
+    top: 50%;
+    left: 50%;
+    transform: translate(-50%, -50%);
+    background-color: rgba(0, 0, 0, 0.8);
+    padding: 20px;
+    border-radius: 10px;
+    box-shadow: 0 4px 8px rgba(0, 0, 0, 0.5);
+    width: 80%;
+    max-width: 600px;
+    z-index: 1000; /* Ensure it's on top */
+}
+
+#hud-input {
+    width: 100%;
+    padding: 10px;
+    border: none;
+    border-radius: 5px;
+    background-color: #333;
+    color: white;
+    font-size: 16px;
+}
+
+#suggestions {
+    list-style-type: none;
+    padding: 0;
+    margin-top: 10px;
+    color: white;
+}
+
+#suggestions li {
+    padding: 8px;
+    cursor: pointer;
+}
+
+#suggestions li:hover {
+    background-color: #555;
+}
+
+.hud-hidden {
+    display: none;
+}

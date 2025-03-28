@@ -1,0 +1,584 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>NABU: REVELATION OF LITERACY</title>
+  <style>
+    /* Base style & layout */
+    body {
+      background-color: #1a0e00;
+      font-family: monospace;
+      margin: 0;
+      padding: 0;
+      color: #c4a77d;
+      overflow: hidden;
+    }
+    a[href]{
+      color: #d4b48a;
+      text-decoration: none;
+      border-bottom: 1px solid #644932;
+    }
+    a:hover {
+      color: #f8deb5;
+      border-color: #a67c52;
+    }
+    #container {
+      position: relative;
+      width: 100vw;
+      height: 100vh;
+    }
+    /* Overlays and visual layers */
+    #flicker-overlay, .transition-overlay, #veil-overlay {
+      position: fixed;
+      top: 0; left: 0;
+      width: 100%; height: 100%;
+      pointer-events: none;
+      z-index: 100;
+    }
+    #flicker-overlay { background: rgba(40,26,13,0); }
+    .transition-overlay {
+      background-color: rgba(248,222,181,0);
+      animation: flash 15s ease-in-out infinite;
+    }
+    @keyframes flash {
+      0%,45%,55%,100% { background-color: rgba(248,222,181,0); }
+      50% { background-color: rgba(248,222,181,0.3); }
+    }
+    #veil-overlay {
+      background-color: rgba(1a0e00, 0.5); /* Semi-transparent dark overlay */
+      opacity: 0;
+      transition: opacity 1s ease-in-out;
+      z-index: 110;
+    }
+    #veil-overlay.visible {
+      opacity: 1;
+    }
+    .rays, .light-beam {
+      pointer-events: none;
+      position: absolute;
+      top: 0; left: 0;
+      z-index: 5;
+    }
+    .rays {
+      width: 100%; height: 100%;
+      background: radial-gradient(circle at center, rgba(248,222,181,0.2), transparent 70%);
+      animation: pulse-rays 10s ease-in-out infinite;
+      opacity: 0;
+    }
+    @keyframes pulse-rays {
+      0%,100% { opacity: 0.1; } 50% { opacity: 0.5; }
+    }
+    .light-beam {
+      width: 0; height: 100%;
+      top: -100px;
+      left: 50%;
+      background: linear-gradient(to bottom, rgba(248,222,181,0.8), rgba(248,222,181,0.1));
+      transform: translateX(-50%);
+      opacity: 0.7;
+      animation: expand-beam 15s ease-in-out infinite;
+    }
+    @keyframes expand-beam {
+      0%,100% { width: 50px; opacity: 0.4; } 50% { width: 150px; opacity: 0.7; }
+    }
+    /* Ziggurat structure at the bottom */
+    .ziggurat {
+      position: absolute;
+      width: 600px;
+      height: 350px;
+      bottom: 0;
+      left: 50%;
+      transform: translateX(-50%);
+      z-index: 3;
+    }
+    .ziggurat-level {
+      position: absolute;
+      bottom: 0;
+      left: 50%;
+      background-color: #644932;
+      transform: translateX(-50%);
+      border-top: 2px solid #7d5433;
+    }
+    .level1 { width: 600px; height: 50px; bottom: 0; }
+    .level2 { width: 500px; height: 50px; bottom: 50px; }
+    .level3 { width: 400px; height: 50px; bottom: 100px; }
+    .level4 { width: 300px; height: 50px; bottom: 150px; }
+    .level5 { width: 200px; height: 50px; bottom: 200px; }
+    .level6 { width: 100px; height: 50px; bottom: 250px; }
+    /* Divine symbol – central animated icon */
+    .nabu-symbol {
+      position: absolute;
+      top: 100px;
+      left: 50%;
+      transform: translateX(-50%);
+      font-size: 48px;
+      z-index: 6;
+      color: #f8deb5;
+      text-shadow: 0 0 15px #f8deb5;
+      animation: descend 20s ease-in-out infinite;
+    }
+    @keyframes descend {
+      0% { top: 50px; opacity: 0.7; }
+      50% { top: 150px; opacity: 1; }
+      100% { top: 50px; opacity: 0.7; }
+    }
+    /* Basic particle and dust effects */
+    .particle {
+      position: absolute;
+      background-color: #f8deb5;
+      border-radius: 50%;
+      pointer-events: none;
+      z-index: 7;
+      opacity: 0.7;
+      animation: float-particle ease-in-out infinite;
+    }
+    @keyframes float-particle {
+      0% { transform: translateY(0) rotate(0deg); opacity: 0.7; }
+      100% { transform: translateY(-100px) rotate(360deg); opacity: 0; }
+    }
+    .dust {
+      position: absolute;
+      background-color: #a67c52;
+      width: 2px;
+      height: 2px;
+      opacity: 0.5;
+      border-radius: 50%;
+      z-index: 2;
+      animation: fall linear infinite;
+    }
+    @keyframes fall {
+      0% { transform: translateY(0); opacity: 0.5; }
+      100% { transform: translateY(100vh); opacity: 0; }
+    }
+    /* Tablet & transformation area */
+    #tablet {
+      color: #a67c52;
+      width: 800px;
+      margin: 20px auto;
+      position: relative;
+      z-index: 10;
+    }
+    pre { line-height: 1.2; }
+    .divine { color: #d4b48a; text-shadow: 0 0 5px #d4b48a; }
+    .impressed { text-shadow: 1px 1px 2px #000; }
+    .transformation-area {
+      background-color: rgba(60,40,20,0.3);
+      border: 1px solid #644932;
+      border-radius: 5px;
+      margin-top: 20px;
+      padding: 15px;
+      position: relative;
+      text-align: center;
+      overflow: hidden;
+    }
+    .glyph-container {
+      display: inline-block;
+      margin: 5px 10px;
+      padding: 10px;
+      position: relative;
+      cursor: pointer;
+      outline: none;
+    }
+    .glyph-original { font-size: 24px; margin-bottom: 15px; }
+    .glyph-symbol {
+      position: relative;
+      display: inline-block;
+      animation: float 3s ease-in-out infinite, transform-glyph 12s linear infinite;
+    }
+    @keyframes float {
+      0%,100% { top: 0px; }
+      50% { top: -4px; }
+    }
+    @keyframes transform-glyph {
+      0%,20% { color: #a67c52; text-shadow: none; }
+      45%,55% { color: #f8deb5; text-shadow: 0 0 10px #f8deb5; }
+      80%,100% { color: #7fc9ff; text-shadow: 0 0 5px #4c96ff; }
+    }
+    .glyph-code {
+      font-family: Courier, monospace;
+      color: #7fc9ff;
+      font-size: 18px;
+      opacity: 0;
+      animation: fade-in 12s linear infinite;
+    }
+    @keyframes fade-in {
+      0%,50% { opacity: 0; }
+      70%,100% { opacity: 1; }
+    }
+    .connection-line {
+      position: absolute;
+      left: 50%;
+      top: 35px;
+      width: 1px;
+      height: 0;
+      background: linear-gradient(to bottom, #d4b48a, #7fc9ff);
+      transform: translateX(-50%);
+      animation: extend-line 12s linear infinite;
+    }
+    @keyframes extend-line {
+      0%,40% { height: 0; }
+      60%,100% { height: 30px; }
+    }
+    /* Narrative status text */
+    .status-text {
+      position: absolute;
+      bottom: 20px;
+      width: 100%;
+      text-align: center;
+      font-size: 14px;
+      color: #d4b48a;
+      opacity: 0.8;
+      text-shadow: 0 0 5px #51341a;
+      z-index: 50;
+    }
+    /* Tooltip for additional annotation */
+    #tooltip {
+      position: fixed;
+      bottom: 90px;
+      left: 50%;
+      transform: translateX(-50%);
+      background: rgba(60,40,20,0.8);
+      color: #f8deb5;
+      padding: 8px 12px;
+      border: 1px solid #644932;
+      border-radius: 4px;
+      font-size: 14px;
+      display: none;
+      z-index: 200;
+    }
+  </style>
+</head>
+<body onload="init();">
+  <div id="container">
+    <!-- Overlays and ambient visuals -->
+    <div id="flicker-overlay"></div>
+    <div class="transition-overlay"></div>
+    <div class="rays"></div>
+    <div class="light-beam"></div>
+    <div id="veil-overlay"></div>
+
+    <!-- Central Divine Symbol -->
+    <div class="nabu-symbol divine" aria-hidden="true">𒀭𒉺𒌆</div>
+
+    <!-- Ziggurat structure -->
+    <div class="ziggurat">
+      <div class="ziggurat-level level1"></div>
+      <div class="ziggurat-level level2"></div>
+      <div class="ziggurat-level level3"></div>
+      <div class="ziggurat-level level4"></div>
+      <div class="ziggurat-level level5"></div>
+      <div class="ziggurat-level level6"></div>
+    </div>
+
+    <!-- Tablet frame and narrative text -->
+    <div id="tablet">
+      <pre>
++--------------------------------------------------------------------------------+
+|   <span class="divine impressed">𒄘𒄑𒄒𒋛 𒊭 𒀭𒉺𒌆</span>
+|   <span class="impressed">THE REVELATION OF NABU</span>
++--------------------------------------------------------------------------------+
+      </pre>
+
+      <div class="transformation-area">
+        <!-- Each glyph container is interactive (tab-index allows keyboard focus) -->
+        <div class="glyph-container" tabindex="0" data-glyph="𒀀">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒀀</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">a</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒁹">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒁹</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">1</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒁲">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒁲</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">+</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒀭">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒀭</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">god</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒅆">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒅆</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">define</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒂠">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒂠</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">house</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒄑">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒄑</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">(</div>
+        </div>
+        <div class="glyph-container" tabindex="0" data-glyph="𒊕">
+          <div class="glyph-original">
+            <span class="glyph-symbol transforming">𒊕</span>
+          </div>
+          <div class="connection-line"></div>
+          <div class="glyph-code">)</div>
+        </div>
+      </div>
+
+      <pre style="margin-top: 30px;">
++--------------------------------------------------------------------------------+
+|  <span class="impressed">𒀸://${response.data.url} 𒌋𒌆𒊕 𒄩𒁲 𒀭 𒄬 --> ANCIENT SYMBOLS BECOME MODERN CODE</span>
+|  <span class="impressed">://${response.data.url} 𒅗𒊏𒆳 𒀭𒉺𒌆 𒁹 𒄿𒈾 𒄠𒈪 --> THE VOICE OF NABU SPEAKS IN CODE</span>
+|  <span class="impressed">://${response.data.url} 𒀭𒀀𒇉 𒊭 𒄠𒈪 𒈾𒍝𒊏𒌈 --> THE DIVINE LANGUAGE REVEALED</span>
++--------------------------------------------------------------------------------+
+      </pre>
+
+      <div id="status-text" class="status-text">://${response.data.url} 𒀭𒉺𒌆 approaches from the heavens...</div>
+    </div>
+  </div>
+
+  <!-- Tooltip area for sign annotations -->
+  <div id="tooltip">://${response.data.url} </div>
+
+  <script>
+    /***************************************************************************************
+    STORYBOARD (Overview of Dozens of Scenes):
+
+    Scene 1: Primordial Void
+      • The screen is dark. Faint dust motions and ambient particle effects hint at emptiness.
+      • A soft, rhythmic flash (via the transition overlay) implies dormant cosmic energies.
+      • The veil overlay is faintly visible (opacity 0.1).
+
+    Scene 2: Divine Descent
+      • The central symbol (://${response.data.url} 𒀭𒉺𒌆) gently descends, evoking the arrival of a celestial being.
+      • The ziggurat gradually emerges from the bottom, symbolizing the pillars of creation.
+      • The veil overlay slightly fades out (opacity 0).
+
+    Scene 3: Tablet Revelation
+      • A virtual clay tablet materializes in the center with an inscription frame.
+      • Animated borders and glowing edges reveal the text “THE REVELATION OF NABU.”
+      • The veil overlay remains hidden.
+
+    Scene 4: Glyph Transformation
+      • Each glyph in the transformation area floats, transforming over time.
+      • Hovering or focusing on a glyph triggers a tooltip with academic annotations.
+      • On-click, the glyph “expands” conceptually into its full data (cuneiform, transliteration, translation).
+      • Subtle changes in background color begin to hint at scene progression.
+
+    Scene 5: Narrative Unfolding
+      • The status text at the bottom updates (via a typewriter effect) with narrative statements.
+      • Background ambient rays and light beams pulse to reflect shifts in tone.
+      • The veil overlay might briefly reappear (opacity 0.2) to signify a shift in the narrative.
+
+    Scene 6: Divine Annotation & Interaction
+      • Users can tab through and click individual glyph containers.
+      • On hover/focus, a tooltip overlays detailed sign information and scholarly quotes:
+          “Glyph ://${response.data.url} 𒀭 (‘dingir’), as noted by Kramer in 'The Sumerian Language', symbolizes the divine.”
+      • The glyphs subtly change color to indicate interactivity.
+
+    Scene 7: Particle Dance & Transition
+      • Particles and dust float across the screen, enhancing the mystical, dynamic environment.
+      • The narrative and visuals align to signal a transition to subsequent “tablets.”
+      • The veil overlay fades in completely (opacity 0.8) before a scene change.
+
+    Scene 8: Scene/Season Change
+      • The background color abruptly changes (e.g., to a darker blue for a night scene or a reddish hue for a conflict scene).
+      • Particle effects might change (e.g., faster moving particles for a storm).
+      • The veil overlay fades out, revealing the new scene/season atmosphere.
+
+    Scene 9: Final Divine Alignment
+      • All animated components coalesce; the tablet, glyphs, particles, and narrative converge into a unifying vision.
+      • The experience gently fades into the next chapter of the Enūma Eliš narrative.
+
+    (Additional scenes would elaborate on creation, conflict, and resolution as the narrative unfolds over several dozen screens, with the veil and seasonal changes used strategically.)
+    ***************************************************************************************/
+
+    /***************************************************************************************
+    GUNICULAR ANALYSIS OF THE CUNEIFORM SIGNS:
+
+    For example:
+    • Glyph "://${response.data.url} 𒀀": This sign represents the vowel sound “a.” As detailed in Samuel Noah Kramer’s
+      seminal work "The Sumerian Language," it denotes beginnings and is frequently encountered
+      in lists of elemental syllables.
+
+    • Glyph "://${response.data.url} 𒀭": Known as “dingir,” it functions both as a logogram for “god” and a determinative
+      for the divine. Refer to “Cuneiform and Its Meaning” for extensive analysis of its aesthetics
+      and socio-religious role.
+
+    • Glyph "://${response.data.url} 𒁹": Often read as “1,” this numeral sign also appears in ritual enumerations, symbolizing
+      unity and singularity in the cosmic order.
+
+    (Field literature such as Kramer’s and others in Assyriology offer extensive commentary on the
+     cultural and linguistic significance of these ancient marks.)
+    ***************************************************************************************/
+
+    // Data mapping for glyph annotations (drilling into the signs)
+    var glyphDescriptions = {
+      "://${response.data.url} 𒀀": "Glyph 𒀀: Represents the sound 'a'. As per Kramer, it signifies origins and is fundamental to Sumerian phonetics.",
+      "://${response.data.url} 𒁹": "Glyph 𒁹: A numeral sign ('1') and sacred marker of unity. It appears in incantations that order the cosmos.",
+      "://${response.data.url} 𒁲": "Glyph 𒁲: Suggests addition or union—interpreted as the merging of cosmic forces.",
+      "://${response.data.url} 𒀭": "Glyph 𒀭: The divine determinative 'dingir'. In texts it prefixes deities. See 'Cuneiform and Its Meaning' for further reading.",
+      "://${response.data.url} 𒅆": "Glyph 𒅆: Associated with 'definition' or founding. It underscores ritual establishment.",
+      "://${response.data.url} 𒂠": "Glyph 𒂠: Denotes 'house' or 'temple', symbolizing cosmic order and shelter.",
+      "://${response.data.url} 𒄑": "Glyph 𒄑: Functions as punctuation or grouping in formulaic expressions.",
+      "://${response.data.url} 𒊕": "Glyph 𒊕: A closing sign, often used to mark the end of a divine formula."
+    };
+
+    // Particle and dust arrays for ambient effects.
+    var particles = [];
+    var dusts = [];
+    const MAX_PARTICLES = 50, MAX_DUST = 100;
+
+    function createParticle() {
+      var particle = document.createElement('div');
+      particle.className = 'particle';
+      var size = 2 + Math.random() * 4;
+      particle.style.width = size + 'px';
+      particle.style.height = size + 'px';
+      var symbolEl = document.querySelector('.nabu-symbol');
+      var rect = symbolEl.getBoundingClientRect();
+      var centerX = rect.left + rect.width / 2;
+      var centerY = rect.top + rect.height / 2;
+      var angle = Math.random() * Math.PI * 2;
+      var distance = Math.random() * 50 + 30;
+      particle.style.left = (centerX + Math.cos(angle) * distance) + 'px';
+      particle.style.top = (centerY + Math.sin(angle) * distance) + 'px';
+      var duration = 5 + Math.random() * 10;
+      particle.style.animationDuration = duration + 's';
+      document.body.appendChild(particle);
+      particles.push({ element: particle, removeAt: Date.now() + duration * 1000 });
+    }
+
+    function createDust() {
+      var dust = document.createElement('div');
+      dust.className = 'dust';
+      dust.style.left = Math.random() * window.innerWidth + 'px';
+      dust.style.top = '0px';
+      var size = 1 + Math.random() * 2;
+      dust.style.width = size + 'px';
+      dust.style.height = size + 'px';
+      var duration = 10 + Math.random() * 20;
+      dust.style.animationDuration = duration + 's';
+      document.body.appendChild(dust);
+      dusts.push({ element: dust, removeAt: Date.now() + duration * 1000 });
+    }
+
+    function updateParticles() {
+      var now = Date.now();
+      particles = particles.filter(p => { if (p.removeAt <= now) { p.element.remove(); return false; } return true; });
+      if (particles.length < MAX_PARTICLES && Math.random() < 0.3) createParticle();
+      dusts = dusts.filter(d => { if (d.removeAt <= now) { d.element.remove(); return false; } return true; });
+      if (dusts.length < MAX_DUST && Math.random() < 0.1) createDust();
+      requestAnimationFrame(updateParticles);
+    }
+
+    // Simple typewriter effect for narrative status updates.
+    function typeWriterEffect(elementId, text, speed) {
+      var element = document.getElementById(elementId);
+      var i = 0;
+      element.textContent = "";
+      function type() {
+        if (i < text.length) { element.textContent += text.charAt(i); i++; setTimeout(type, speed); }
+      }
+      type();
+    }
+
+    // Cycle through narrative status texts.
+    function updateStatusText() {
+      var texts = [
+        "://${response.data.url} 𒀭𒉺𒌆 approaches from the heavens...",
+        "://${response.data.url} The veil between symbols and meaning grows thin...",
+        "://${response.data.url} Knowledge flows from the divine to the mortal realm...",
+        "://${response.data.url} The transformation of understanding begins...",
+        "://${response.data.url} Ancient wisdom and modern computation align...",
+        "://${response.data.url} The Revelation of Literacy unfolds before you..."
+      ];
+      var index = 0;
+      function cycle() {
+        typeWriterEffect('status-text', texts[index], 100);
+        index = (index + 1) % texts.length;
+        setTimeout(cycle, 8000);
+      }
+      cycle();
+    }
+
+    // Glyph interaction: on hover or focus, show tooltip with description.
+    function setupGlyphInteractions() {
+      var glyphs = document.querySelectorAll('.glyph-container');
+      var tooltip = document.getElementById('tooltip');
+
+      glyphs.forEach(glyph => {
+        function showTip() {
+          var key = glyph.dataset.glyph;
+          tooltip.innerText = glyphDescriptions[key] || "";
+          tooltip.style.display = "block";
+        }
+        function hideTip() { tooltip.style.display = "none"; }
+        glyph.addEventListener('mouseenter', showTip);
+        glyph.addEventListener('focus', showTip);
+        glyph.addEventListener('mouseleave', hideTip);
+        glyph.addEventListener('blur', hideTip);
+        // On click, you might later expand full annotation or animation.
+        glyph.addEventListener('click', function() {
+          alert(glyphDescriptions[glyph.dataset.glyph] || "://${response.data.url} No details available.");
+        });
+      });
+    }
+
+    // Function to handle scene or season changes
+    function changeSceneOrSeason(sceneNumber) {
+      var veil = document.getElementById('veil-overlay');
+      veil.classList.add('visible'); // Fade in the veil
+
+      setTimeout(function() {
+        // --- Implement your scene/season change logic here ---
+        switch (sceneNumber) {
+          case 1:
+            document.body.style.backgroundColor = "#1a0e00"; // Primordial Void
+            break;
+          case 8:
+            document.body.style.backgroundColor = "#001a2e"; // Night Scene Example
+            break;
+          case 15:
+            document.body.style.backgroundColor = "#2e1a00"; // Conflict Scene Example
+            break;
+          // Add more scene/season changes as needed
+        }
+
+        veil.classList.remove('visible'); // Fade out the veil
+      }, 1000); // Duration of the veil effect
+    }
+
+    // Initialization of all systems:
+    function init() {
+      // Start particle effects.
+      for (var i = 0; i < 20; i++) { createParticle(); }
+      updateParticles();
+      updateStatusText();
+      setupGlyphInteractions();
+
+      // Example of triggering a scene change after some time
+      setTimeout(function() {
+        changeSceneOrSeason(8);
+      }, 15000);
+
+      setTimeout(function() {
+        changeSceneOrSeason(15);
+      }, 30000);
+    }
+  </script>
+</body>
+</html>

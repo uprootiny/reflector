@@ -1,0 +1,1316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Refined Typography</title>
+    <style>
+        @font-face {
+            font-family: 'Menlo';
+            src: local('Menlo'), local('Menlo Regular');
+            font-weight: normal;
+            font-style: normal;
+        }
+        
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+            -webkit-tap-highlight-color: transparent;
+        }
+        
+        :root {
+            --text-primary: rgba(230, 230, 240, 0.94);
+            --text-secondary: rgba(200, 200, 220, 0.85);
+            --text-tertiary: rgba(170, 170, 190, 0.75);
+            --accent-cyan: rgba(120, 210, 255, 0.9);
+            --accent-mint: rgba(150, 255, 180, 0.9);
+            --accent-gold: rgba(255, 200, 120, 0.9);
+            --accent-magenta: rgba(255, 150, 220, 0.9);
+            --glow-cyan: rgba(100, 200, 255, 0.4);
+            --glow-mint: rgba(100, 255, 180, 0.4);
+            --glow-gold: rgba(255, 200, 100, 0.4);
+            --bg-primary: #0a0a12;
+            --bg-secondary: #12121e;
+            --bg-tertiary: #1a1a2e;
+            --depth-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+            --depth-foreground: 8px;
+            --depth-background: -8px;
+            --transition-smooth: cubic-bezier(0.22, 1, 0.36, 1);
+        }
+        
+        body {
+            background-color: #000;
+            color: var(--text-primary);
+            font-family: 'Menlo', monospace;
+            display: flex;
+            flex-direction: column;
+            align-items: center;
+            justify-content: center;
+            overflow: hidden;
+            height: 100vh;
+            touch-action: manipulation;
+        }
+        
+        .iphone-container {
+            position: relative;
+            width: 390px; /* iPhone 12/13/14 width */
+            height: 844px; /* iPhone 12/13/14 height */
+            overflow: hidden;
+            background: linear-gradient(135deg, var(--bg-primary), var(--bg-tertiary));
+            perspective: 1200px;
+            perspective-origin: 50% 50%;
+            border-radius: 40px;
+            box-shadow: 0 25px 50px -12px rgba(0, 0, 0, 0.5),
+                        0 10px 20px -5px rgba(0, 0, 0, 0.2),
+                        inset 0 0 2px rgba(255, 255, 255, 0.05);
+        }
+        
+        .text-scene {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            padding: 2.5rem 1.75rem;
+            overflow: hidden;
+            transition: transform 0.3s var(--transition-smooth);
+        }
+        
+        .paragraph {
+            position: relative;
+            font-size: 17px;
+            line-height: 1.7;
+            transform-style: preserve-3d;
+            margin-bottom: 1.8rem;
+            letter-spacing: -0.01em;
+            color: var(--text-primary);
+            font-kerning: normal;
+            text-rendering: optimizeLegibility;
+            -webkit-font-smoothing: antialiased;
+            width: calc(100% - 10px);
+        }
+        
+        .word {
+            display: inline-block;
+            position: relative;
+            transform-style: preserve-3d;
+            transition: transform 0.7s var(--transition-smooth),
+                        text-shadow 0.7s var(--transition-smooth),
+                        color 0.7s var(--transition-smooth);
+            margin-right: 0.25em;
+            white-space: nowrap;
+            will-change: transform, text-shadow;
+        }
+        
+        .foreground {
+            transform: translateZ(var(--depth-foreground));
+            color: var(--text-primary);
+            text-shadow: 0 0 8px var(--glow-cyan);
+            font-weight: 500;
+        }
+        
+        .background {
+            transform: translateZ(var(--depth-background));
+            color: var(--text-tertiary);
+            text-shadow: 0 0 0 transparent;
+            font-weight: 300;
+        }
+        
+        .original-text, .alternative-text {
+            transition: opacity 0.4s var(--transition-smooth),
+                        transform 0.4s var(--transition-smooth);
+        }
+        
+        .alternative-text {
+            position: absolute;
+            top: 0;
+            left: 0;
+            opacity: 0;
+            pointer-events: none;
+            transform: translateY(5px);
+        }
+        
+        .word.substitution {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 8px var(--glow-cyan);
+            cursor: pointer;
+            position: relative;
+            border-bottom: 1px dotted rgba(120, 210, 255, 0.25);
+            padding-bottom: 2px;
+            transform: translateZ(4px);
+            transition: all 0.3s var(--transition-smooth);
+        }
+        
+        .word.substitution:hover, .word.substitution:active {
+            color: var(--accent-cyan);
+            text-shadow: 0 0 12px var(--glow-cyan);
+            border-bottom-color: rgba(120, 210, 255, 0.6);
+        }
+        
+        .foreign-text {
+            position: relative;
+            cursor: pointer;
+            display: inline-block;
+            line-height: 1.4;
+            margin: 0.1em 0.4em;
+            padding: 0.2em 0.4em;
+            border-radius: 0.35em;
+            transition: all 0.3s var(--transition-smooth);
+            transform: translateZ(4px);
+            transform-style: preserve-3d;
+        }
+        
+        .foreign-text::before {
+            content: "";
+            position: absolute;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(30, 40, 60, 0.15);
+            border-radius: 0.35em;
+            z-index: -1;
+            transition: all 0.3s var(--transition-smooth);
+            transform: translateZ(-2px);
+        }
+        
+        .foreign-text:hover::before, .foreign-text:active::before {
+            background: rgba(40, 50, 80, 0.25);
+        }
+        
+        .foreign-text.persian {
+            font-family: 'Tahoma', sans-serif;
+            color: var(--accent-gold);
+            text-shadow: 0 0 8px var(--glow-gold);
+            direction: rtl;
+            font-size: 0.9em;
+            padding: 0.25em 0.5em;
+            line-height: 1.7;
+        }
+        
+        .foreign-text.chinese {
+            font-family: 'PingFang SC', 'SimSun', 'STSong', sans-serif;
+            color: var(--accent-mint);
+            text-shadow: 0 0 8px var(--glow-mint);
+            font-size: 1.1em;
+            font-weight: 400;
+            letter-spacing: 0.05em;
+        }
+        
+        .translation-tooltip {
+            position: absolute;
+            background: rgba(15, 20, 35, 0.96);
+            backdrop-filter: blur(10px);
+            padding: 1rem;
+            border-radius: 12px;
+            box-shadow: 0 10px 25px rgba(0, 0, 0, 0.3),
+                        0 0 15px var(--glow-cyan),
+                        inset 0 0 1px rgba(200, 220, 255, 0.2);
+            font-size: 15px;
+            line-height: 1.5;
+            width: max-content;
+            max-width: 300px;
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transition: all 0.4s var(--transition-smooth);
+            transform: translateY(5px) scale(0.98);
+            pointer-events: none;
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            color: var(--text-primary);
+        }
+        
+        .translation-tooltip.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        
+        .translation-tooltip::after {
+            content: '';
+            position: absolute;
+            top: -8px;
+            left: 50%;
+            transform: translateX(-50%);
+            width: 0;
+            height: 0;
+            border-left: 8px solid transparent;
+            border-right: 8px solid transparent;
+            border-bottom: 8px solid rgba(15, 20, 35, 0.9);
+        }
+        
+        .translation-origin {
+            font-size: 0.8em;
+            margin-top: 0.5em;
+            opacity: 0.7;
+            font-style: italic;
+        }
+        
+        .settings-panel {
+            position: absolute;
+            bottom: 2rem;
+            right: 2rem;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+            z-index: 100;
+        }
+        
+        .settings-button {
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: rgba(30, 40, 60, 0.8);
+            backdrop-filter: blur(8px);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-primary);
+            cursor: pointer;
+            box-shadow: 0 5px 15px rgba(0, 0, 0, 0.2),
+                        0 0 8px var(--glow-cyan);
+            transition: all 0.3s var(--transition-smooth);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            font-size: 20px;
+            will-change: transform, box-shadow;
+        }
+        
+        .settings-button:hover, .settings-button:active {
+            background: rgba(40, 60, 80, 0.9);
+            transform: translateY(-3px) scale(1.05);
+            box-shadow: 0 8px 20px rgba(0, 0, 0, 0.3),
+                        0 0 12px var(--glow-cyan);
+        }
+        
+        .settings-panel-expanded {
+            position: absolute;
+            bottom: 5rem;
+            right: 2rem;
+            background: rgba(15, 20, 35, 0.95);
+            backdrop-filter: blur(10px);
+            padding: 1.5rem;
+            border-radius: 16px;
+            box-shadow: 0 15px 40px rgba(0, 0, 0, 0.3),
+                        0 0 20px var(--glow-cyan),
+                        inset 0 0 2px rgba(200, 220, 255, 0.2);
+            z-index: 100;
+            opacity: 0;
+            visibility: hidden;
+            transform: translateY(20px) scale(0.95);
+            transition: all 0.4s var(--transition-smooth);
+            border: 1px solid rgba(100, 200, 255, 0.15);
+            width: 300px;
+        }
+        
+        .settings-panel-expanded.visible {
+            opacity: 1;
+            visibility: visible;
+            transform: translateY(0) scale(1);
+        }
+        
+        .settings-title {
+            margin-bottom: 1.25rem;
+            font-size: 17px;
+            font-weight: bold;
+            color: var(--text-primary);
+            position: relative;
+            padding-bottom: 0.5rem;
+        }
+        
+        .settings-title::after {
+            content: "";
+            position: absolute;
+            bottom: 0;
+            left: 0;
+            width: 100%;
+            height: 1px;
+            background: linear-gradient(90deg, 
+                var(--accent-cyan), 
+                rgba(120, 210, 255, 0.2), 
+                transparent);
+        }
+        
+        .settings-row {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            margin-bottom: 1.25rem;
+        }
+        
+        .settings-label {
+            color: var(--text-secondary);
+            font-size: 15px;
+        }
+        
+        .slider-container {
+            width: 120px;
+            height: 20px;
+            position: relative;
+        }
+        
+        .slider {
+            -webkit-appearance: none;
+            width: 100%;
+            height: 4px;
+            border-radius: 2px;
+            background: rgba(100, 200, 255, 0.2);
+            outline: none;
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb {
+            -webkit-appearance: none;
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--glow-cyan);
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-moz-range-thumb {
+            width: 16px;
+            height: 16px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            cursor: pointer;
+            box-shadow: 0 0 10px var(--glow-cyan);
+            border: none;
+            transition: all 0.2s ease;
+        }
+        
+        .slider::-webkit-slider-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+        
+        .slider::-moz-range-thumb:hover {
+            transform: scale(1.1);
+            box-shadow: 0 0 15px var(--glow-cyan);
+        }
+        
+        .toggle-switch {
+            position: relative;
+            display: inline-block;
+            width: 52px;
+            height: 26px;
+        }
+        
+        .toggle-switch input {
+            opacity: 0;
+            width: 0;
+            height: 0;
+        }
+        
+        .toggle-slider {
+            position: absolute;
+            cursor: pointer;
+            top: 0;
+            left: 0;
+            right: 0;
+            bottom: 0;
+            background: rgba(100, 200, 255, 0.2);
+            transition: .4s var(--transition-smooth);
+            border-radius: 26px;
+        }
+        
+        .toggle-slider:before {
+            position: absolute;
+            content: "";
+            height: 20px;
+            width: 20px;
+            left: 3px;
+            bottom: 3px;
+            background-color: #fff;
+            transition: .4s var(--transition-smooth);
+            border-radius: 50%;
+            box-shadow: 0 0 5px rgba(0, 0, 0, 0.2);
+        }
+        
+        input:checked + .toggle-slider {
+            background-color: var(--accent-cyan);
+        }
+        
+        input:checked + .toggle-slider:before {
+            transform: translateX(26px);
+        }
+        
+        input:focus + .toggle-slider {
+            box-shadow: 0 0 5px var(--glow-cyan);
+        }
+        
+        @keyframes pulse {
+            0% {
+                text-shadow: 0 0 8px var(--glow-cyan);
+            }
+            50% {
+                text-shadow: 0 0 15px var(--glow-cyan);
+            }
+            100% {
+                text-shadow: 0 0 8px var(--glow-cyan);
+            }
+        }
+        
+        @keyframes float {
+            0%, 100% {
+                transform: translateZ(var(--depth-foreground)) translateY(0);
+            }
+            50% {
+                transform: translateZ(var(--depth-foreground)) translateY(-3px);
+            }
+        }
+        
+        .floating {
+            animation: float 8s infinite ease-in-out;
+        }
+        
+        .pulse-glow {
+            animation: pulse 6s infinite ease-in-out;
+        }
+        
+        .gradient-text {
+            background: linear-gradient(90deg, var(--accent-cyan), var(--accent-magenta));
+            -webkit-background-clip: text;
+            -webkit-text-fill-color: transparent;
+            background-clip: text;
+            color: transparent;
+            transform: translateZ(2px);
+        }
+        
+        /* Reading cursor */
+        .reading-cursor {
+            position: absolute;
+            width: 2px;
+            height: 24px;
+            background: var(--accent-cyan);
+            border-radius: 1px;
+            opacity: 0.7;
+            pointer-events: none;
+            mix-blend-mode: screen;
+            box-shadow: 0 0 8px var(--glow-cyan);
+            z-index: 5;
+            transform: translateZ(10px);
+            transition: opacity 0.3s ease, transform 0.2s ease;
+        }
+        
+        .reading-cursor.hidden {
+            opacity: 0;
+        }
+        
+        /* Tap feedback */
+        .tap-feedback {
+            position: absolute;
+            width: 50px;
+            height: 50px;
+            border-radius: 50%;
+            background: radial-gradient(circle, var(--glow-cyan), transparent 70%);
+            opacity: 0;
+            pointer-events: none;
+            z-index: 10;
+            transform: translate(-50%, -50%);
+            mix-blend-mode: screen;
+        }
+        
+        @keyframes tap-ripple {
+            0% {
+                transform: translate(-50%, -50%) scale(0.5);
+                opacity: 0.8;
+            }
+            100% {
+                transform: translate(-50%, -50%) scale(2);
+                opacity: 0;
+            }
+        }
+        
+        /* Fine typography adjustments */
+        .word-group {
+            display: inline-block;
+            margin-right: 0.1em;
+            white-space: nowrap;
+        }
+        
+        .tight-space {
+            margin-right: 0.05em;
+        }
+        
+        .no-break {
+            white-space: nowrap;
+        }
+        
+        /* Refined visual markers */
+        .subtitle-line {
+            font-size: 0.85em;
+            color: var(--text-tertiary);
+            margin-bottom: 1.4rem;
+            margin-top: -1rem;
+            letter-spacing: 0.05em;
+            text-transform: uppercase;
+            transform: translateZ(2px);
+        }
+        
+        /* Accessibility focus states */
+        .word:focus-visible, .foreign-text:focus-visible {
+            outline: 2px solid var(--accent-cyan);
+            outline-offset: 2px;
+            border-radius: 4px;
+        }
+        
+        /* Loading animation */
+        .loading-screen {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: var(--bg-primary);
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+            transition: opacity 0.5s ease-out 0.5s, visibility 0s 1s;
+        }
+        
+        .loading-screen.hidden {
+            opacity: 0;
+            visibility: hidden;
+        }
+        
+        .loading-icon {
+            width: 100px;
+            height: 20px;
+            display: flex;
+            justify-content: space-between;
+        }
+        
+        .loading-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            background: var(--accent-cyan);
+            animation: loading-bounce 1.4s infinite ease-in-out both;
+        }
+        
+        .loading-dot:nth-child(1) { 
+            animation-delay: -0.32s; 
+        }
+        
+        .loading-dot:nth-child(2) { 
+            animation-delay: -0.16s; 
+        }
+        
+        @keyframes loading-bounce {
+            0%, 80%, 100% { 
+                transform: scale(0);
+            }
+            40% { 
+                transform: scale(1.0);
+            }
+        }
+        
+        /* Typography refinements for smaller screens */
+        @media (max-width: 390px) {
+            .paragraph {
+                font-size: 16px;
+                line-height: 1.6;
+                margin-bottom: 1.6rem;
+            }
+            
+            .foreign-text {
+                font-size: 0.9em;
+                padding: 0.15em 0.3em;
+            }
+            
+            .settings-panel-expanded {
+                width: 280px;
+                right: 1rem;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="iphone-container">
+        <div class="loading-screen" id="loading-screen">
+            <div class="loading-icon">
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+                <div class="loading-dot"></div>
+            </div>
+        </div>
+        
+        <div class="text-scene" id="text-scene">
+            <div class="reading-cursor hidden" id="reading-cursor"></div>
+            
+            <h1 class="paragraph" style="font-size: 22px; margin-bottom: 1rem; transform: translateZ(10px);">
+                <span class="word gradient-text">Dimensional</span>
+                <span class="word">Typography</span>
+            </h1>
+            
+            <div class="subtitle-line">Exploring text through space and wisdom</div>
+            
+            <p class="paragraph">
+                <span class="word">In</span>
+                <span class="word-group">
+                    <span class="word">the</span>
+                    <span class="word foreground pulse-glow">depths</span>
+                </span>
+                <span class="word">of</span>
+                <span class="word background">perception,</span>
+                <span class="word">we</span>
+                <span class="word">find</span>
+                <span class="word">that</span>
+                <span class="word substitution" id="word-1" tabindex="0">
+                    <span class="original-text">consciousness</span>
+                    <span class="alternative-text">awareness</span>
+                </span>
+                <span class="word foreground floating">moves</span>
+                <span class="word-group tight-space">
+                    <span class="word">like</span>
+                    <span class="word background">water,</span>
+                </span>
+                <span class="word">flowing</span>
+                <span class="word">between</span>
+                <span class="foreign-text chinese" data-translation="The Way that can be told is not the eternal Way" data-source="Tao Te Ching, Chapter 1" tabindex="0">道可道，非常道</span>
+                <span class="word">and</span>
+                <span class="word substitution" id="word-2" tabindex="0">
+                    <span class="original-text">emptiness</span>
+                    <span class="alternative-text">absence</span>
+                </span>
+                <span class="word-group">
+                    <span class="word">of</span>
+                    <span class="word background">form.</span>
+                </span>
+            </p>
+            
+            <p class="paragraph">
+                <span class="word-group">
+                    <span class="word">As</span>
+                    <span class="word foreground">Laozi</span>
+                </span>
+                <span class="word">observed,</span>
+                <span class="word substitution" id="word-3" tabindex="0">
+                    <span class="original-text">wisdom</span>
+                    <span class="alternative-text">insight</span>
+                </span>
+                <span class="word">comes</span>
+                <span class="word">from</span>
+                <span class="foreign-text chinese" data-translation="The name that can be named is not the eternal name" data-source="Tao Te Ching, Chapter 1" tabindex="0">名可名，非常名</span>
+                <span class="word">while</span>
+                <span class="word background">Rumi</span>
+                <span class="word">reminds</span>
+                <span class="word">us</span>
+                <span class="foreign-text persian" data-translation="You are not a drop in the ocean. You are the entire ocean in a drop." data-source="Jalal ad-Din Muhammad Rumi" tabindex="0">تو قطره‌ای در اقیانوس نیستی، تو تمام اقیانوس در یک قطره هستی</span>
+            </p>
+            
+            <p class="paragraph">
+                <span class="word">These</span>
+                <span class="word foreground floating">ancient</span>
+                <span class="word-group">
+                    <span class="word">truths</span>
+                    <span class="word background">emerge</span>
+                </span>
+                <span class="word">as</span>
+                <span class="word gradient-text">layers</span>
+                <span class="word">of</span>
+                <span class="word substitution" id="word-4" tabindex="0">
+                    <span class="original-text">meaning</span>
+                    <span class="alternative-text">significance</span>
+                </span>
+                <span class="word">within</span>
+                <span class="foreign-text persian" data-translation="Out beyond ideas of wrongdoing and rightdoing, there is a field. I'll meet you there." data-source="Jalal ad-Din Muhammad Rumi" tabindex="0">آن سوی اندیشه‌های بد و خوب، دشتی است. آنجا با تو دیدار می‌کنم</span>
+            </p>
+            
+            <p class="paragraph">
+                <span class="word-group tight-space">
+                    <span class="word">The</span>
+                    <span class="word background">interplay</span>
+                </span>
+                <span class="word">of</span>
+                <span class="word foreground pulse-glow">presence</span>
+                <span class="word">and</span>
+                <span class="word substitution" id="word-5" tabindex="0">
+                    <span class="original-text">absence</span>
+                    <span class="alternative-text">void</span>
+                </span>
+                <span class="word">creates</span>
+                <span class="word">a</span>
+                <span class="foreign-text chinese" data-translation="The nameless is the origin of Heaven and Earth" data-source="Tao Te Ching, Chapter 1" tabindex="0">無名天地之始</span>
+                <span class="word">of</span>
+                <span class="word foreground floating no-break">infinite</span>
+                <span class="word background">possibility.</span>
+            </p>
+            
+            <div id="translation-tooltip" class="translation-tooltip">
+                <div id="tooltip-text"></div>
+                <div id="tooltip-source" class="translation-origin"></div>
+            </div>
+            
+            <div id="tap-feedback" class="tap-feedback"></div>
+        </div>
+        
+        <div class="settings-panel">
+            <div class="settings-button" id="settings-toggle" aria-label="Settings" role="button" tabindex="0">
+                ⚙️
+            </div>
+        </div>
+        
+        <div class="settings-panel-expanded" id="settings-panel">
+            <div class="settings-title">Typography Settings</div>
+            
+            <div class="settings-row">
+                <div class="settings-label">Depth Intensity</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="depth-slider" aria-label="Adjust depth intensity">
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">Parallax Sensitivity</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="parallax-slider" aria-label="Adjust parallax sensitivity">
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">Glow Intensity</div>
+                <div class="slider-container">
+                    <input type="range" min="0" max="100" value="50" class="slider" id="glow-slider" aria-label="Adjust glow intensity">
+                </div>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">Reading Guide</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" id="reading-cursor-toggle" aria-label="Toggle reading guide">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+            
+            <div class="settings-row">
+                <div class="settings-label">Dark Mode</div>
+                <label class="toggle-switch">
+                    <input type="checkbox" checked id="dark-mode-toggle" aria-label="Toggle dark mode">
+                    <span class="toggle-slider"></span>
+                </label>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        document.addEventListener('DOMContentLoaded', function() {
+            // Elements
+            const textScene = document.getElementById('text-scene');
+            const translationTooltip = document.getElementById('translation-tooltip');
+            const tooltipText = document.getElementById('tooltip-text');
+            const tooltipSource = document.getElementById('tooltip-source');
+            const settingsToggle = document.getElementById('settings-toggle');
+            const settingsPanel = document.getElementById('settings-panel');
+            const readingCursor = document.getElementById('reading-cursor');
+            const tapFeedback = document.getElementById('tap-feedback');
+            const loadingScreen = document.getElementById('loading-screen');
+            
+            // Variables for tracking state
+            let lastX = 0;
+            let lastY = 0;
+            let isMoving = false;
+            let isReadingActive = false;
+            let isSubstitutionActive = false;
+            let longPressTimer;
+            let activeTooltipElement = null;
+            
+            // Settings variables
+            let depthIntensity = 0.5;
+            let parallaxSensitivity = 0.5;
+            let glowIntensity = 0.5;
+            let isDarkMode = true;
+            
+            // Initialize sliders and toggles
+            const depthSlider = document.getElementById('depth-slider');
+            const parallaxSlider = document.getElementById('parallax-slider');
+            const glowSlider = document.getElementById('glow-slider');
+            const darkModeToggle = document.getElementById('dark-mode-toggle');
+            const readingCursorToggle = document.getElementById('reading-cursor-toggle');
+            
+            // Hide loading screen after content loads
+            window.addEventListener('load', function() {
+                setTimeout(() => {
+                    loadingScreen.classList.add('hidden');
+                }, 800);
+            });
+            
+            // Initialize text depths with subtle variations
+            function initializeTextDepths() {
+                // Set random z-depths for regular words
+                const words = document.querySelectorAll('.word:not(.foreground):not(.background):not(.substitution):not(.gradient-text)');
+                words.forEach(word => {
+                    // Create more subtle and natural depth variations
+                    const zDepth = (Math.random() * 5 - 2.5).toFixed(2);
+                    word.style.transform = `translateZ(${zDepth}px)`;
+                    
+                    // Add subtle glow to some words
+                    if (Math.random() > 0.7) {
+                        const hue = 190 + Math.random() * 40;
+                        const intensity = 0.2 + Math.random() * 0.3;
+                        word.style.textShadow = `0 0 5px hsla(${hue}, 80%, 70%, ${intensity})`;
+                    }
+                });
+                
+                // Add slight rotations to some words for more organic feel
+                document.querySelectorAll('.word').forEach(word => {
+                    if (Math.random() > 0.7) {
+                        const rotateX = (Math.random() * 2 - 1).toFixed(2);
+                        const rotateY = (Math.random() * 2 - 1).toFixed(2);
+                        const currentTransform = word.style.transform || '';
+                        
+                        if (!currentTransform.includes('rotate')) {
+                            word.style.transform = `${currentTransform} rotateX(${rotateX}deg) rotateY(${rotateY}deg)`;
+                        }
+                    }
+                });
+            }
+            
+            // Handle substitution words
+            function setupSubstitutions() {
+                const substitutionWords = document.querySelectorAll('.substitution');
+                substitutionWords.forEach(word => {
+                    const originalText = word.querySelector('.original-text');
+                    const alternativeText = word.querySelector('.alternative-text');
+                    
+                    word.addEventListener('click', function(e) {
+                        e.preventDefault();
+                        showTapFeedback(e.clientX, e.clientY);
+                        
+                        if (originalText.style.opacity !== '0') {
+                            originalText.style.opacity = 0;
+                            originalText.style.transform = 'translateY(-5px)';
+                            alternativeText.style.opacity = 1;
+                            alternativeText.style.transform = 'translateY(0)';
+                            alternativeText.style.pointerEvents = 'auto';
+                        } else {
+                            originalText.style.opacity = 1;
+                            originalText.style.transform = 'translateY(0)';
+                            alternativeText.style.opacity = 0;
+                            alternativeText.style.transform = 'translateY(5px)';
+                            alternativeText.style.pointerEvents = 'none';
+                        }
+                    });
+                    
+                    // Keyboard accessibility
+                    word.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            this.click();
+                        }
+                    });
+                });
+            }
+            
+            // Handle foreign text translations
+            function setupTranslations() {
+                const foreignTexts = document.querySelectorAll('.foreign-text');
+                
+                foreignTexts.forEach(text => {
+                    const translation = text.getAttribute('data-translation');
+                    const source = text.getAttribute('data-source');
+                    
+                    // Touch handling
+                    text.addEventListener('touchstart', function(e) {
+                        longPressTimer = setTimeout(function() {
+                            showTranslation(text, translation, source);
+                            activeTooltipElement = text;
+                            
+                            // Vibrate if available
+                            if (navigator.vibrate) {
+                                navigator.vibrate(50);
+                            }
+                        }, 500); // Show after 500ms hold
+                    }, { passive: true });
+                    
+                    text.addEventListener('touchend', function() {
+                        clearTimeout(longPressTimer);
+                        
+                        // Hide tooltip after a delay if this is the active element
+                        if (activeTooltipElement === text) {
+                            setTimeout(() => {
+                                if (activeTooltipElement === text) {
+                                    translationTooltip.classList.remove('visible');
+                                    activeTooltipElement = null;
+                                }
+                            }, 2000);
+                        }
+                    });
+                    
+                    // Click for desktop
+                    text.addEventListener('click', function(e) {
+                        showTapFeedback(e.clientX, e.clientY);
+                        showTranslation(text, translation, source);
+                        activeTooltipElement = text;
+                    });
+                    
+                    // Keyboard accessibility
+                    text.addEventListener('keydown', function(e) {
+                        if (e.key === 'Enter' || e.key === ' ') {
+                            e.preventDefault();
+                            showTranslation(text, translation, source);
+                            activeTooltipElement = text;
+                        }
+                    });
+                });
+                
+                // Hide tooltip when clicking elsewhere
+                document.addEventListener('click', function(e) {
+                    if (!e.target.closest('.foreign-text') && !e.target.closest('.translation-tooltip')) {
+                        translationTooltip.classList.remove('visible');
+                        activeTooltipElement = null;
+                    }
+                });
+            }
+            
+            function showTranslation(element, translation, source) {
+                // Calculate position for tooltip
+                const rect = element.getBoundingClientRect();
+                const containerRect = textScene.getBoundingClientRect();
+                
+                // Position the tooltip
+                if (element.classList.contains('persian')) {
+                    // For right-to-left text, position differently
+                    translationTooltip.style.top = (rect.top - containerRect.top + rect.height + 15) + 'px';
+                    translationTooltip.style.left = Math.max(10, Math.min(containerRect.width - 300, 
+                        rect.left - containerRect.left)) + 'px';
+                    translationTooltip.style.transformOrigin = '10% 0';
+                } else {
+                    translationTooltip.style.top = (rect.top - containerRect.top + rect.height + 15) + 'px';
+                    translationTooltip.style.left = Math.max(10, Math.min(containerRect.width - 300, 
+                        rect.left - containerRect.left - 140 + rect.width / 2)) + 'px';
+                    translationTooltip.style.transformOrigin = '50% 0';
+                }
+                
+                // Set content and show
+                tooltipText.textContent = translation;
+                tooltipSource.textContent = source;
+                translationTooltip.classList.add('visible');
+            }
+            
+            // Settings panel toggle
+            function setupSettingsPanel() {
+                settingsToggle.addEventListener('click', function(e) {
+                    showTapFeedback(e.clientX, e.clientY);
+                    settingsPanel.classList.toggle('visible');
+                });
+                
+                // Close when clicking outside
+                document.addEventListener('click', function(e) {
+                    if (settingsPanel.classList.contains('visible') && 
+                        !e.target.closest('.settings-panel') && 
+                        !e.target.closest('.settings-button')) {
+                        settingsPanel.classList.remove('visible');
+                    }
+                });
+                
+                // Keyboard accessibility
+                settingsToggle.addEventListener('keydown', function(e) {
+                    if (e.key === 'Enter' || e.key === ' ') {
+                        e.preventDefault();
+                        this.click();
+                    }
+                });
+            }
+            
+            // Update settings from sliders
+            function setupSettingsControls() {
+                depthSlider.addEventListener('input', function() {
+                    depthIntensity = this.value / 100;
+                    updateDepthIntensity();
+                });
+                
+                parallaxSlider.addEventListener('input', function() {
+                    parallaxSensitivity = this.value / 100;
+                });
+                
+                glowSlider.addEventListener('input', function() {
+                    glowIntensity = this.value / 100;
+                    updateGlowIntensity();
+                });
+                
+                darkModeToggle.addEventListener('change', function() {
+                    isDarkMode = this.checked;
+                    updateColorScheme();
+                });
+                
+                readingCursorToggle.addEventListener('change', function() {
+                    isReadingActive = this.checked;
+                    if (isReadingActive) {
+                        readingCursor.classList.remove('hidden');
+                    } else {
+                        readingCursor.classList.add('hidden');
+                    }
+                });
+            }
+            
+            function updateDepthIntensity() {
+                // Calculate depths based on intensity
+                const foregroundDepth = 4 + (depthIntensity * 10);
+                const backgroundDepth = -4 - (depthIntensity * 10);
+                
+                // Update CSS custom properties
+                document.documentElement.style.setProperty('--depth-foreground', `${foregroundDepth}px`);
+                document.documentElement.style.setProperty('--depth-background', `${backgroundDepth}px`);
+                
+                // Apply to existing elements with specific classes
+                document.querySelectorAll('.foreground').forEach(word => {
+                    const currentTransform = word.style.transform || '';
+                    word.style.transform = currentTransform.replace(/translateZ\([^)]*\)/, `translateZ(${foregroundDepth}px)`);
+                });
+                
+                document.querySelectorAll('.background').forEach(word => {
+                    const currentTransform = word.style.transform || '';
+                    word.style.transform = currentTransform.replace(/translateZ\([^)]*\)/, `translateZ(${backgroundDepth}px)`);
+                });
+                
+                // Update floating animation
+                document.querySelectorAll('.floating').forEach(word => {
+                    word.style.animationName = 'none';
+                    setTimeout(() => {
+                        word.style.animationName = 'float';
+                    }, 10);
+                });
+            }
+            
+            function updateGlowIntensity() {
+                // Calculate glow amounts based on intensity
+                const foregroundGlow = 3 + (glowIntensity * 15);
+                const glowColor = `rgba(100, 200, 255, ${glowIntensity * 0.5 + 0.2})`;
+                
+                // Update CSS custom properties
+                document.documentElement.style.setProperty('--glow-cyan', glowColor);
+                
+                // Apply to specific elements
+                document.querySelectorAll('.pulse-glow').forEach(word => {
+                    word.style.animationName = 'none';
+                    setTimeout(() => {
+                        word.style.animationName = 'pulse';
+                    }, 10);
+                });
+                
+                document.querySelectorAll('.foreground:not(.pulse-glow)').forEach(word => {
+                    word.style.textShadow = `0 0 ${foregroundGlow}px ${glowColor}`;
+                });
+                
+                // Update other glow elements
+                document.querySelectorAll('.substitution').forEach(word => {
+                    word.style.textShadow = `0 0 ${glowIntensity * 8 + 2}px ${glowColor}`;
+                });
+            }
+            
+            function updateColorScheme() {
+                const container = document.querySelector('.iphone-container');
+                
+                if (isDarkMode) {
+                    // Dark mode colors
+                    document.documentElement.style.setProperty('--bg-primary', '#0a0a12');
+                    document.documentElement.style.setProperty('--bg-secondary', '#12121e');
+                    document.documentElement.style.setProperty('--bg-tertiary', '#1a1a2e');
+                    document.documentElement.style.setProperty('--text-primary', 'rgba(230, 230, 240, 0.94)');
+                    document.documentElement.style.setProperty('--text-secondary', 'rgba(200, 200, 220, 0.85)');
+                    document.documentElement.style.setProperty('--text-tertiary', 'rgba(170, 170, 190, 0.75)');
+                    
+                    container.style.background = 'linear-gradient(135deg, var(--bg-primary), var(--bg-tertiary))';
+                } else {
+                    // Light mode colors
+                    document.documentElement.style.setProperty('--bg-primary', '#f0f0f8');
+                    document.documentElement.style.setProperty('--bg-secondary', '#e8e8f0');
+                    document.documentElement.style.setProperty('--bg-tertiary', '#e0e0ee');
+                    document.documentElement.style.setProperty('--text-primary', 'rgba(40, 40, 60, 0.94)');
+                    document.documentElement.style.setProperty('--text-secondary', 'rgba(60, 60, 80, 0.85)');
+                    document.documentElement.style.setProperty('--text-tertiary', 'rgba(80, 80, 100, 0.75)');
+                    
+                    container.style.background = 'linear-gradient(135deg, var(--bg-primary), var(--bg-tertiary))';
+                }
+                
+                // Update all word colors that aren't special classes
+                document.querySelectorAll('.word:not(.foreground):not(.background):not(.gradient-text):not(.substitution)').forEach(word => {
+                    word.style.color = 'var(--text-primary)';
+                });
+                
+                document.querySelectorAll('.background').forEach(word => {
+                    word.style.color = 'var(--text-tertiary)';
+                });
+            }
+            
+            // Reading cursor functionality
+            function updateReadingCursor(x, y) {
+                if (!isReadingActive) return;
+                
+                // Find the word closest to the cursor
+                const words = document.querySelectorAll('.word, .foreign-text');
+                let closestWord = null;
+                let closestDistance = Infinity;
+                
+                words.forEach(word => {
+                    const rect = word.getBoundingClientRect();
+                    const wordX = rect.left + rect.width / 2;
+                    const wordY = rect.top + rect.height / 2;
+                    
+                    const distance = Math.sqrt(
+                        Math.pow(wordX - x, 2) + 
+                        Math.pow(wordY - y, 2)
+                    );
+                    
+                    if (distance < closestDistance) {
+                        closestDistance = distance;
+                        closestWord = word;
+                    }
+                });
+                
+                if (closestWord && closestDistance < 150) {
+                    const rect = closestWord.getBoundingClientRect();
+                    const containerRect = textScene.getBoundingClientRect();
+                    
+                    readingCursor.style.left = (rect.left - containerRect.left - 5) + 'px';
+                    readingCursor.style.top = (rect.top - containerRect.top) + 'px';
+                    readingCursor.style.height = rect.height + 'px';
+                    readingCursor.classList.remove('hidden');
+                } else {
+                    readingCursor.classList.add('hidden');
+                }
+            }
+            
+            // Show tap feedback effect
+            function showTapFeedback(x, y) {
+                // Position the feedback element
+                tapFeedback.style.left = x + 'px';
+                tapFeedback.style.top = y + 'px';
+                
+                // Trigger animation
+                tapFeedback.style.animation = 'none';
+                setTimeout(() => {
+                    tapFeedback.style.animation = 'tap-ripple 0.6s forwards';
+                }, 10);
+            }
+            
+            // Parallax effect on mouse/touch move
+            function handleMovement(clientX, clientY) {
+                if (!isMoving) {
+                    requestAnimationFrame(() => {
+                        const containerRect = textScene.getBoundingClientRect();
+                        
+                        // Calculate mouse position relative to container center
+                        const centerX = containerRect.left + containerRect.width / 2;
+                        const centerY = containerRect.top + containerRect.height / 2;
+                        
+                        const deltaX = (clientX - centerX) / (containerRect.width / 2);
+                        const deltaY = (clientY - centerY) / (containerRect.height / 2);
+                        
+                        // Apply parallax to text scene based on sensitivity
+                        const rotateAmount = parallaxSensitivity * 10;
+                        const moveAmount = parallaxSensitivity * 15;
+                        
+                        textScene.style.transform = `
+                            perspective(1200px)
+                            rotateY(${deltaX * rotateAmount}deg) 
+                            rotateX(${-deltaY * rotateAmount}deg)
+                            translateX(${deltaX * moveAmount * 0.4}px)
+                            translateY(${deltaY * moveAmount * 0.4}px)
+                        `;
+                        
+                        // Apply parallax to individual words based on their z-depth
+                        document.querySelectorAll('.word, .foreign-text').forEach(word => {
+                            let zDepth = 0;
+                            
+                            // Extract z-depth from transform if it exists
+                            const transformStyle = word.style.transform || '';
+                            const zMatch = transformStyle.match(/translateZ\(([^)]+)\)/);
+                            if (zMatch) {
+                                zDepth = parseFloat(zMatch[1]);
+                            } else if (word.classList.contains('foreground')) {
+                                zDepth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--depth-foreground'));
+                            } else if (word.classList.contains('background')) {
+                                zDepth = parseFloat(getComputedStyle(document.documentElement).getPropertyValue('--depth-background'));
+                            }
+                            
+                            // Scale movement based on depth and sensitivity
+                            const depthFactor = Math.abs(zDepth) * 0.2 * parallaxSensitivity;
+                            const moveX = deltaX * depthFactor * moveAmount;
+                            const moveY = deltaY * depthFactor * moveAmount;
+                            
+                            // Update transform preserving existing properties
+                            let newTransform = transformStyle.replace(/translate(X|Y)\([^)]*\)/g, '');
+                            newTransform += ` translateX(${moveX}px) translateY(${moveY}px)`;
+                            word.style.transform = newTransform;
+                        });
+                        
+                        // Update reading cursor
+                        updateReadingCursor(clientX, clientY);
+                        
+                        lastX = clientX;
+                        lastY = clientY;
+                        isMoving = false;
+                    });
+                    
+                    isMoving = true;
+                }
+            }
+            
+            // Set up event listeners
+            function setupEventListeners() {
+                // Mouse movement handler
+                document.addEventListener('mousemove', function(e) {
+                    handleMovement(e.clientX, e.clientY);
+                });
+                
+                // Touch movement handler with passive option for better performance
+                document.addEventListener('touchmove', function(e) {
+                    handleMovement(e.touches[0].clientX, e.touches[0].clientY);
+                }, { passive: true });
+                
+                // Reset position when mouse leaves or touch ends
+                document.addEventListener('mouseleave', resetPosition);
+                document.addEventListener('touchend', resetPosition);
+                
+                // Add subtle movement on scroll for mobile
+                window.addEventListener('deviceorientation', function(e) {
+                    if (e.beta && e.gamma) {
+                        const x = window.innerWidth / 2 + (e.gamma * 10);
+                        const y = window.innerHeight / 2 + (e.beta * 10);
+                        handleMovement(x, y);
+                    }
+                }, true);
+            }
+            
+            function resetPosition() {
+                // Smoothly reset the scene position
+                textScene.style.transform = 'perspective(1200px) rotateY(0deg) rotateX(0deg) translateX(0) translateY(0)';
+                
+                // Reset word positions
+                document.querySelectorAll('.word, .foreign-text').forEach(word => {
+                    const transform = word.style.transform || '';
+                    word.style.transform = transform.replace(/translate(X|Y)\([^)]*\)/g, '');
+                });
+                
+                // Hide reading cursor
+                readingCursor.classList.add('hidden');
+            }
+            
+            // Initialize the experience
+            function initialize() {
+              
+                initializeTextDepths();
+                setupSubstitutions();
+                setupTranslations();
+                setupSettingsPanel();
+                setupSettingsControls();
+                setupEventListeners();
+                
+                // Apply initial settings
+                updateDepthIntensity();
+                updateGlowIntensity();
+                updateColorScheme();
+
+                loadingScreen.classList.add('hidden');
+
+            }
+            
+            // Start the application
+            initialize();

@@ -1,0 +1,503 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Infrastructure Intelligence - Minimal Demo</title>
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <style>
+    body {
+      font-family: -apple-system, BlinkMacSystemFont, 'Segoe UI', Roboto, sans-serif;
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 20px;
+      background: #f8fafc;
+      color: #334155;
+    }
+    
+    .header {
+      background: white;
+      padding: 20px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .config-panel {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+      margin-bottom: 20px;
+    }
+    
+    .demo-grid {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 20px;
+    }
+    
+    .demo-panel {
+      background: white;
+      padding: 16px;
+      border-radius: 8px;
+      box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+    }
+    
+    .panel-title {
+      font-weight: 600;
+      margin-bottom: 12px;
+      color: #1e293b;
+    }
+    
+    .input-group {
+      margin-bottom: 12px;
+    }
+    
+    .input-group label {
+      display: block;
+      font-size: 14px;
+      font-weight: 500;
+      margin-bottom: 4px;
+      color: #374151;
+    }
+    
+    .input-group input, .input-group select {
+      width: 100%;
+      padding: 8px 12px;
+      border: 1px solid #d1d5db;
+      border-radius: 4px;
+      font-size: 14px;
+    }
+    
+    .btn {
+      background: #3b82f6;
+      color: white;
+      border: none;
+      padding: 8px 16px;
+      border-radius: 4px;
+      cursor: pointer;
+      font-size: 14px;
+      margin-right: 8px;
+      margin-bottom: 8px;
+    }
+    
+    .btn:hover {
+      background: #2563eb;
+    }
+    
+    .btn.secondary {
+      background: #6b7280;
+    }
+    
+    .btn.secondary:hover {
+      background: #4b5563;
+    }
+    
+    .status {
+      display: inline-block;
+      padding: 2px 8px;
+      border-radius: 12px;
+      font-size: 12px;
+      font-weight: 500;
+    }
+    
+    .status.up { background: #dcfce7; color: #166534; }
+    .status.down { background: #fecaca; color: #991b1b; }
+    .status.checking { background: #fef3c7; color: #92400e; }
+    
+    .results {
+      background: #f8fafc;
+      border: 1px solid #e2e8f0;
+      border-radius: 4px;
+      padding: 12px;
+      margin-top: 12px;
+      font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+      font-size: 12px;
+      max-height: 300px;
+      overflow-y: auto;
+    }
+    
+    .error {
+      color: #dc2626;
+      background: #fef2f2;
+      border: 1px solid #fecaca;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    
+    .success {
+      color: #166534;
+      background: #f0fdf4;
+      border: 1px solid #bbf7d0;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 14px;
+    }
+    
+    .loading {
+      opacity: 0.6;
+      pointer-events: none;
+    }
+    
+    .cache-stats {
+      background: #f1f5f9;
+      border-radius: 4px;
+      padding: 8px;
+      margin-top: 8px;
+      font-size: 12px;
+    }
+    
+    @media (max-width: 768px) {
+      .demo-grid {
+        grid-template-columns: 1fr;
+      }
+    }
+  </style>
+</head>
+<body>
+  <div class="header">
+    <h1>Infrastructure Intelligence - Minimal Demo</h1>
+    <p>Real infrastructure inspection with caching and LLM analysis</p>
+    <div id="system-status"></div>
+  </div>
+
+  <div class="config-panel">
+    <h3 class="panel-title">Configuration</h3>
+    <div class="input-group">
+      <label for="api-key">LLM API Key (OpenRouter)</label>
+      <input type="password" id="api-key" placeholder="Enter your OpenRouter API key">
+    </div>
+    <button class="btn" onclick="saveConfig()">Save Config</button>
+    <button class="btn secondary" onclick="testLLM()">Test LLM Connection</button>
+  </div>
+
+  <div class="demo-grid">
+    <div class="demo-panel">
+      <h3 class="panel-title">Domain Inspection</h3>
+      <div class="input-group">
+        <label for="domain-select">Select Domain</label>
+        <select id="domain-select">
+          <option value="cyrillrafael.org">cyrillrafael.org</option>
+          <option value="marchdown.net">marchdown.net</option>
+          <option value="dissemblage.art">dissemblage.art</option>
+          <option value="hyperstitious.org">hyperstitious.org</option>
+          <option value="xenoethics.info">xenoethics.info</option>
+          <option value="xenoethics.org">xenoethics.org</option>
+          <option value="example.com">example.com (test)</option>
+        </select>
+      </div>
+      <button class="btn" onclick="inspectDomain()">Inspect Domain</button>
+      <button class="btn secondary" onclick="clearCache()">Clear Cache</button>
+      <div id="domain-results" class="results"></div>
+    </div>
+
+    <div class="demo-panel">
+      <h3 class="panel-title">GitHub Inspection</h3>
+      <div class="input-group">
+        <label for="github-user">GitHub Username</label>
+        <select id="github-user">
+          <option value="uprootiny">uprootiny</option>
+          <option value="marchdown">marchdown</option>
+          <option value="cyrillrafael">cyrillrafael</option>
+        </select>
+      </div>
+      <button class="btn" onclick="inspectGithubUser()">Get Repositories</button>
+      <div id="github-results" class="results"></div>
+    </div>
+
+    <div class="demo-panel">
+      <h3 class="panel-title">LLM Analysis</h3>
+      <div class="input-group">
+        <label for="analysis-type">Analysis Type</label>
+        <select id="analysis-type">
+          <option value="infrastructure-analysis">Infrastructure Analysis</option>
+          <option value="security-assessment">Security Assessment</option>
+        </select>
+      </div>
+      <button class="btn" onclick="runLLMAnalysis()">Analyze Last Result</button>
+      <div id="llm-results" class="results"></div>
+    </div>
+
+    <div class="demo-panel">
+      <h3 class="panel-title">System Health</h3>
+      <button class="btn" onclick="refreshSystemHealth()">Refresh Health</button>
+      <button class="btn secondary" onclick="showCacheStats()">Cache Stats</button>
+      <div id="health-results" class="results"></div>
+    </div>
+  </div>
+
+  <!-- Load ClojureScript library -->
+  <script type="text/clojure" src="https://raw.githubusercontent.com/uprootiny/reflector/refs/heads/main/cljs/infra-intelligence/core.cljs"></script>
+  
+  <script type="text/javascript">
+    // Global state for demo
+    let demoState = {
+      lastInspectionResult: null,
+      apiKey: '',
+      infraLib: null
+    };
+
+    // Wait for ClojureScript to load and initialize
+    document.addEventListener('DOMContentLoaded', function() {
+      // Check if ClojureScript library loaded
+      if (typeof window.infraIntelligence !== 'undefined') {
+        demoState.infraLib = window.infraIntelligence;
+        showSuccess('system-status', 'Infrastructure Intelligence library loaded successfully');
+        
+        // Initialize the library
+        try {
+          demoState.infraLib.init({});
+          showSuccess('system-status', 'Library initialized. Ready for inspection.');
+        } catch (error) {
+          showError('system-status', 'Failed to initialize library: ' + error.message);
+        }
+      } else {
+        // Fallback: mock the library for demo purposes
+        console.warn('ClojureScript library not loaded, using mock implementation');
+        demoState.infraLib = createMockLibrary();
+        showSuccess('system-status', 'Demo mode: Using mock implementation');
+      }
+    });
+
+    // Mock library implementation for demo when ClojureScript fails to load
+    function createMockLibrary() {
+      return {
+        init: (config) => {
+          console.log('Mock: Library initialized with config:', config);
+        },
+        
+        inspectInfrastructure: async (type, identifier) => {
+          await new Promise(resolve => setTimeout(resolve, 1000)); // Simulate delay
+          
+          if (type === 'domain') {
+            return {
+              domain: identifier,
+              'https-check': {
+                status: Math.random() > 0.3 ? 'up' : 'down',
+                'response-time': Math.floor(Math.random() * 1000) + 100,
+                'status-code': Math.random() > 0.3 ? 200 : 500
+              },
+              'ssl-check': {
+                'ssl-enabled': Math.random() > 0.2,
+                'security-headers': {
+                  'strict-transport-security': Math.random() > 0.5 ? 'max-age=31536000' : null
+                }
+              },
+              'maturity-score': Math.random(),
+              timestamp: Date.now()
+            };
+          } else if (type === 'github-user') {
+            return {
+              user: identifier,
+              repos: [
+                { name: 'repo1', language: 'JavaScript', stars: 5 },
+                { name: 'repo2', language: 'Python', stars: 12 },
+                { name: 'repo3', language: 'ClojureScript', stars: 3 }
+              ],
+              'total-repos': 3,
+              'total-stars': 20
+            };
+          }
+        },
+        
+        callLLM: async (promptType, data, apiKey) => {
+          if (!apiKey) {
+            throw new Error('API key required for LLM analysis');
+          }
+          
+          await new Promise(resolve => setTimeout(resolve, 2000)); // Simulate LLM delay
+          
+          return `Mock LLM Analysis (${promptType}):
+
+Based on the provided data, here's a simulated analysis:
+
+1. Health Score: ${Math.floor(Math.random() * 40) + 60}/100
+2. Key findings: The infrastructure shows typical patterns for a ${promptType.replace('-', ' ')}
+3. Recommendations: Consider implementing monitoring and automated backups
+4. Next steps: Review security headers and performance optimization
+
+This is a mock response for demonstration purposes.`;
+        },
+        
+        getSystemHealth: () => ({
+          total: 6,
+          up: 4,
+          down: 1,
+          degraded: 1,
+          'cache-stats': {
+            'total-entries': 3,
+            'total-hits': 15,
+            'hit-rate': 0.75
+          }
+        }),
+        
+        clearCache: () => {
+          console.log('Mock: Cache cleared');
+        }
+      };
+    }
+
+    // Demo functions
+    function saveConfig() {
+      const apiKey = document.getElementById('api-key').value;
+      demoState.apiKey = apiKey;
+      
+      if (apiKey) {
+        showSuccess('system-status', 'API key saved. LLM analysis enabled.');
+      } else {
+        showError('system-status', 'Please enter an API key to enable LLM analysis.');
+      }
+    }
+
+    async function testLLM() {
+      if (!demoState.apiKey) {
+        showError('llm-results', 'Please enter an API key first');
+        return;
+      }
+
+      setLoading('llm-results', true);
+      
+      try {
+        const testData = { test: 'connection', timestamp: Date.now() };
+        const result = await demoState.infraLib.callLLM('infrastructure-analysis', testData, demoState.apiKey);
+        showResults('llm-results', result);
+      } catch (error) {
+        showError('llm-results', 'LLM test failed: ' + error.message);
+      } finally {
+        setLoading('llm-results', false);
+      }
+    }
+
+    async function inspectDomain() {
+      const domain = document.getElementById('domain-select').value;
+      setLoading('domain-results', true);
+      
+      try {
+        const result = await demoState.infraLib.inspectInfrastructure('domain', domain);
+        demoState.lastInspectionResult = result;
+        showResults('domain-results', result);
+      } catch (error) {
+        showError('domain-results', 'Domain inspection failed: ' + error.message);
+      } finally {
+        setLoading('domain-results', false);
+      }
+    }
+
+    async function inspectGithubUser() {
+      const username = document.getElementById('github-user').value;
+      setLoading('github-results', true);
+      
+      try {
+        const result = await demoState.infraLib.inspectInfrastructure('github-user', username);
+        demoState.lastInspectionResult = result;
+        showResults('github-results', result);
+      } catch (error) {
+        showError('github-results', 'GitHub inspection failed: ' + error.message);
+      } finally {
+        setLoading('github-results', false);
+      }
+    }
+
+    async function runLLMAnalysis() {
+      if (!demoState.lastInspectionResult) {
+        showError('llm-results', 'Please run an inspection first');
+        return;
+      }
+
+      if (!demoState.apiKey) {
+        showError('llm-results', 'Please enter an API key first');
+        return;
+      }
+
+      const analysisType = document.getElementById('analysis-type').value;
+      setLoading('llm-results', true);
+      
+      try {
+        const result = await demoState.infraLib.callLLM(analysisType, demoState.lastInspectionResult, demoState.apiKey);
+        showResults('llm-results', result);
+      } catch (error) {
+        showError('llm-results', 'LLM analysis failed: ' + error.message);
+      } finally {
+        setLoading('llm-results', false);
+      }
+    }
+
+    function refreshSystemHealth() {
+      try {
+        const health = demoState.infraLib.getSystemHealth();
+        showResults('health-results', health);
+      } catch (error) {
+        showError('health-results', 'Failed to get system health: ' + error.message);
+      }
+    }
+
+    function showCacheStats() {
+      try {
+        const health = demoState.infraLib.getSystemHealth();
+        const cacheStats = health['cache-stats'] || {};
+        showResults('health-results', {
+          'Cache Statistics': cacheStats,
+          'Performance': {
+            'Hit Rate': `${Math.round((cacheStats['hit-rate'] || 0) * 100)}%`,
+            'Total Entries': cacheStats['total-entries'] || 0,
+            'Total Hits': cacheStats['total-hits'] || 0
+          }
+        });
+      } catch (error) {
+        showError('health-results', 'Failed to get cache stats: ' + error.message);
+      }
+    }
+
+    function clearCache() {
+      try {
+        demoState.infraLib.clearCache();
+        showSuccess('domain-results', 'Cache cleared successfully');
+      } catch (error) {
+        showError('domain-results', 'Failed to clear cache: ' + error.message);
+      }
+    }
+
+    // Utility functions
+    function showResults(elementId, data) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '<pre>' + JSON.stringify(data, null, 2) + '</pre>';
+      element.classList.remove('loading');
+    }
+
+    function showError(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '<div class="error">' + message + '</div>';
+      element.classList.remove('loading');
+    }
+
+    function showSuccess(elementId, message) {
+      const element = document.getElementById(elementId);
+      element.innerHTML = '<div class="success">' + message + '</div>';
+      element.classList.remove('loading');
+    }
+
+    function setLoading(elementId, isLoading) {
+      const element = document.getElementById(elementId);
+      if (isLoading) {
+        element.classList.add('loading');
+        element.innerHTML = '<div>Loading...</div>';
+      } else {
+        element.classList.remove('loading');
+      }
+    }
+
+    // Handle loading errors gracefully
+    window.addEventListener('error', function(event) {
+      console.error('Script error:', event.error);
+      if (!demoState.infraLib) {
+        console.warn('Falling back to mock implementation due to script error');
+        demoState.infraLib = createMockLibrary();
+        showSuccess('system-status', 'Demo mode: Using mock implementation (script error)');
+      }
+    });
+  </script>
+</body>
+</html>

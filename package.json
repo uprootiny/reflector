@@ -1,0 +1,32 @@
+{
+  "name": "reflector-dashboard",
+  "version": "1.0.0",
+  "description": "Advanced multi-language infrastructure intelligence system with real-time domain monitoring",
+  "main": "reflector-index.html",
+  "scripts": {
+    "dev": "cd cljs/infra-intelligence && npx shadow-cljs watch app",
+    "build": "cd cljs/infra-intelligence && npx shadow-cljs release app",
+    "serve": "python3 -m http.server 8080",
+    "deploy": "npm run build && rsync -av --delete . user@dashboard.dissemblage.art:/var/www/reflector/",
+    "test": "curl -f http://localhost:8080/reflector-index.html"
+  },
+  "keywords": [
+    "domain-monitoring",
+    "security-assessment", 
+    "infrastructure-intelligence",
+    "clojurescript",
+    "polyglot-programming"
+  ],
+  "author": "uprootiny",
+  "license": "MIT",
+  "dependencies": {
+    "shadow-cljs": "^3.1.6",
+    "react": "^19.1.0",
+    "react-dom": "^19.1.0"
+  },
+  "repository": {
+    "type": "git",
+    "url": "https://github.com/uprootiny/reflector.git"
+  },
+  "homepage": "https://uprootiny.github.io/reflector/"
+}

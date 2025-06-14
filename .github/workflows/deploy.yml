@@ -1,0 +1,132 @@
+name: Deploy Reflector Dashboard
+
+on:
+  push:
+    branches: [ main ]
+  pull_request:
+    branches: [ main ]
+  workflow_dispatch:
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    
+    steps:
+    - name: Checkout code
+      uses: actions/checkout@v4
+      
+    - name: Setup Node.js
+      uses: actions/setup-node@v4
+      with:
+        node-version: '18'
+        cache: 'npm'
+        
+    - name: Setup Java
+      uses: actions/setup-java@v4
+      with:
+        distribution: 'temurin'
+        java-version: '17'
+        
+    - name: Install Clojure CLI
+      run: |
+        curl -L -O https://github.com/clojure/brew-install/releases/latest/download/linux-install.sh
+        chmod +x linux-install.sh
+        sudo ./linux-install.sh
+        
+    - name: Install dependencies
+      run: |
+        if [ -f "package.json" ]; then
+          npm ci
+        else
+          npm init -y
+          npm install shadow-cljs react react-dom
+        fi
+        
+    - name: Build ClojureScript
+      run: |
+        cd cljs/infra-intelligence
+        if [ -f "shadow-cljs.edn" ]; then
+          npx shadow-cljs release app
+        else
+          echo "No shadow-cljs config found, using HTML only"
+        fi
+        
+    - name: Prepare deployment files
+      run: |
+        mkdir -p dist
+        cp *.html dist/ || true
+        cp *.css dist/ || true
+        cp *.js dist/ || true
+        cp -r cljs/infra-intelligence/public/* dist/ || true
+        
+        # Ensure main files exist
+        if [ ! -f "dist/index.html" ]; then
+          cp reflector-index.html dist/index.html
+        fi
+        
+    - name: Create health endpoint
+      run: |
+        cat > dist/health.json << 'EOF'
+        {
+          "status": "healthy",
+          "service": "reflector",
+          "description": "Domain monitoring dashboard with multi-language infrastructure intelligence",
+          "timestamp": "${{ github.event.head_commit.timestamp }}",
+          "commit": "${{ github.sha }}",
+          "endpoints": {
+            "dashboard": "/",
+            "health": "/health.json"
+          },
+          "features": [
+            "Real-time domain monitoring",
+            "SSL certificate tracking", 
+            "Performance analytics",
+            "Security assessment",
+            "ClojureScript intelligence engine",
+            "Multi-language coordination (HTML/TypeScript/Clojure/Python)"
+          ],
+          "deployment": {
+            "github-pages": "https://uprootiny.github.io/reflector/",
+            "custom-domain": "https://dashboard.dissemblage.art/",
+            "repository": "https://github.com/uprootiny/reflector"
+          }
+        }
+        EOF
+        
+    - name: Setup GitHub Pages
+      uses: actions/configure-pages@v4
+      
+    - name: Upload to GitHub Pages
+      uses: actions/upload-pages-artifact@v3
+      with:
+        path: ./dist
+        
+    - name: Deploy to GitHub Pages
+      id: deployment
+      uses: actions/deploy-pages@v4
+      if: github.ref == 'refs/heads/main'
+      
+  health-check:
+    needs: build-and-deploy
+    runs-on: ubuntu-latest
+    if: github.ref == 'refs/heads/main'
+    
+    steps:
+    - name: Wait for deployment
+      run: sleep 30
+      
+    - name: Test deployment
+      run: |
+        # Test main endpoint
+        curl -f https://uprootiny.github.io/reflector/ || {
+          echo "❌ Main page not accessible"
+          exit 1
+        }
+        
+        # Test health endpoint  
+        curl -f https://uprootiny.github.io/reflector/health.json || {
+          echo "❌ Health endpoint not accessible"
+          exit 1
+        }
+        
+        echo "✅ Deployment successful and accessible"

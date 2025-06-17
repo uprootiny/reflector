@@ -1,0 +1,1024 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Baroque Quantitative Finance Dashboard</title>
+    <style>
+        :root {
+            --primary: #1e293b;
+            --secondary: #334155;
+            --accent: #3b82f6;
+            --success: #10b981;
+            --warning: #f59e0b;
+            --danger: #ef4444;
+            --background: #f8fafc;
+            --surface: #ffffff;
+            --text: #1e293b;
+            --text-muted: #64748b;
+            --border: #e2e8f0;
+        }
+
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', -apple-system, BlinkMacSystemFont, sans-serif;
+            background: var(--background);
+            color: var(--text);
+            line-height: 1.5;
+        }
+
+        .app {
+            min-height: 100vh;
+            display: flex;
+            flex-direction: column;
+        }
+
+        /* Header */
+        .header {
+            background: var(--surface);
+            border-bottom: 1px solid var(--border);
+            padding: 1rem 2rem;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .header-content {
+            max-width: 1400px;
+            margin: 0 auto;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .header-title {
+            font-size: 1.5rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .header-subtitle {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-left: 0.5rem;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 1rem;
+            align-items: center;
+        }
+
+        .btn {
+            padding: 0.5rem 1rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            background: var(--surface);
+            color: var(--text);
+            cursor: pointer;
+            font-size: 0.875rem;
+            font-weight: 500;
+            transition: all 0.2s;
+            text-decoration: none;
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+        }
+
+        .btn:hover {
+            background: var(--background);
+            border-color: var(--accent);
+        }
+
+        .btn.primary {
+            background: var(--accent);
+            border-color: var(--accent);
+            color: white;
+        }
+
+        .btn.primary:hover {
+            background: #2563eb;
+            border-color: #2563eb;
+        }
+
+        .btn.success {
+            background: var(--success);
+            border-color: var(--success);
+            color: white;
+        }
+
+        .btn.danger {
+            background: var(--danger);
+            border-color: var(--danger);
+            color: white;
+        }
+
+        /* Main Layout */
+        .main {
+            flex: 1;
+            max-width: 1400px;
+            margin: 0 auto;
+            padding: 2rem;
+            width: 100%;
+        }
+
+        .dashboard-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 2rem;
+            margin-bottom: 2rem;
+        }
+
+        .full-width {
+            grid-column: 1 / -1;
+        }
+
+        /* Cards */
+        .card {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.5rem;
+            overflow: hidden;
+            box-shadow: 0 1px 3px rgba(0,0,0,0.1);
+        }
+
+        .card-header {
+            padding: 1.5rem;
+            border-bottom: 1px solid var(--border);
+            background: #f8fafc;
+        }
+
+        .card-title {
+            font-size: 1.125rem;
+            font-weight: 600;
+            color: var(--primary);
+        }
+
+        .card-content {
+            padding: 1.5rem;
+        }
+
+        /* Data Display */
+        .metric-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 1rem;
+        }
+
+        .metric {
+            text-align: center;
+            padding: 1rem;
+            background: #f8fafc;
+            border-radius: 0.375rem;
+        }
+
+        .metric-value {
+            font-size: 2rem;
+            font-weight: 700;
+            color: var(--primary);
+        }
+
+        .metric-label {
+            font-size: 0.875rem;
+            color: var(--text-muted);
+            margin-top: 0.25rem;
+        }
+
+        .metric.positive .metric-value {
+            color: var(--success);
+        }
+
+        .metric.negative .metric-value {
+            color: var(--danger);
+        }
+
+        /* Tables */
+        .table {
+            width: 100%;
+            border-collapse: collapse;
+        }
+
+        .table th {
+            text-align: left;
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+            font-weight: 600;
+            color: var(--text-muted);
+            font-size: 0.875rem;
+        }
+
+        .table td {
+            padding: 0.75rem;
+            border-bottom: 1px solid var(--border);
+        }
+
+        .table tr:hover {
+            background: #f8fafc;
+        }
+
+        /* Charts */
+        .chart-container {
+            height: 300px;
+            position: relative;
+            background: #f8fafc;
+            border-radius: 0.375rem;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: var(--text-muted);
+        }
+
+        /* Status Indicators */
+        .status {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            font-size: 0.875rem;
+            font-weight: 500;
+        }
+
+        .status-dot {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+        }
+
+        .status.healthy .status-dot {
+            background: var(--success);
+        }
+
+        .status.warning .status-dot {
+            background: var(--warning);
+        }
+
+        .status.error .status-dot {
+            background: var(--danger);
+        }
+
+        /* Forms */
+        .form-group {
+            margin-bottom: 1rem;
+        }
+
+        .form-label {
+            display: block;
+            margin-bottom: 0.5rem;
+            font-weight: 500;
+            color: var(--text);
+        }
+
+        .form-input {
+            width: 100%;
+            padding: 0.5rem;
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            font-size: 0.875rem;
+        }
+
+        .form-input:focus {
+            outline: none;
+            border-color: var(--accent);
+            box-shadow: 0 0 0 3px rgba(59, 130, 246, 0.1);
+        }
+
+        /* Loading States */
+        .loading {
+            display: inline-flex;
+            align-items: center;
+            gap: 0.5rem;
+            color: var(--text-muted);
+        }
+
+        .spinner {
+            width: 16px;
+            height: 16px;
+            border: 2px solid var(--border);
+            border-top: 2px solid var(--accent);
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        /* Responsive */
+        @media (max-width: 768px) {
+            .dashboard-grid {
+                grid-template-columns: 1fr;
+            }
+            
+            .main {
+                padding: 1rem;
+            }
+            
+            .header {
+                padding: 1rem;
+            }
+            
+            .header-content {
+                flex-direction: column;
+                gap: 1rem;
+                align-items: flex-start;
+            }
+        }
+
+        /* Notifications */
+        .notifications {
+            position: fixed;
+            top: 1rem;
+            right: 1rem;
+            z-index: 1000;
+            display: flex;
+            flex-direction: column;
+            gap: 0.5rem;
+        }
+
+        .notification {
+            background: var(--surface);
+            border: 1px solid var(--border);
+            border-radius: 0.375rem;
+            padding: 1rem;
+            box-shadow: 0 4px 6px rgba(0,0,0,0.1);
+            max-width: 400px;
+            animation: slideIn 0.3s ease-out;
+        }
+
+        .notification.success {
+            border-left: 4px solid var(--success);
+        }
+
+        .notification.error {
+            border-left: 4px solid var(--danger);
+        }
+
+        .notification.warning {
+            border-left: 4px solid var(--warning);
+        }
+
+        @keyframes slideIn {
+            from {
+                transform: translateX(100%);
+                opacity: 0;
+            }
+            to {
+                transform: translateX(0);
+                opacity: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div id="app">
+        <div class="app">
+            <header class="header">
+                <div class="header-content">
+                    <div>
+                        <span class="header-title">Baroque Finance</span>
+                        <span class="header-subtitle">Quantitative Analysis Platform</span>
+                    </div>
+                    <div class="header-controls">
+                        <button class="btn" onclick="refreshData()">
+                            <span id="refresh-icon">🔄</span> Refresh
+                        </button>
+                        <button class="btn primary" onclick="runAnalysis()">
+                            <span>📊</span> Analyze
+                        </button>
+                    </div>
+                </div>
+            </header>
+
+            <main class="main">
+                <div class="dashboard-grid">
+                    <!-- Portfolio Overview -->
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h2 class="card-title">Portfolio Overview</h2>
+                        </div>
+                        <div class="card-content">
+                            <div class="metric-grid" id="portfolio-metrics">
+                                <div class="metric">
+                                    <div class="metric-value" id="total-value">$1,247,832</div>
+                                    <div class="metric-label">Total Value</div>
+                                </div>
+                                <div class="metric positive">
+                                    <div class="metric-value" id="daily-pnl">+$12,843</div>
+                                    <div class="metric-label">Daily P&L</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value" id="volatility">18.7%</div>
+                                    <div class="metric-label">Volatility (30d)</div>
+                                </div>
+                                <div class="metric">
+                                    <div class="metric-value" id="sharpe-ratio">1.34</div>
+                                    <div class="metric-label">Sharpe Ratio</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Price Chart -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Price Performance</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="chart-container" id="price-chart">
+                                <canvas id="price-canvas" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Volatility Analysis -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Volatility Analysis</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="chart-container" id="volatility-chart">
+                                <canvas id="volatility-canvas" width="400" height="200"></canvas>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Holdings Table -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Current Holdings</h3>
+                        </div>
+                        <div class="card-content">
+                            <table class="table">
+                                <thead>
+                                    <tr>
+                                        <th>Symbol</th>
+                                        <th>Position</th>
+                                        <th>P&L</th>
+                                        <th>Status</th>
+                                    </tr>
+                                </thead>
+                                <tbody id="holdings-table">
+                                    <!-- Will be populated by JavaScript -->
+                                </tbody>
+                            </table>
+                        </div>
+                    </div>
+
+                    <!-- Risk Metrics -->
+                    <div class="card">
+                        <div class="card-header">
+                            <h3 class="card-title">Risk Metrics</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="metric-grid">
+                                <div class="metric">
+                                    <div class="metric-value" id="var-95">-2.8%</div>
+                                    <div class="metric-label">VaR (95%)</div>
+                                </div>
+                                <div class="metric negative">
+                                    <div class="metric-value" id="max-drawdown">-8.4%</div>
+                                    <div class="metric-label">Max Drawdown</div>
+                                </div>
+                            </div>
+                        </div>
+                    </div>
+
+                    <!-- Analysis Tools -->
+                    <div class="card full-width">
+                        <div class="card-header">
+                            <h3 class="card-title">Analysis Tools</h3>
+                        </div>
+                        <div class="card-content">
+                            <div class="form-group">
+                                <label class="form-label">Analysis Type</label>
+                                <select class="form-input" id="analysis-type">
+                                    <option value="volatility">Volatility Analysis</option>
+                                    <option value="correlation">Correlation Analysis</option>
+                                    <option value="momentum">Momentum Strategy</option>
+                                    <option value="mean-reversion">Mean Reversion</option>
+                                    <option value="risk-metrics">Risk Metrics</option>
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label class="form-label">Lookback Period (days)</label>
+                                <input type="number" class="form-input" id="lookback-period" value="20" min="5" max="252">
+                            </div>
+                            <div id="analysis-results" class="metric-grid">
+                                <!-- Results will be populated here -->
+                            </div>
+                        </div>
+                    </div>
+                </div>
+            </main>
+        </div>
+    </div>
+
+    <div id="notifications" class="notifications">
+        <!-- Notifications will be added here -->
+    </div>
+
+    <script>
+        // ============================================================================
+        // BAROQUE QUANTITATIVE FINANCE ENGINE - EMBEDDED CLOJURESCRIPT IMPLEMENTATION
+        // ============================================================================
+
+        // Core Time Series Data Structure
+        class TimeSeries {
+            constructor(timestamps, values, metadata = {}) {
+                this.timestamps = timestamps;
+                this.values = values;
+                this.metadata = metadata;
+            }
+
+            static validate(ts) {
+                return ts.timestamps.length === ts.values.length &&
+                       ts.timestamps.every(t => typeof t === 'number') &&
+                       ts.values.every(v => typeof v === 'number' && !isNaN(v));
+            }
+
+            get length() {
+                return this.values.length;
+            }
+
+            slice(start, end) {
+                return new TimeSeries(
+                    this.timestamps.slice(start, end),
+                    this.values.slice(start, end),
+                    { ...this.metadata, sliced: true }
+                );
+            }
+        }
+
+        // Mathematical Operations
+        const MathOps = {
+            mean(values) {
+                return values.reduce((a, b) => a + b, 0) / values.length;
+            },
+
+            variance(values) {
+                const mean = this.mean(values);
+                return values.reduce((acc, val) => acc + Math.pow(val - mean, 2), 0) / (values.length - 1);
+            },
+
+            stdDev(values) {
+                return Math.sqrt(this.variance(values));
+            },
+
+            correlation(x, y) {
+                const n = Math.min(x.length, y.length);
+                const alignedX = x.slice(0, n);
+                const alignedY = y.slice(0, n);
+                
+                const meanX = this.mean(alignedX);
+                const meanY = this.mean(alignedY);
+                
+                const numerator = alignedX.reduce((acc, xi, i) => 
+                    acc + (xi - meanX) * (alignedY[i] - meanY), 0);
+                
+                const denomX = Math.sqrt(alignedX.reduce((acc, xi) => acc + Math.pow(xi - meanX, 2), 0));
+                const denomY = Math.sqrt(alignedY.reduce((acc, yi) => acc + Math.pow(yi - meanY, 2), 0));
+                
+                return numerator / (denomX * denomY);
+            }
+        };
+
+        // Time Series Analysis Functions
+        const TSAnalysis = {
+            returns(ts, method = 'log') {
+                const returnValues = [];
+                for (let i = 1; i < ts.values.length; i++) {
+                    if (method === 'log') {
+                        returnValues.push(Math.log(ts.values[i] / ts.values[i-1]));
+                    } else {
+                        returnValues.push((ts.values[i] - ts.values[i-1]) / ts.values[i-1]);
+                    }
+                }
+                return new TimeSeries(
+                    ts.timestamps.slice(1),
+                    returnValues,
+                    { ...ts.metadata, type: 'returns', method }
+                );
+            },
+
+            rollingWindow(ts, windowSize, aggregator) {
+                if (ts.length < windowSize) return null;
+                
+                const results = [];
+                const timestamps = [];
+                
+                for (let i = windowSize - 1; i < ts.values.length; i++) {
+                    const window = ts.values.slice(i - windowSize + 1, i + 1);
+                    results.push(aggregator(window));
+                    timestamps.push(ts.timestamps[i]);
+                }
+                
+                return new TimeSeries(timestamps, results, 
+                    { ...ts.metadata, rolling: true, windowSize });
+            },
+
+            volatility(ts, windowSize = 20) {
+                const returnSeries = this.returns(ts, 'log');
+                return this.rollingWindow(returnSeries, windowSize, (window) => {
+                    return MathOps.stdDev(window) * Math.sqrt(252); // Annualized
+                });
+            },
+
+            momentum(ts, lookback = 10) {
+                const signals = [];
+                const timestamps = [];
+                
+                for (let i = lookback; i < ts.values.length; i++) {
+                    const current = ts.values[i];
+                    const past = ts.values[i - lookback];
+                    const momentum = (current - past) / past;
+                    
+                    let signal = 'hold';
+                    if (momentum > 0.02) signal = 'buy';
+                    else if (momentum < -0.02) signal = 'sell';
+                    
+                    signals.push({
+                        momentum,
+                        signal,
+                        strength: Math.min(1, Math.abs(momentum) / 0.02)
+                    });
+                    timestamps.push(ts.timestamps[i]);
+                }
+                
+                return { timestamps, signals };
+            },
+
+            calculateVaR(returns, confidenceLevel = 0.95) {
+                const sorted = [...returns].sort((a, b) => a - b);
+                const index = Math.floor((1 - confidenceLevel) * sorted.length);
+                return sorted[index];
+            },
+
+            maxDrawdown(ts) {
+                let maxDD = 0;
+                let peak = ts.values[0];
+                
+                for (let i = 1; i < ts.values.length; i++) {
+                    if (ts.values[i] > peak) {
+                        peak = ts.values[i];
+                    }
+                    const drawdown = (peak - ts.values[i]) / peak;
+                    maxDD = Math.max(maxDD, drawdown);
+                }
+                
+                return maxDD;
+            }
+        };
+
+        // Data Generation for Demo
+        const DataGenerator = {
+            generateGBM(S0, mu, sigma, T, n) {
+                const dt = T / n;
+                const prices = [S0];
+                const timestamps = [Date.now() - (n * 24 * 60 * 60 * 1000)];
+                
+                for (let i = 1; i <= n; i++) {
+                    const dW = this.randomNormal() * Math.sqrt(dt);
+                    const newPrice = prices[i-1] * Math.exp((mu - 0.5 * sigma * sigma) * dt + sigma * dW);
+                    prices.push(newPrice);
+                    timestamps.push(Date.now() - ((n - i) * 24 * 60 * 60 * 1000));
+                }
+                
+                return new TimeSeries(timestamps, prices, {
+                    symbol: 'SYNTHETIC',
+                    model: 'GBM',
+                    parameters: { S0, mu, sigma, T, n }
+                });
+            },
+
+            randomNormal() {
+                // Box-Muller transformation
+                const u1 = Math.random();
+                const u2 = Math.random();
+                return Math.sqrt(-2 * Math.log(u1)) * Math.cos(2 * Math.PI * u2);
+            },
+
+            generatePortfolio() {
+                const symbols = ['SPY', 'QQQ', 'IWM', 'VTI', 'EFA'];
+                const portfolio = [];
+                
+                symbols.forEach((symbol, i) => {
+                    const ts = this.generateGBM(
+                        100 + i * 20, // Starting price
+                        0.08 + i * 0.01, // Drift
+                        0.15 + i * 0.02, // Volatility
+                        1, // 1 year
+                        252 // Daily data
+                    );
+                    ts.metadata.symbol = symbol;
+                    portfolio.push(ts);
+                });
+                
+                return portfolio;
+            }
+        };
+
+        // Chart Rendering
+        const ChartRenderer = {
+            drawTimeSeries(canvas, timeSeries, options = {}) {
+                const ctx = canvas.getContext('2d');
+                const { width, height } = canvas;
+                
+                // Clear canvas
+                ctx.clearRect(0, 0, width, height);
+                
+                // Setup
+                const padding = 40;
+                const chartWidth = width - 2 * padding;
+                const chartHeight = height - 2 * padding;
+                
+                const values = timeSeries.values;
+                const minVal = Math.min(...values);
+                const maxVal = Math.max(...values);
+                const valueRange = maxVal - minVal;
+                
+                // Draw axes
+                ctx.strokeStyle = '#e2e8f0';
+                ctx.lineWidth = 1;
+                ctx.beginPath();
+                ctx.moveTo(padding, padding);
+                ctx.lineTo(padding, height - padding);
+                ctx.lineTo(width - padding, height - padding);
+                ctx.stroke();
+                
+                // Draw line
+                ctx.strokeStyle = options.color || '#3b82f6';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+                
+                values.forEach((value, i) => {
+                    const x = padding + (i / (values.length - 1)) * chartWidth;
+                    const y = height - padding - ((value - minVal) / valueRange) * chartHeight;
+                    
+                    if (i === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+                
+                ctx.stroke();
+                
+                // Add labels
+                ctx.fillStyle = '#64748b';
+                ctx.font = '12px sans-serif';
+                ctx.fillText(minVal.toFixed(2), 5, height - padding + 15);
+                ctx.fillText(maxVal.toFixed(2), 5, padding + 15);
+            }
+        };
+
+        // Application State
+        let appState = {
+            portfolio: [],
+            currentAnalysis: null,
+            loading: false
+        };
+
+        // UI Functions
+        function showNotification(message, type = 'info') {
+            const notifications = document.getElementById('notifications');
+            const notification = document.createElement('div');
+            notification.className = `notification ${type}`;
+            notification.innerHTML = `
+                <div style="font-weight: 500; margin-bottom: 0.25rem;">${type.charAt(0).toUpperCase() + type.slice(1)}</div>
+                <div>${message}</div>
+            `;
+            
+            notifications.appendChild(notification);
+            
+            setTimeout(() => {
+                notification.remove();
+            }, 4000);
+        }
+
+        function updateLoadingState(loading) {
+            appState.loading = loading;
+            const refreshIcon = document.getElementById('refresh-icon');
+            if (loading) {
+                refreshIcon.innerHTML = '<div class="spinner"></div>';
+            } else {
+                refreshIcon.innerHTML = '🔄';
+            }
+        }
+
+        function updatePortfolioMetrics() {
+            if (appState.portfolio.length === 0) return;
+            
+            // Calculate portfolio metrics
+            const totalValue = appState.portfolio.reduce((sum, asset) => {
+                return sum + asset.values[asset.values.length - 1] * 1000; // Assume 1000 shares each
+            }, 0);
+            
+            const dailyReturns = appState.portfolio.map(asset => {
+                const returns = TSAnalysis.returns(asset, 'simple');
+                return returns.values[returns.values.length - 1];
+            });
+            
+            const portfolioReturn = MathOps.mean(dailyReturns);
+            const portfolioVol = MathOps.stdDev(dailyReturns) * Math.sqrt(252);
+            const sharpeRatio = portfolioReturn * 252 / portfolioVol;
+            
+            // Update DOM
+            document.getElementById('total-value').textContent = `$${totalValue.toLocaleString()}`;
+            document.getElementById('daily-pnl').textContent = `${portfolioReturn >= 0 ? '+' : ''}$${(portfolioReturn * totalValue).toFixed(0)}`;
+            document.getElementById('volatility').textContent = `${(portfolioVol * 100).toFixed(1)}%`;
+            document.getElementById('sharpe-ratio').textContent = sharpeRatio.toFixed(2);
+            
+            // Risk metrics
+            const allReturns = appState.portfolio.flatMap(asset => TSAnalysis.returns(asset, 'simple').values);
+            const var95 = TSAnalysis.calculateVaR(allReturns, 0.95);
+            const maxDD = Math.max(...appState.portfolio.map(asset => TSAnalysis.maxDrawdown(asset)));
+            
+            document.getElementById('var-95').textContent = `${(var95 * 100).toFixed(1)}%`;
+            document.getElementById('max-drawdown').textContent = `${(maxDD * 100).toFixed(1)}%`;
+        }
+
+        function updateHoldingsTable() {
+            const tbody = document.getElementById('holdings-table');
+            tbody.innerHTML = '';
+            
+            appState.portfolio.forEach(asset => {
+                const returns = TSAnalysis.returns(asset, 'simple');
+                const lastReturn = returns.values[returns.values.length - 1];
+                const currentPrice = asset.values[asset.values.length - 1];
+                const pnl = lastReturn * currentPrice * 1000; // Assume 1000 shares
+                
+                const row = document.createElement('tr');
+                row.innerHTML = `
+                    <td><strong>${asset.metadata.symbol}</strong></td>
+                    <td>1,000 shares</td>
+                    <td style="color: ${pnl >= 0 ? 'var(--success)' : 'var(--danger)'}">
+                        ${pnl >= 0 ? '+' : ''}$${pnl.toFixed(0)}
+                    </td>
+                    <td>
+                        <span class="status healthy">
+                            <span class="status-dot"></span>
+                            Active
+                        </span>
+                    </td>
+                `;
+                tbody.appendChild(row);
+            });
+        }
+
+        function updateCharts() {
+            if (appState.portfolio.length === 0) return;
+            
+            // Price chart
+            const priceCanvas = document.getElementById('price-canvas');
+            const mainAsset = appState.portfolio[0];
+            ChartRenderer.drawTimeSeries(priceCanvas, mainAsset, { color: '#3b82f6' });
+            
+            // Volatility chart
+            const volatilityCanvas = document.getElementById('volatility-canvas');
+            const volSeries = TSAnalysis.volatility(mainAsset, 20);
+            if (volSeries) {
+                ChartRenderer.drawTimeSeries(volatilityCanvas, volSeries, { color: '#f59e0b' });
+            }
+        }
+
+        function runAnalysis() {
+            if (appState.portfolio.length === 0) {
+                showNotification('No data available. Please refresh data first.', 'warning');
+                return;
+            }
+            
+            const analysisType = document.getElementById('analysis-type').value;
+            const lookbackPeriod = parseInt(document.getElementById('lookback-period').value);
+            const resultsContainer = document.getElementById('analysis-results');
+            
+            updateLoadingState(true);
+            
+            setTimeout(() => {
+                try {
+                    const mainAsset = appState.portfolio[0];
+                    let results = {};
+                    
+                    switch (analysisType) {
+                        case 'volatility':
+                            const volSeries = TSAnalysis.volatility(mainAsset, lookbackPeriod);
+                            const avgVol = MathOps.mean(volSeries.values);
+                            results = {
+                                'Average Volatility': `${(avgVol * 100).toFixed(1)}%`,
+                                'Current Volatility': `${(volSeries.values[volSeries.values.length - 1] * 100).toFixed(1)}%`,
+                                'Volatility Trend': avgVol > 0.2 ? 'High' : 'Normal'
+                            };
+                            break;
+                            
+                        case 'correlation':
+                            if (appState.portfolio.length >= 2) {
+                                const corr = MathOps.correlation(
+                                    appState.portfolio[0].values,
+                                    appState.portfolio[1].values
+                                );
+                                results = {
+                                    'Correlation': corr.toFixed(3),
+                                    'Relationship': Math.abs(corr) > 0.7 ? 'Strong' : 'Moderate'
+                                };
+                            }
+                            break;
+                            
+                        case 'momentum':
+                            const momentum = TSAnalysis.momentum(mainAsset, lookbackPeriod);
+                            const recentSignal = momentum.signals[momentum.signals.length - 1];
+                            results = {
+                                'Current Signal': recentSignal.signal.toUpperCase(),
+                                'Signal Strength': `${(recentSignal.strength * 100).toFixed(0)}%`,
+                                'Momentum': `${(recentSignal.momentum * 100).toFixed(2)}%`
+                            };
+                            break;
+                            
+                        case 'risk-metrics':
+                            const returns = TSAnalysis.returns(mainAsset, 'simple');
+                            const var95 = TSAnalysis.calculateVaR(returns.values, 0.95);
+                            const maxDD = TSAnalysis.maxDrawdown(mainAsset);
+                            results = {
+                                'VaR (95%)': `${(var95 * 100).toFixed(2)}%`,
+                                'Max Drawdown': `${(maxDD * 100).toFixed(2)}%`,
+                                'Risk Level': maxDD > 0.1 ? 'High' : 'Moderate'
+                            };
+                            break;
+                    }
+                    
+                    // Display results
+                    resultsContainer.innerHTML = '';
+                    Object.entries(results).forEach(([key, value]) => {
+                        const metric = document.createElement('div');
+                        metric.className = 'metric';
+                        metric.innerHTML = `
+                            <div class="metric-value">${value}</div>
+                            <div class="metric-label">${key}</div>
+                        `;
+                        resultsContainer.appendChild(metric);
+                    });
+                    
+                    showNotification(`${analysisType} analysis completed successfully`, 'success');
+                    
+                } catch (error) {
+                    console.error('Analysis error:', error);
+                    showNotification('Analysis failed. Please try again.', 'error');
+                } finally {
+                    updateLoadingState(false);
+                }
+            }, 1000);
+        }
+
+        function refreshData() {
+            updateLoadingState(true);
+            showNotification('Refreshing market data...', 'info');
+            
+            setTimeout(() => {
+                try {
+                    appState.portfolio = DataGenerator.generatePortfolio();
+                    updatePortfolioMetrics();
+                    updateHoldingsTable();
+                    updateCharts();
+                    showNotification('Data refreshed successfully', 'success');
+                } catch (error) {
+                    console.error('Data refresh error:', error);
+                    showNotification('Failed to refresh data', 'error');
+                } finally {
+                    updateLoadingState(false);
+                }
+            }, 1500);
+        }
+
+        // Initialize Application
+        function initializeApp() {
+            console.log('Baroque Quantitative Finance Dashboard - Initializing...');
+            
+            // Load initial data
+            refreshData();
+            
+            // Setup event listeners
+            document.getElementById('analysis-type').addEventListener('change', () => {
+                document.getElementById('analysis-results').innerHTML = '';
+            });
+            
+            console.log('Dashboard initialized successfully');
+            showNotification('Baroque Finance Dashboard initialized', 'success');
+        }
+
+        // Auto-refresh every 5 minutes
+        setInterval(() => {
+            if (!appState.loading) {
+                refreshData();
+            }
+        }, 300000);
+
+        // Initialize when DOM is ready
+        if (document.readyState === 'loading') {
+            document.addEventListener('DOMContentLoaded', initializeApp);
+        } else {
+            initializeApp();
+        }
+    </script>
+</body>
+</html>

@@ -1,0 +1,1874 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Keraunos Browser System - Multi-Modal Reactive Environment</title>
+    <script src="https://cdnjs.cloudflare.com/ajax/libs/three.js/r128/three.min.js"></script>
+    <script src="https://unpkg.com/scittle@0.6.17/dist/scittle.js"></script>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'SF Mono', 'Monaco', 'Inconsolata', 'Roboto Mono', monospace;
+            background: radial-gradient(ellipse at center, #0a0a1a, #000000);
+            color: #e0e0e0;
+            overflow: hidden;
+            height: 100vh;
+        }
+
+        .system-container {
+            display: grid;
+            grid-template-areas: 
+                "header header header"
+                "sidebar main-view details"
+                "sidebar repl-area details";
+            grid-template-columns: 300px 1fr 280px;
+            grid-template-rows: 60px 1fr 300px;
+            height: 100vh;
+            gap: 2px;
+            background: #111;
+        }
+
+        .header {
+            grid-area: header;
+            background: linear-gradient(90deg, #1a1a2e, #16213e);
+            border-bottom: 1px solid #333;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            padding: 0 20px;
+            position: relative;
+        }
+
+        .header h1 {
+            font-size: 16px;
+            color: #00ffff;
+            text-shadow: 0 0 10px #00ffff;
+        }
+
+        .header-controls {
+            display: flex;
+            gap: 10px;
+        }
+
+        .header-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s;
+        }
+
+        .header-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+            box-shadow: 0 0 10px rgba(0, 255, 255, 0.3);
+        }
+
+        .sidebar {
+            grid-area: sidebar;
+            background: rgba(0, 0, 0, 0.8);
+            border-right: 1px solid #333;
+            overflow-y: auto;
+            padding: 15px;
+        }
+
+        .sidebar-section {
+            margin-bottom: 20px;
+        }
+
+        .sidebar-title {
+            color: #ffaa00;
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 1px;
+        }
+
+        .cell-item, .agent-item, .view-mode {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 4px;
+            padding: 8px;
+            margin-bottom: 6px;
+            cursor: pointer;
+            transition: all 0.2s;
+            font-size: 11px;
+        }
+
+        .cell-item:hover, .agent-item:hover, .view-mode:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.3);
+            transform: translateX(4px);
+        }
+
+        .cell-item.active, .view-mode.active {
+            background: rgba(0, 255, 255, 0.2);
+            border-color: rgba(0, 255, 255, 0.5);
+        }
+
+        .cell-value {
+            color: #00ff88;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .main-view {
+            grid-area: main-view;
+            background: rgba(0, 0, 0, 0.9);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .view-container {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            opacity: 0;
+            transform: translateY(20px);
+            transition: all 0.5s cubic-bezier(0.4, 0, 0.2, 1);
+            pointer-events: none;
+        }
+
+        .view-container.active {
+            opacity: 1;
+            transform: translateY(0);
+            pointer-events: all;
+        }
+
+        .details-panel {
+            grid-area: details;
+            background: rgba(0, 0, 0, 0.8);
+            border-left: 1px solid #333;
+            padding: 15px;
+            overflow-y: auto;
+        }
+
+        .repl-area {
+            grid-area: repl-area;
+            background: rgba(0, 0, 0, 0.95);
+            border-top: 1px solid #333;
+            display: flex;
+            flex-direction: column;
+        }
+
+        .repl-header {
+            background: rgba(0, 255, 0, 0.1);
+            padding: 8px 15px;
+            border-bottom: 1px solid #333;
+            font-size: 11px;
+            color: #00ff00;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .repl-output {
+            flex: 1;
+            padding: 10px;
+            overflow-y: auto;
+            font-family: 'SF Mono', monospace;
+            font-size: 11px;
+            line-height: 1.4;
+        }
+
+        .repl-input-container {
+            display: flex;
+            border-top: 1px solid #333;
+            background: rgba(0, 0, 0, 0.9);
+        }
+
+        .repl-prompt {
+            padding: 8px 10px;
+            color: #00ff00;
+            font-weight: bold;
+            min-width: 60px;
+        }
+
+        .repl-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e0e0e0;
+            padding: 8px;
+            font-family: 'SF Mono', monospace;
+            font-size: 11px;
+            outline: none;
+        }
+
+        .repl-line {
+            margin: 2px 0;
+        }
+
+        .repl-line.input {
+            color: #e0e0e0;
+        }
+
+        .repl-line.output {
+            color: #00ff88;
+        }
+
+        .repl-line.error {
+            color: #ff4444;
+        }
+
+        .repl-line.comment {
+            color: #888888;
+        }
+
+        /* Network Graph View */
+        .network-view {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .network-node {
+            position: absolute;
+            background: rgba(0, 255, 255, 0.2);
+            border: 2px solid rgba(0, 255, 255, 0.6);
+            border-radius: 50%;
+            width: 60px;
+            height: 60px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            cursor: pointer;
+            transition: all 0.3s;
+            font-size: 10px;
+            text-align: center;
+            user-select: none;
+        }
+
+        .network-node:hover {
+            transform: scale(1.2);
+            box-shadow: 0 0 20px rgba(0, 255, 255, 0.8);
+        }
+
+        .network-node.cell { border-color: rgba(0, 255, 136, 0.8); background: rgba(0, 255, 136, 0.1); }
+        .network-node.agent { border-color: rgba(255, 170, 0, 0.8); background: rgba(255, 170, 0, 0.1); }
+        .network-node.computed { border-color: rgba(255, 68, 255, 0.8); background: rgba(255, 68, 255, 0.1); }
+
+        .connection-line {
+            position: absolute;
+            background: linear-gradient(90deg, rgba(255, 255, 255, 0.2), rgba(0, 255, 255, 0.4));
+            height: 2px;
+            transform-origin: left center;
+            pointer-events: none;
+            z-index: 1;
+        }
+
+        /* Tree View */
+        .tree-view {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .tree-node {
+            margin: 5px 0;
+            padding: 8px 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-left: 3px solid #00ffff;
+            border-radius: 4px;
+            cursor: pointer;
+            transition: all 0.2s;
+        }
+
+        .tree-node:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: translateX(8px);
+        }
+
+        .tree-node.level-1 { margin-left: 0px; border-left-color: #ff6b6b; }
+        .tree-node.level-2 { margin-left: 20px; border-left-color: #4ecdc4; }
+        .tree-node.level-3 { margin-left: 40px; border-left-color: #45b7d1; }
+
+        /* Timeline View */
+        .timeline-view {
+            padding: 20px;
+            overflow-y: auto;
+        }
+
+        .timeline-item {
+            display: flex;
+            align-items: center;
+            margin: 10px 0;
+            padding: 12px;
+            background: rgba(255, 255, 255, 0.05);
+            border-radius: 6px;
+            border-left: 4px solid #00ffff;
+        }
+
+        .timeline-timestamp {
+            min-width: 80px;
+            color: #888;
+            font-size: 10px;
+        }
+
+        .timeline-content {
+            flex: 1;
+            margin-left: 15px;
+        }
+
+        .timeline-title {
+            font-weight: bold;
+            margin-bottom: 4px;
+        }
+
+        .timeline-details {
+            font-size: 10px;
+            color: #aaa;
+        }
+
+        /* Matrix View */
+        .matrix-view {
+            padding: 20px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(120px, 1fr));
+            gap: 10px;
+            overflow-y: auto;
+        }
+
+        .matrix-cell {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 12px;
+            text-align: center;
+            transition: all 0.2s;
+            cursor: pointer;
+        }
+
+        .matrix-cell:hover {
+            background: rgba(255, 255, 255, 0.1);
+            transform: scale(1.05);
+        }
+
+        .matrix-cell-name {
+            font-weight: bold;
+            margin-bottom: 6px;
+            font-size: 11px;
+        }
+
+        .matrix-cell-value {
+            color: #00ff88;
+            font-size: 14px;
+            font-weight: bold;
+        }
+
+        .matrix-cell-type {
+            color: #888;
+            font-size: 9px;
+            margin-top: 4px;
+        }
+
+        /* 3D View Container */
+        .spatial-view {
+            position: relative;
+            width: 100%;
+            height: 100%;
+        }
+
+        .spatial-controls {
+            position: absolute;
+            bottom: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            display: flex;
+            gap: 10px;
+            z-index: 10;
+        }
+
+        .spatial-btn {
+            background: rgba(0, 0, 0, 0.8);
+            border: 1px solid rgba(255, 255, 255, 0.3);
+            color: white;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 10px;
+            transition: all 0.2s;
+        }
+
+        .spatial-btn:hover {
+            background: rgba(255, 255, 255, 0.1);
+            border-color: rgba(255, 255, 255, 0.5);
+        }
+
+        /* Chart View */
+        .chart-view {
+            padding: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 20px;
+        }
+
+        .chart-container {
+            background: rgba(255, 255, 255, 0.05);
+            border: 1px solid rgba(255, 255, 255, 0.1);
+            border-radius: 6px;
+            padding: 15px;
+            height: 200px;
+            position: relative;
+        }
+
+        .chart-title {
+            font-weight: bold;
+            margin-bottom: 10px;
+            color: #00ffff;
+        }
+
+        .chart-canvas {
+            width: 100%;
+            height: calc(100% - 30px);
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 4px;
+        }
+
+        /* Loading and Status */
+        .loading {
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            height: 100%;
+            font-size: 14px;
+            color: #888;
+        }
+
+        .loading::after {
+            content: '';
+            width: 20px;
+            height: 20px;
+            border: 2px solid rgba(255, 255, 255, 0.3);
+            border-top-color: #00ffff;
+            border-radius: 50%;
+            animation: spin 1s linear infinite;
+            margin-left: 10px;
+        }
+
+        @keyframes spin {
+            to { transform: rotate(360deg); }
+        }
+
+        .status-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+        }
+
+        .status-active { background: #00ff88; }
+        .status-inactive { background: #666; }
+        .status-error { background: #ff4444; }
+        .status-computing { background: #ffaa00; animation: pulse 1s infinite; }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.3; }
+        }
+
+        /* Scrollbars */
+        ::-webkit-scrollbar {
+            width: 6px;
+        }
+
+        ::-webkit-scrollbar-track {
+            background: rgba(255, 255, 255, 0.1);
+        }
+
+        ::-webkit-scrollbar-thumb {
+            background: rgba(0, 255, 255, 0.3);
+            border-radius: 3px;
+        }
+
+        ::-webkit-scrollbar-thumb:hover {
+            background: rgba(0, 255, 255, 0.5);
+        }
+
+        /* Modal for file operations */
+        .modal {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            background: rgba(0, 0, 0, 0.8);
+            display: none;
+            align-items: center;
+            justify-content: center;
+            z-index: 1000;
+        }
+
+        .modal.active {
+            display: flex;
+        }
+
+        .modal-content {
+            background: #1a1a1a;
+            border: 1px solid #333;
+            border-radius: 8px;
+            padding: 20px;
+            min-width: 400px;
+            max-width: 80%;
+            max-height: 80%;
+            overflow-y: auto;
+        }
+
+        .modal-header {
+            font-weight: bold;
+            margin-bottom: 15px;
+            color: #00ffff;
+        }
+
+        .modal-body {
+            margin-bottom: 15px;
+        }
+
+        .modal-footer {
+            display: flex;
+            gap: 10px;
+            justify-content: flex-end;
+        }
+
+        .modal-btn {
+            background: rgba(0, 255, 255, 0.1);
+            border: 1px solid rgba(0, 255, 255, 0.3);
+            color: #00ffff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .modal-btn:hover {
+            background: rgba(0, 255, 255, 0.2);
+        }
+
+        .code-editor {
+            width: 100%;
+            height: 300px;
+            background: #000;
+            color: #e0e0e0;
+            border: 1px solid #333;
+            border-radius: 4px;
+            padding: 10px;
+            font-family: 'SF Mono', monospace;
+            font-size: 11px;
+            resize: vertical;
+        }
+    </style>
+</head>
+<body>
+    <div class="system-container">
+        <!-- Header -->
+        <div class="header">
+            <h1>Keraunos Browser System v1.0</h1>
+            <div class="header-controls">
+                <button class="header-btn" onclick="exportSystem()">📥 Export System</button>
+                <button class="header-btn" onclick="importSystem()">📤 Import System</button>
+                <button class="header-btn" onclick="downloadFiles()">💾 Download Files</button>
+                <button class="header-btn" onclick="resetSystem()">🔄 Reset</button>
+                <button class="header-btn" onclick="toggleFullscreen()">⛶ Fullscreen</button>
+            </div>
+        </div>
+
+        <!-- Sidebar -->
+        <div class="sidebar">
+            <div class="sidebar-section">
+                <div class="sidebar-title">🔗 Reactive Cells</div>
+                <div id="cells-list"></div>
+                <button class="header-btn" style="margin-top: 10px; width: 100%;" onclick="createCell()">+ New Cell</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">🤖 Agents</div>
+                <div id="agents-list"></div>
+                <button class="header-btn" style="margin-top: 10px; width: 100%;" onclick="createAgent()">+ New Agent</button>
+            </div>
+
+            <div class="sidebar-section">
+                <div class="sidebar-title">👁️ View Modes</div>
+                <div class="view-mode active" data-view="network" onclick="switchView('network')">🕸️ Network Graph</div>
+                <div class="view-mode" data-view="tree" onclick="switchView('tree')">🌳 Tree Hierarchy</div>
+                <div class="view-mode" data-view="timeline" onclick="switchView('timeline')">📅 Timeline Flow</div>
+                <div class="view-mode" data-view="matrix" onclick="switchView('matrix')">🔢 Matrix Grid</div>
+                <div class="view-mode" data-view="spatial" onclick="switchView('spatial')">🌌 3D Spatial</div>
+                <div class="view-mode" data-view="chart" onclick="switchView('chart')">📈 Charts</div>
+            </div>
+        </div>
+
+        <!-- Main View Area -->
+        <div class="main-view">
+            <!-- Network Graph View -->
+            <div class="view-container active" id="network-view">
+                <div class="network-view" id="network-container"></div>
+            </div>
+
+            <!-- Tree View -->
+            <div class="view-container" id="tree-view">
+                <div class="tree-view" id="tree-container"></div>
+            </div>
+
+            <!-- Timeline View -->
+            <div class="view-container" id="timeline-view">
+                <div class="timeline-view" id="timeline-container"></div>
+            </div>
+
+            <!-- Matrix View -->
+            <div class="view-container" id="matrix-view">
+                <div class="matrix-view" id="matrix-container"></div>
+            </div>
+
+            <!-- 3D Spatial View -->
+            <div class="view-container" id="spatial-view">
+                <div class="spatial-view" id="spatial-container">
+                    <div class="loading">Initializing 3D Environment...</div>
+                    <div class="spatial-controls">
+                        <button class="spatial-btn" onclick="spatial.reset()">🎯 Reset</button>
+                        <button class="spatial-btn" onclick="spatial.autoRotate()">🔄 Auto Rotate</button>
+                        <button class="spatial-btn" onclick="spatial.toggleWireframe()">🕸️ Wireframe</button>
+                    </div>
+                </div>
+            </div>
+
+            <!-- Chart View -->
+            <div class="view-container" id="chart-view">
+                <div class="chart-view" id="chart-container"></div>
+            </div>
+        </div>
+
+        <!-- Details Panel -->
+        <div class="details-panel">
+            <div class="sidebar-title">📊 System Details</div>
+            <div id="details-content">
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 11px; color: #888;">System Status</div>
+                    <div><span class="status-indicator status-active"></span>Reactive System Active</div>
+                    <div><span class="status-indicator status-active"></span>Agent Network Online</div>
+                    <div><span class="status-indicator status-active"></span>Storage Connected</div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 11px; color: #888;">Current Selection</div>
+                    <div id="selection-details">No item selected</div>
+                </div>
+                
+                <div style="margin-bottom: 15px;">
+                    <div style="font-size: 11px; color: #888;">Performance</div>
+                    <div>Cells: <span id="cell-count">0</span></div>
+                    <div>Agents: <span id="agent-count">0</span></div>
+                    <div>Computations/sec: <span id="computation-rate">0</span></div>
+                </div>
+            </div>
+        </div>
+
+        <!-- REPL Area -->
+        <div class="repl-area">
+            <div class="repl-header">
+                <span>ClojureScript REPL - Keraunos Environment</span>
+                <div>
+                    <button class="header-btn" onclick="clearRepl()">Clear</button>
+                    <button class="header-btn" onclick="loadExamples()">Load Examples</button>
+                </div>
+            </div>
+            <div class="repl-output" id="repl-output"></div>
+            <div class="repl-input-container">
+                <span class="repl-prompt">cljs.user=></span>
+                <input type="text" class="repl-input" id="repl-input" placeholder="Enter ClojureScript expressions...">
+            </div>
+        </div>
+    </div>
+
+    <!-- Modal for file operations -->
+    <div class="modal" id="modal">
+        <div class="modal-content">
+            <div class="modal-header" id="modal-header">Modal Title</div>
+            <div class="modal-body" id="modal-body">Modal content</div>
+            <div class="modal-footer">
+                <button class="modal-btn" onclick="closeModal()">Cancel</button>
+                <button class="modal-btn" id="modal-confirm" onclick="confirmModal()">Confirm</button>
+            </div>
+        </div>
+    </div>
+
+    <script type="application/x-scittle">
+        ;; Keraunos Browser System - Core Implementation
+        ;; A reactive, multi-modal system for building and visualizing complex systems
+
+        (ns keraunos.core
+          (:require [clojure.string :as str]
+                    [clojure.edn :as edn]))
+
+        ;; ============================================================================
+        ;; Core Reactive Cell System
+        ;; ============================================================================
+
+        (defonce system-state (atom {:cells {}
+                                     :agents {}
+                                     :watchers {}
+                                     :history []
+                                     :dependencies {}
+                                     :current-view :network
+                                     :selection nil}))
+
+        (defn now [] (.toISOString (js/Date.)))
+
+        (defn log-event [event]
+          (swap! system-state update :history conj (assoc event :timestamp (now))))
+
+        (defn uuid []
+          (str (random-uuid)))
+
+        ;; Reactive Cell Implementation
+        (defprotocol IReactiveCell
+          (get-value [this] "Get the current value")
+          (set-value! [this value] "Set a new value")
+          (add-watcher! [this key f] "Add a watcher function")
+          (remove-watcher! [this key] "Remove a watcher")
+          (get-dependencies [this] "Get cell dependencies"))
+
+        (deftype ReactiveCell [id value-atom watchers-atom dependencies-atom meta-atom]
+          IReactiveCell
+          (get-value [this] @value-atom)
+          (set-value! [this new-value]
+            (let [old-value @value-atom]
+              (when (not= old-value new-value)
+                (reset! value-atom new-value)
+                (log-event {:type :cell-updated :id id :old-value old-value :new-value new-value})
+                ;; Notify watchers
+                (doseq [[key f] @watchers-atom]
+                  (try
+                    (f this old-value new-value)
+                    (catch js/Error e
+                      (js/console.error "Watcher error:" e))))
+                ;; Update dependent cells
+                (update-dependents! id))))
+          (add-watcher! [this key f]
+            (swap! watchers-atom assoc key f))
+          (remove-watcher! [this key]
+            (swap! watchers-atom dissoc key))
+          (get-dependencies [this] @dependencies-atom)
+          
+          Object
+          (toString [this] (str "#<ReactiveCell " id " " @value-atom ">")))
+
+        (defn create-cell [id initial-value & {:keys [dependencies meta]}]
+          (let [cell (ReactiveCell. id 
+                                    (atom initial-value)
+                                    (atom {})
+                                    (atom (or dependencies #{}))
+                                    (atom (or meta {})))]
+            (swap! system-state assoc-in [:cells id] cell)
+    
+            ;; Set up dependency tracking
+            (when dependencies
+              (doseq [dep-id dependencies]
+                (when-let [dep-cell (get-in @system-state [:cells dep-id])]
+                  (add-watcher! dep-cell id 
+                                (fn [dep-cell old new]
+                                  (when-let [compute-fn (get-in @(.-meta-atom cell) [:compute-fn])]
+                                    (try
+                                      (let [new-val (compute-fn)]
+                                        (set-value! cell new-val))
+                                      (catch js/Error e
+                                        (js/console.error "Computation error:" e)))))))))
+    
+            (log-event {:type :cell-created :id id :value initial-value})
+            cell))
+
+        (defn update-dependents! [cell-id]
+          ;; Find all cells that depend on this one and update them
+          (doseq [[id cell] (:cells @system-state)]
+            (when (contains? (get-dependencies cell) cell-id)
+              (when-let [compute-fn (get-in @(.-meta-atom cell) [:compute-fn])]
+                (try
+                  (let [new-val (compute-fn)]
+                    (set-value! cell new-val))
+                  (catch js/Error e
+                    (js/console.error "Dependent update error:" e)))))))
+
+        (defn get-cell [id]
+          (get-in @system-state [:cells id]))
+
+        (defn create-computed-cell [id dependencies compute-fn]
+          (let [cell (create-cell id nil :dependencies dependencies 
+                                 :meta {:compute-fn compute-fn :type :computed})]
+            ;; Initial computation
+    (try
+      (let [initial-value (compute-fn)]
+        (set-value! cell initial-value))
+      (catch js/Error e
+        (js/console.error "Initial computation error:" e)))
+    cell))
+
+        ;; ============================================================================
+        ;; Agent System
+        ;; ============================================================================
+
+        (defprotocol IAgent
+          (send-message! [this to-agent message] "Send a message to another agent")
+          (receive-message! [this from-agent message] "Receive a message")
+          (get-state [this] "Get agent state")
+          (update-state! [this f] "Update agent state"))
+
+        (deftype SystemAgent [id state-atom behavior-fn message-queue-atom]
+          IAgent
+          (send-message! [this to-agent-id message]
+            (when-let [to-agent (get-in @system-state [:agents to-agent-id])]
+              (receive-message! to-agent id message)))
+          (receive-message! [this from-agent-id message]
+            (swap! message-queue-atom conj {:from from-agent-id :message message :timestamp (now)})
+            (when behavior-fn
+              (try
+                (behavior-fn this message)
+                (catch js/Error e
+                  (js/console.error "Agent behavior error:" e)))))
+          (get-state [this] @state-atom)
+          (update-state! [this f]
+            (swap! state-atom f))
+          
+          Object
+          (toString [this] (str "#<Agent " id " " @state-atom ">")))
+
+        (defn create-agent [id initial-state behavior-fn]
+          (let [agent (SystemAgent. id (atom initial-state) behavior-fn (atom []))]
+            (swap! system-state assoc-in [:agents id] agent)
+            (log-event {:type :agent-created :id id :state initial-state})
+            agent))
+
+        ;; ============================================================================
+        ;; Time Series and Analysis
+        ;; ============================================================================
+
+        (defn generate-time-series [length & {:keys [volatility trend] :or {volatility 0.1 trend 0.001}}]
+          (reduce (fn [series _]
+                    (let [last-val (or (last series) 100)
+                          change (* last-val (+ trend (* volatility (- (rand) 0.5))))
+                          new-val (+ last-val change)]
+                      (conj series new-val)))
+                  [] (range length)))
+
+        (defn moving-average [series window]
+          (map #(/ (reduce + (take window (drop % series))) window)
+               (range (- (count series) window -1))))
+
+        (defn rsi [series period]
+          (let [changes (map - (rest series) series)
+                gains (map #(max 0 %) changes)
+                losses (map #(max 0 (- %)) changes)
+                avg-gain (/ (reduce + (take period gains)) period)
+                avg-loss (/ (reduce + (take period losses)) period)
+                rs (if (zero? avg-loss) 100 (/ avg-gain avg-loss))]
+            (- 100 (/ 100 (+ 1 rs)))))
+
+        ;; ============================================================================
+        ;; Storage and Persistence
+        ;; ============================================================================
+
+        (defn save-to-storage! [key data]
+          (try
+            (.setItem js/localStorage (str "keraunos." key) (str data))
+            (catch js/Error e
+              (js/console.error "Storage save error:" e))))
+
+        (defn load-from-storage [key]
+          (try
+            (when-let [data (.getItem js/localStorage (str "keraunos." key))]
+              (edn/read-string data))
+            (catch js/Error e
+              (js/console.error "Storage load error:" e)
+              nil)))
+
+        (defn export-system []
+          (let [export-data {:cells (into {} (map (fn [[id cell]] 
+                                                   [id {:value (get-value cell)
+                                                        :dependencies (get-dependencies cell)
+                                                        :meta @(.-meta-atom cell)}])
+                                                 (:cells @system-state)))
+                             :agents (into {} (map (fn [[id agent]] 
+                                                   [id {:state (get-state agent)}])
+                                                  (:agents @system-state)))
+                             :history (:history @system-state)}]
+        export-data))
+
+        ;; ============================================================================
+        ;; System Initialization and Examples
+        ;; ============================================================================
+
+        (defn initialize-example-system! []
+          ;; Create some example cells
+          (create-cell :base-price 100.0)
+          (create-cell :volatility 0.15)
+          (create-cell :time-step 0)
+          
+          ;; Create computed cells
+          (create-computed-cell :current-price #{:base-price :volatility :time-step}
+                                (fn []
+                                  (let [base (get-value (get-cell :base-price))
+                                        vol (get-value (get-cell :volatility))
+                                        t (get-value (get-cell :time-step))]
+                                    (+ base (* base vol (Math/sin (/ t 10)))))))
+          
+          (create-computed-cell :price-momentum #{:current-price}
+                                (fn []
+                                  (let [price (get-value (get-cell :current-price))]
+                                    (if (> price 105) :bullish :bearish))))
+          
+          ;; Create example agents
+          (create-agent :market-monitor 
+                        {:last-price nil :alert-threshold 0.05}
+                        (fn [agent message]
+                          (let [state (get-state agent)]
+                            (when (= (:type message) :price-update)
+                              (when-let [last-price (:last-price state)]
+                                (let [change (Math/abs (- (:price message) last-price))
+                                      threshold (* last-price (:alert-threshold state))]
+                                  (when (> change threshold)
+                                    (send-message! agent :risk-manager 
+                                                   {:type :price-alert :change change}))))
+                              (update-state! agent #(assoc % :last-price (:price message)))))))
+          
+          (create-agent :risk-manager
+                        {:alerts [] :risk-level :low}
+                        (fn [agent message]
+                          (when (= (:type message) :price-alert)
+                            (update-state! agent #(-> %
+                                                      (update :alerts conj message)
+                                                      (assoc :risk-level 
+                                                             (if (> (:change message) 5) :high :medium)))))))
+          
+          ;; Set up watchers to connect cells to agents
+          (add-watcher! (get-cell :current-price) :market-monitor
+                        (fn [cell old new]
+                          (when-let [agent (get-in @system-state [:agents :market-monitor])]
+                            (receive-message! agent :system {:type :price-update :price new}))))
+          
+          (log-event {:type :system-initialized}))
+
+        ;; ============================================================================
+        ;; Export ready indicator
+        ;; ============================================================================
+
+        ;; Signal that the core system is loaded
+        (set! js/window.keraunosCore true)
+    </script>
+
+    <script>
+        // Browser Integration Layer
+        // Connects ClojureScript core to DOM and provides UI management
+
+        class KeraunosUI {
+            constructor() {
+                this.currentView = 'network';
+                this.spatial = null;
+                this.charts = new Map();
+                this.animationId = null;
+                this.computationCount = 0;
+                this.lastComputationTime = Date.now();
+                
+                this.init();
+            }
+
+            async init() {
+                // Wait for ClojureScript core to load
+                while (!window.keraunosCore) {
+                    await new Promise(resolve => setTimeout(resolve, 100));
+                }
+
+                // Initialize the system
+                this.initializeSystem();
+                this.setupREPL();
+                this.setupEventListeners();
+                this.startRenderLoop();
+                
+                // Load saved state or initialize examples
+                this.loadSystemState();
+            }
+
+            initializeSystem() {
+                // Initialize example system via ClojureScript
+                try {
+                    scittle.core.eval_string("(keraunos.core/initialize-example-system!)");
+                    this.updateUI();
+                } catch (e) {
+                    console.error("System initialization error:", e);
+                }
+            }
+
+            setupREPL() {
+                const input = document.getElementById('repl-input');
+                const output = document.getElementById('repl-output');
+
+                input.addEventListener('keypress', (e) => {
+                    if (e.key === 'Enter') {
+                        const expr = input.value.trim();
+                        if (expr) {
+                            this.evaluateExpression(expr);
+                            input.value = '';
+                        }
+                    }
+                });
+
+                // Add initial message
+                this.addReplLine('comment', ';; Keraunos Browser System initialized');
+                this.addReplLine('comment', ';; Try: (get-value (get-cell :current-price))');
+                this.addReplLine('comment', ';; Try: (set-value! (get-cell :time-step) 42)');
+            }
+
+            evaluateExpression(expr) {
+                this.addReplLine('input', `cljs.user=> ${expr}`);
+                
+                try {
+                    const result = scittle.core.eval_string(expr);
+                    this.addReplLine('output', this.formatResult(result));
+                    this.computationCount++;
+                    this.updateUI();
+                } catch (e) {
+                    this.addReplLine('error', `Error: ${e.message}`);
+                }
+            }
+
+            addReplLine(type, content) {
+                const output = document.getElementById('repl-output');
+                const line = document.createElement('div');
+                line.className = `repl-line ${type}`;
+                line.textContent = content;
+                output.appendChild(line);
+                output.scrollTop = output.scrollHeight;
+            }
+
+            formatResult(result) {
+                if (result === null) return 'nil';
+                if (result === undefined) return 'undefined';
+                if (typeof result === 'string') return `"${result}"`;
+                if (typeof result === 'object') return JSON.stringify(result, null, 2);
+                return String(result);
+            }
+
+            setupEventListeners() {
+                // View switching
+                document.querySelectorAll('.view-mode').forEach(mode => {
+                    mode.addEventListener('click', () => {
+                        this.switchView(mode.dataset.view);
+                    });
+                });
+
+                // Window resize
+                window.addEventListener('resize', () => {
+                    if (this.spatial) {
+                        this.spatial.handleResize();
+                    }
+                });
+            }
+
+            switchView(viewName) {
+                if (this.currentView === viewName) return;
+
+                // Update view mode buttons
+                document.querySelectorAll('.view-mode').forEach(mode => {
+                    mode.classList.toggle('active', mode.dataset.view === viewName);
+                });
+
+                // Switch view containers
+                document.querySelectorAll('.view-container').forEach(container => {
+                    container.classList.remove('active');
+                });
+                
+                document.getElementById(`${viewName}-view`).classList.add('active');
+                this.currentView = viewName;
+
+                // Initialize view-specific content
+                this.renderCurrentView();
+            }
+
+            renderCurrentView() {
+                switch (this.currentView) {
+                    case 'network':
+                        this.renderNetworkView();
+                        break;
+                    case 'tree':
+                        this.renderTreeView();
+                        break;
+                    case 'timeline':
+                        this.renderTimelineView();
+                        break;
+                    case 'matrix':
+                        this.renderMatrixView();
+                        break;
+                    case 'spatial':
+                        this.renderSpatialView();
+                        break;
+                    case 'chart':
+                        this.renderChartView();
+                        break;
+                }
+            }
+
+            renderNetworkView() {
+                const container = document.getElementById('network-container');
+                container.innerHTML = '';
+
+                try {
+                    const systemState = scittle.core.eval_string("@keraunos.core/system-state");
+                    const cells = systemState.cells || {};
+                    const agents = systemState.agents || {};
+
+                    // Position nodes in a circle
+                    const totalNodes = Object.keys(cells).length + Object.keys(agents).length;
+                    const centerX = container.offsetWidth / 2;
+                    const centerY = container.offsetHeight / 2;
+                    const radius = Math.min(centerX, centerY) * 0.7;
+
+                    let nodeIndex = 0;
+
+                    // Render cells
+                    Object.keys(cells).forEach(cellId => {
+                        const angle = (nodeIndex / totalNodes) * 2 * Math.PI;
+                        const x = centerX + Math.cos(angle) * radius - 30;
+                        const y = centerY + Math.sin(angle) * radius - 30;
+
+                        const cellValue = scittle.core.eval_string(`(get-value (get-cell :${cellId}))`);
+                        const isComputed = scittle.core.eval_string(`(get-in @(.-meta-atom (get-cell :${cellId})) [:type])`);
+
+                        const node = document.createElement('div');
+                        node.className = `network-node ${isComputed === 'computed' ? 'computed' : 'cell'}`;
+                        node.style.left = `${x}px`;
+                        node.style.top = `${y}px`;
+                        node.innerHTML = `<div>${cellId}</div><div style="font-size: 8px;">${this.formatValue(cellValue)}</div>`;
+                        
+                        node.addEventListener('click', () => this.selectItem('cell', cellId));
+                        container.appendChild(node);
+                        nodeIndex++;
+                    });
+
+                    // Render agents
+                    Object.keys(agents).forEach(agentId => {
+                        const angle = (nodeIndex / totalNodes) * 2 * Math.PI;
+                        const x = centerX + Math.cos(angle) * radius - 30;
+                        const y = centerY + Math.sin(angle) * radius - 30;
+
+                        const node = document.createElement('div');
+                        node.className = 'network-node agent';
+                        node.style.left = `${x}px`;
+                        node.style.top = `${y}px`;
+                        node.innerHTML = `<div>${agentId}</div><div style="font-size: 8px;">agent</div>`;
+                        
+                        node.addEventListener('click', () => this.selectItem('agent', agentId));
+                        container.appendChild(node);
+                        nodeIndex++;
+                    });
+
+                    // Draw connections for computed cells
+                    Object.keys(cells).forEach(cellId => {
+                        const deps = scittle.core.eval_string(`(get-dependencies (get-cell :${cellId}))`);
+                        if (deps && deps.length > 0) {
+                            // Draw lines to dependencies
+                            // This would require more complex positioning logic
+                        }
+                    });
+
+                } catch (e) {
+                    console.error("Network view render error:", e);
+                }
+            }
+
+            renderTreeView() {
+                const container = document.getElementById('tree-container');
+                container.innerHTML = '';
+
+                try {
+                    const systemState = scittle.core.eval_string("@keraunos.core/system-state");
+                    const cells = systemState.cells || {};
+                    const agents = systemState.agents || {};
+
+                    // Create tree structure
+                    const createNode = (text, level, onClick) => {
+                        const node = document.createElement('div');
+                        node.className = `tree-node level-${level}`;
+                        node.textContent = text;
+                        if (onClick) node.addEventListener('click', onClick);
+                        return node;
+                    };
+
+                    container.appendChild(createNode('📊 System Overview', 1));
+                    
+                    container.appendChild(createNode('🔗 Reactive Cells', 2));
+                    Object.keys(cells).forEach(cellId => {
+                        const cellValue = scittle.core.eval_string(`(get-value (get-cell :${cellId}))`);
+                        const text = `${cellId}: ${this.formatValue(cellValue)}`;
+                        container.appendChild(createNode(text, 3, () => this.selectItem('cell', cellId)));
+                    });
+
+                    container.appendChild(createNode('🤖 Agents', 2));
+                    Object.keys(agents).forEach(agentId => {
+                        container.appendChild(createNode(agentId, 3, () => this.selectItem('agent', agentId)));
+                    });
+
+                } catch (e) {
+                    console.error("Tree view render error:", e);
+                }
+            }
+
+            renderTimelineView() {
+                const container = document.getElementById('timeline-container');
+                container.innerHTML = '';
+
+                try {
+                    const history = scittle.core.eval_string("(:history @keraunos.core/system-state)") || [];
+                    
+                    history.slice(-20).reverse().forEach(event => {
+                        const item = document.createElement('div');
+                        item.className = 'timeline-item';
+                        
+                        const timestamp = new Date(event.timestamp).toLocaleTimeString();
+                        
+                        item.innerHTML = `
+                            <div class="timeline-timestamp">${timestamp}</div>
+                            <div class="timeline-content">
+                                <div class="timeline-title">${event.type}</div>
+                                <div class="timeline-details">${this.formatEventDetails(event)}</div>
+                            </div>
+                        `;
+                        
+                        container.appendChild(item);
+                    });
+
+                } catch (e) {
+                    console.error("Timeline view render error:", e);
+                }
+            }
+
+            renderMatrixView() {
+                const container = document.getElementById('matrix-container');
+                container.innerHTML = '';
+
+                try {
+                    const systemState = scittle.core.eval_string("@keraunos.core/system-state");
+                    const cells = systemState.cells || {};
+                    const agents = systemState.agents || {};
+
+                    // Render cells
+                    Object.keys(cells).forEach(cellId => {
+                        const cellValue = scittle.core.eval_string(`(get-value (get-cell :${cellId}))`);
+                        const isComputed = scittle.core.eval_string(`(get-in @(.-meta-atom (get-cell :${cellId})) [:type])`);
+
+                        const cell = document.createElement('div');
+                        cell.className = 'matrix-cell';
+                        cell.innerHTML = `
+                            <div class="matrix-cell-name">${cellId}</div>
+                            <div class="matrix-cell-value">${this.formatValue(cellValue)}</div>
+                            <div class="matrix-cell-type">${isComputed === 'computed' ? 'computed' : 'cell'}</div>
+                        `;
+                        
+                        cell.addEventListener('click', () => this.selectItem('cell', cellId));
+                        container.appendChild(cell);
+                    });
+
+                    // Render agents
+                    Object.keys(agents).forEach(agentId => {
+                        const agentState = scittle.core.eval_string(`(get-state (get-in @keraunos.core/system-state [:agents :${agentId}]))`);
+                        
+                        const cell = document.createElement('div');
+                        cell.className = 'matrix-cell';
+                        cell.innerHTML = `
+                            <div class="matrix-cell-name">${agentId}</div>
+                            <div class="matrix-cell-value">agent</div>
+                            <div class="matrix-cell-type">active</div>
+                        `;
+                        
+                        cell.addEventListener('click', () => this.selectItem('agent', agentId));
+                        container.appendChild(cell);
+                    });
+
+                } catch (e) {
+                    console.error("Matrix view render error:", e);
+                }
+            }
+
+            renderSpatialView() {
+                const container = document.getElementById('spatial-container');
+                
+                if (!this.spatial) {
+                    this.spatial = new Spatial3D(container);
+                }
+                
+                this.spatial.updateData();
+            }
+
+            renderChartView() {
+                const container = document.getElementById('chart-container');
+                container.innerHTML = '';
+
+                try {
+                    // Create chart for current price over time
+                    const priceChart = document.createElement('div');
+                    priceChart.className = 'chart-container';
+                    priceChart.innerHTML = `
+                        <div class="chart-title">Current Price History</div>
+                        <canvas class="chart-canvas" id="price-chart"></canvas>
+                    `;
+                    container.appendChild(priceChart);
+
+                    // Generate sample data
+                    const canvas = document.getElementById('price-chart');
+                    const ctx = canvas.getContext('2d');
+                    canvas.width = canvas.offsetWidth;
+                    canvas.height = canvas.offsetHeight;
+
+                    this.drawSimpleChart(ctx, canvas.width, canvas.height);
+
+                } catch (e) {
+                    console.error("Chart view render error:", e);
+                }
+            }
+
+            drawSimpleChart(ctx, width, height) {
+                // Simple chart drawing
+                const data = [];
+                for (let i = 0; i < 50; i++) {
+                    data.push(100 + Math.sin(i * 0.1) * 10 + Math.random() * 5);
+                }
+
+                ctx.fillStyle = '#000';
+                ctx.fillRect(0, 0, width, height);
+
+                ctx.strokeStyle = '#00ffff';
+                ctx.lineWidth = 2;
+                ctx.beginPath();
+
+                const stepX = width / (data.length - 1);
+                const minY = Math.min(...data);
+                const maxY = Math.max(...data);
+                const rangeY = maxY - minY;
+
+                data.forEach((value, index) => {
+                    const x = index * stepX;
+                    const y = height - ((value - minY) / rangeY) * height;
+                    
+                    if (index === 0) {
+                        ctx.moveTo(x, y);
+                    } else {
+                        ctx.lineTo(x, y);
+                    }
+                });
+
+                ctx.stroke();
+            }
+
+            selectItem(type, id) {
+                try {
+                    const details = document.getElementById('selection-details');
+                    
+                    if (type === 'cell') {
+                        const cellValue = scittle.core.eval_string(`(get-value (get-cell :${id}))`);
+                        const deps = scittle.core.eval_string(`(get-dependencies (get-cell :${id}))`);
+                        const isComputed = scittle.core.eval_string(`(get-in @(.-meta-atom (get-cell :${id})) [:type])`);
+                        
+                        details.innerHTML = `
+                            <div><strong>Cell: ${id}</strong></div>
+                            <div>Value: ${this.formatValue(cellValue)}</div>
+                            <div>Type: ${isComputed === 'computed' ? 'computed' : 'basic'}</div>
+                            <div>Dependencies: ${deps ? deps.join(', ') : 'none'}</div>
+                        `;
+                    } else if (type === 'agent') {
+                        const agentState = scittle.core.eval_string(`(get-state (get-in @keraunos.core/system-state [:agents :${id}]))`);
+                        
+                        details.innerHTML = `
+                            <div><strong>Agent: ${id}</strong></div>
+                            <div>State: ${JSON.stringify(agentState, null, 2)}</div>
+                            <div>Type: behavioral</div>
+                        `;
+                    }
+                } catch (e) {
+                    console.error("Selection error:", e);
+                }
+            }
+
+            updateUI() {
+                try {
+                    // Update sidebar lists
+                    this.updateCellsList();
+                    this.updateAgentsList();
+                    this.updateSystemStats();
+                    this.renderCurrentView();
+                } catch (e) {
+                    console.error("UI update error:", e);
+                }
+            }
+
+            updateCellsList() {
+                const container = document.getElementById('cells-list');
+                container.innerHTML = '';
+
+                try {
+                    const cells = scittle.core.eval_string("(keys (:cells @keraunos.core/system-state))") || [];
+                    
+                    cells.forEach(cellId => {
+                        const cellValue = scittle.core.eval_string(`(get-value (get-cell :${cellId}))`);
+                        
+                        const item = document.createElement('div');
+                        item.className = 'cell-item';
+                        item.innerHTML = `
+                            <div>${cellId}</div>
+                            <div class="cell-value">${this.formatValue(cellValue)}</div>
+                        `;
+                        
+                        item.addEventListener('click', () => this.selectItem('cell', cellId));
+                        container.appendChild(item);
+                    });
+                } catch (e) {
+                    console.error("Cells list update error:", e);
+                }
+            }
+
+            updateAgentsList() {
+                const container = document.getElementById('agents-list');
+                container.innerHTML = '';
+
+                try {
+                    const agents = scittle.core.eval_string("(keys (:agents @keraunos.core/system-state))") || [];
+                    
+                    agents.forEach(agentId => {
+                        const item = document.createElement('div');
+                        item.className = 'agent-item';
+                        item.innerHTML = `
+                            <div>${agentId}</div>
+                            <div style="font-size: 9px; color: #888;">active</div>
+                        `;
+                        
+                        item.addEventListener('click', () => this.selectItem('agent', agentId));
+                        container.appendChild(item);
+                    });
+                } catch (e) {
+                    console.error("Agents list update error:", e);
+                }
+            }
+
+            updateSystemStats() {
+                try {
+                    const cellCount = scittle.core.eval_string("(count (:cells @keraunos.core/system-state))") || 0;
+                    const agentCount = scittle.core.eval_string("(count (:agents @keraunos.core/system-state))") || 0;
+                    
+                    document.getElementById('cell-count').textContent = cellCount;
+                    document.getElementById('agent-count').textContent = agentCount;
+                    
+                    // Calculate computation rate
+                    const now = Date.now();
+                    const timeDiff = (now - this.lastComputationTime) / 1000;
+                    if (timeDiff > 1) {
+                        const rate = Math.round(this.computationCount / timeDiff);
+                        document.getElementById('computation-rate').textContent = rate;
+                        this.computationCount = 0;
+                        this.lastComputationTime = now;
+                    }
+                } catch (e) {
+                    console.error("Stats update error:", e);
+                }
+            }
+
+            formatValue(value) {
+                if (typeof value === 'number') {
+                    return value.toFixed(2);
+                }
+                if (value === null || value === undefined) {
+                    return 'nil';
+                }
+                if (typeof value === 'object') {
+                    return JSON.stringify(value);
+                }
+                return String(value);
+            }
+
+            formatEventDetails(event) {
+                if (event.id) {
+                    return `ID: ${event.id}`;
+                }
+                return Object.keys(event).filter(k => k !== 'type' && k !== 'timestamp').map(k => `${k}: ${event[k]}`).join(', ');
+            }
+
+            startRenderLoop() {
+                const animate = () => {
+                    this.animationId = requestAnimationFrame(animate);
+                    
+                    // Update spatial view if active
+                    if (this.currentView === 'spatial' && this.spatial) {
+                        this.spatial.render();
+                    }
+
+                    // Periodic UI updates
+                    if (Date.now() % 1000 < 16) { // Roughly every second
+                        this.updateSystemStats();
+                    }
+                };
+                animate();
+            }
+
+            loadSystemState() {
+                try {
+                    const saved = localStorage.getItem('keraunos.system-state');
+                    if (saved) {
+                        const state = JSON.parse(saved);
+                        // Restore state logic would go here
+                        console.log('Loaded saved state:', state);
+                    }
+                } catch (e) {
+                    console.log('No saved state or load error:', e);
+                }
+            }
+
+            saveSystemState() {
+                try {
+                    const systemState = scittle.core.eval_string("@keraunos.core/system-state");
+                    localStorage.setItem('keraunos.system-state', JSON.stringify(systemState));
+                } catch (e) {
+                    console.error('Save error:', e);
+                }
+            }
+        }
+
+        // 3D Spatial View Implementation
+        class Spatial3D {
+            constructor(container) {
+                this.container = container;
+                this.scene = null;
+                this.camera = null;
+                this.renderer = null;
+                this.nodes = new Map();
+                this.autoRotating = false;
+                
+                this.init();
+            }
+
+            init() {
+                try {
+                    this.scene = new THREE.Scene();
+                    this.camera = new THREE.PerspectiveCamera(75, this.container.offsetWidth / this.container.offsetHeight, 0.1, 1000);
+                    this.renderer = new THREE.WebGLRenderer({ antialias: true, alpha: true });
+                    
+                    this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
+                    this.renderer.setClearColor(0x000000, 0);
+                    
+                    // Clear loading message and add renderer
+                    this.container.innerHTML = '';
+                    this.container.appendChild(this.renderer.domElement);
+                    
+                    // Re-add controls
+                    const controls = document.createElement('div');
+                    controls.className = 'spatial-controls';
+                    controls.innerHTML = `
+                        <button class="spatial-btn" onclick="ui.spatial.reset()">🎯 Reset</button>
+                        <button class="spatial-btn" onclick="ui.spatial.autoRotate()">🔄 Auto Rotate</button>
+                        <button class="spatial-btn" onclick="ui.spatial.toggleWireframe()">🕸️ Wireframe</button>
+                    `;
+                    this.container.appendChild(controls);
+                    
+                    this.camera.position.set(0, 5, 10);
+                    this.camera.lookAt(0, 0, 0);
+                    
+                    // Add lighting
+                    const ambientLight = new THREE.AmbientLight(0x404040, 0.6);
+                    this.scene.add(ambientLight);
+                    
+                    const dirLight = new THREE.DirectionalLight(0x00ffff, 0.8);
+                    dirLight.position.set(10, 10, 5);
+                    this.scene.add(dirLight);
+                    
+                    this.updateData();
+                } catch (e) {
+                    console.error('3D initialization error:', e);
+                }
+            }
+
+            updateData() {
+                try {
+                    // Clear existing nodes
+                    this.nodes.forEach(node => this.scene.remove(node));
+                    this.nodes.clear();
+
+                    const systemState = scittle.core.eval_string("@keraunos.core/system-state");
+                    const cells = systemState.cells || {};
+                    const agents = systemState.agents || {};
+
+                    // Create 3D nodes for cells
+                    Object.keys(cells).forEach((cellId, index) => {
+                        const geometry = new THREE.IcosahedronGeometry(0.5, 1);
+                        const material = new THREE.MeshLambertMaterial({
+                            color: 0x00ff88,
+                            wireframe: true
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        
+                        // Position in a spiral
+                        const angle = index * 0.5;
+                        const radius = 3;
+                        mesh.position.set(
+                            Math.cos(angle) * radius,
+                            (index - Object.keys(cells).length / 2) * 0.5,
+                            Math.sin(angle) * radius
+                        );
+                        
+                        mesh.userData = { type: 'cell', id: cellId };
+                        this.scene.add(mesh);
+                        this.nodes.set(cellId, mesh);
+                    });
+
+                    // Create 3D nodes for agents
+                    Object.keys(agents).forEach((agentId, index) => {
+                        const geometry = new THREE.OctahedronGeometry(0.6, 1);
+                        const material = new THREE.MeshLambertMaterial({
+                            color: 0xffaa00,
+                            wireframe: true
+                        });
+                        const mesh = new THREE.Mesh(geometry, material);
+                        
+                        const angle = index * 1.2;
+                        const radius = 5;
+                        mesh.position.set(
+                            Math.cos(angle) * radius,
+                            1,
+                            Math.sin(angle) * radius
+                        );
+                        
+                        mesh.userData = { type: 'agent', id: agentId };
+                        this.scene.add(mesh);
+                        this.nodes.set(agentId, mesh);
+                    });
+
+                } catch (e) {
+                    console.error('3D data update error:', e);
+                }
+            }
+
+            render() {
+                if (!this.renderer || !this.scene || !this.camera) return;
+
+                try {
+                    // Animate nodes
+                    const time = Date.now() * 0.001;
+                    this.nodes.forEach((mesh, id) => {
+                        mesh.rotation.y += 0.01;
+                        mesh.position.y += Math.sin(time + mesh.position.x) * 0.001;
+                    });
+
+                    // Auto-rotation
+                    if (this.autoRotating) {
+                        this.camera.position.x = Math.cos(time * 0.1) * 10;
+                        this.camera.position.z = Math.sin(time * 0.1) * 10;
+                        this.camera.lookAt(0, 0, 0);
+                    }
+
+                    this.renderer.render(this.scene, this.camera);
+                } catch (e) {
+                    console.error('3D render error:', e);
+                }
+            }
+
+            reset() {
+                this.camera.position.set(0, 5, 10);
+                this.camera.lookAt(0, 0, 0);
+                this.autoRotating = false;
+            }
+
+            autoRotate() {
+                this.autoRotating = !this.autoRotating;
+            }
+
+            toggleWireframe() {
+                this.nodes.forEach(mesh => {
+                    if (mesh.material) {
+                        mesh.material.wireframe = !mesh.material.wireframe;
+                    }
+                });
+            }
+
+            handleResize() {
+                if (!this.camera || !this.renderer) return;
+                
+                this.camera.aspect = this.container.offsetWidth / this.container.offsetHeight;
+                this.camera.updateProjectionMatrix();
+                this.renderer.setSize(this.container.offsetWidth, this.container.offsetHeight);
+            }
+        }
+
+        // Global functions for UI interaction
+        let ui;
+
+        window.switchView = (viewName) => {
+            if (ui) ui.switchView(viewName);
+        };
+
+        window.createCell = () => {
+            const name = prompt('Cell name:');
+            const value = prompt('Initial value:');
+            if (name && value !== null) {
+                try {
+                    const numValue = parseFloat(value) || 0;
+                    scittle.core.eval_string(`(create-cell :${name} ${numValue})`);
+                    ui.updateUI();
+                } catch (e) {
+                    alert('Error creating cell: ' + e.message);
+                }
+            }
+        };
+
+        window.createAgent = () => {
+            const name = prompt('Agent name:');
+            if (name) {
+                try {
+                    scittle.core.eval_string(`(create-agent :${name} {} nil)`);
+                    ui.updateUI();
+                } catch (e) {
+                    alert('Error creating agent: ' + e.message);
+                }
+            }
+        };
+
+        window.clearRepl = () => {
+            document.getElementById('repl-output').innerHTML = '';
+        };
+
+        window.loadExamples = () => {
+            const examples = [
+                '(set-value! (get-cell :time-step) (+ (get-value (get-cell :time-step)) 1))',
+                '(create-cell :new-indicator 42)',
+                '(map #(get-value (get-cell %)) [:current-price :volatility])',
+                '(keys (:cells @system-state))'
+            ];
+            
+            examples.forEach(example => {
+                ui.addReplLine('comment', `;; Example: ${example}`);
+            });
+        };
+
+        window.exportSystem = () => {
+            try {
+                const exportData = scittle.core.eval_string("(export-system)");
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = 'keraunos-system.json';
+                a.click();
+                URL.revokeObjectURL(url);
+            } catch (e) {
+                alert('Export error: ' + e.message);
+            }
+        };
+
+        window.importSystem = () => {
+            const input = document.createElement('input');
+            input.type = 'file';
+            input.accept = '.json';
+            input.onchange = (e) => {
+                const file = e.target.files[0];
+                if (file) {
+                    const reader = new FileReader();
+                    reader.onload = (e) => {
+                        try {
+                            const data = JSON.parse(e.target.result);
+                            // Import logic would go here
+                            console.log('Imported data:', data);
+                            alert('Import functionality coming soon!');
+                        } catch (err) {
+                            alert('Import error: ' + err.message);
+                        }
+                    };
+                    reader.readAsText(file);
+                }
+            };
+            input.click();
+        };
+
+        window.downloadFiles = () => {
+            try {
+                // Generate deps.edn
+                const depsEdn = `{:deps {org.clojure/clojure {:mvn/version "1.11.1"}
+        org.clojure/clojurescript {:mvn/version "1.11.60"}}}`;
+                
+                // Generate core.clj
+                const coreClj = scittle.core.eval_string(`(str "(ns keraunos.core)
+
+;; Generated from Keraunos Browser System
+;; " (now) "
+
+" (export-system))`);
+
+                // Download deps.edn
+                let blob = new Blob([depsEdn], { type: 'text/plain' });
+                let url = URL.createObjectURL(blob);
+                let a = document.createElement('a');
+                a.href = url;
+                a.download = 'deps.edn';
+                a.click();
+                URL.revokeObjectURL(url);
+
+                // Download core.clj
+                setTimeout(() => {
+                    blob = new Blob([coreClj], { type: 'text/plain' });
+                    url = URL.createObjectURL(blob);
+                    a = document.createElement('a');
+                    a.href = url;
+                    a.download = 'core.clj';
+                    a.click();
+                    URL.revokeObjectURL(url);
+                }, 500);
+
+            } catch (e) {
+                alert('Download error: ' + e.message);
+            }
+        };
+
+        window.resetSystem = () => {
+            if (confirm('Reset the entire system? This will clear all data.')) {
+                try {
+                    localStorage.removeItem('keraunos.system-state');
+                    scittle.core.eval_string("(reset! system-state {:cells {} :agents {} :watchers {} :history [] :dependencies {} :current-view :network :selection nil})");
+                    scittle.core.eval_string("(initialize-example-system!)");
+                    ui.updateUI();
+                } catch (e) {
+                    alert('Reset error: ' + e.message);
+                }
+            }
+        };
+
+        window.toggleFullscreen = () => {
+            if (!document.fullscreenElement) {
+                document.documentElement.requestFullscreen();
+            } else {
+                document.exitFullscreen();
+            }
+        };
+
+        window.closeModal = () => {
+            document.getElementById('modal').classList.remove('active');
+        };
+
+        window.confirmModal = () => {
+            // Modal confirmation logic
+            closeModal();
+        };
+
+        // Initialize the UI when DOM is ready
+        document.addEventListener('DOMContentLoaded', () => {
+            ui = new KeraunosUI();
+            window.ui = ui; // Make available globally for debugging
+        });
+
+        // Save state on page unload
+        window.addEventListener('beforeunload', () => {
+            if (ui) ui.saveSystemState();
+        });
+    </script>
+</body>
+</html>

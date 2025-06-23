@@ -1,0 +1,957 @@
+
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Reflector - Digital Presence Hub</title>
+    <style>
+        * { margin: 0; padding: 0; box-sizing: border-box; }
+
+        :root {
+            --bg-primary: #0a0e1a;
+            --bg-secondary: #111621;
+            --text-primary: #e1e8f7;
+            --accent-green: #00ffaa;
+            --accent-yellow: #ffd93d;
+            --accent-blue: #64d9ff;
+            --accent-purple: #b794f6;
+            --accent-pink: #ff6b9d;
+            --glass: rgba(17, 22, 33, 0.8);
+        }
+
+        body {
+            font-family: 'JetBrains Mono', 'Monaco', monospace;
+            background: radial-gradient(circle at 30% 40%, rgba(0, 255, 170, 0.1), transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 107, 157, 0.08), transparent 50%),
+                        linear-gradient(135deg, var(--bg-primary), var(--bg-secondary));
+            color: var(--text-primary);
+            overflow-x: hidden;
+            min-height: 100vh;
+        }
+
+        .main-container {
+            display: grid;
+            grid-template-columns: 300px 1fr 300px;
+            grid-template-rows: auto 1fr auto;
+            min-height: 100vh;
+            gap: 20px;
+            padding: 20px;
+        }
+
+        .header {
+            grid-column: 1 / -1;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            background: var(--glass);
+            border: 1px solid rgba(100, 217, 255, 0.3);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+        }
+
+        .logo {
+            font-size: 2rem;
+            font-weight: bold;
+            color: var(--accent-green);
+            text-shadow: 0 0 20px var(--accent-green);
+        }
+
+        .status-indicators {
+            display: flex;
+            gap: 15px;
+            align-items: center;
+        }
+
+        .status-dot {
+            width: 12px;
+            height: 12px;
+            border-radius: 50%;
+            animation: pulse 2s infinite;
+        }
+
+        .status-dot.active { background: var(--accent-green); }
+        .status-dot.pending { background: var(--accent-yellow); }
+        .status-dot.experimental { background: var(--accent-purple); }
+
+        .sidebar {
+            background: var(--glass);
+            border: 1px solid rgba(100, 217, 255, 0.2);
+            border-radius: 12px;
+            padding: 20px;
+            backdrop-filter: blur(20px);
+            height: fit-content;
+        }
+
+        .sidebar-title {
+            color: var(--accent-blue);
+            font-size: 14px;
+            font-weight: bold;
+            margin-bottom: 15px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+
+        .nav-item, .activity-item, .connection-item {
+            padding: 12px;
+            margin: 8px 0;
+            background: rgba(26, 31, 46, 0.6);
+            border-radius: 8px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            border-left: 3px solid transparent;
+        }
+
+        .nav-item:hover {
+            background: rgba(26, 31, 46, 0.9);
+            border-left-color: var(--accent-green);
+            transform: translateX(4px);
+        }
+
+        .nav-item.active {
+            border-left-color: var(--accent-green);
+            background: rgba(0, 255, 170, 0.1);
+        }
+
+        .main-content {
+            background: var(--glass);
+            border: 1px solid rgba(100, 217, 255, 0.2);
+            border-radius: 12px;
+            padding: 30px;
+            backdrop-filter: blur(20px);
+            position: relative;
+            overflow: hidden;
+        }
+
+        .content-section {
+            display: none;
+            animation: fadeIn 0.5s ease-in;
+        }
+
+        .content-section.active {
+            display: block;
+        }
+
+        @keyframes fadeIn {
+            from { opacity: 0; transform: translateY(20px); }
+            to { opacity: 1; transform: translateY(0); }
+        }
+
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+
+        .section-title {
+            font-size: 1.8rem;
+            color: var(--accent-green);
+            margin-bottom: 20px;
+            text-shadow: 0 0 10px var(--accent-green);
+        }
+
+        .manifesto-card, .experiment-card, .library-card {
+            background: rgba(26, 31, 46, 0.6);
+            border: 1px solid rgba(100, 217, 255, 0.3);
+            border-radius: 8px;
+            padding: 20px;
+            margin: 15px 0;
+            transition: all 0.3s ease;
+            cursor: pointer;
+        }
+
+        .manifesto-card:hover, .experiment-card:hover, .library-card:hover {
+            border-color: var(--accent-green);
+            background: rgba(26, 31, 46, 0.9);
+            transform: translateY(-2px);
+        }
+
+        .card-title {
+            color: var(--accent-yellow);
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .card-description {
+            color: rgba(225, 232, 247, 0.8);
+            font-size: 14px;
+            line-height: 1.4;
+        }
+
+        .card-meta {
+            display: flex;
+            justify-content: space-between;
+            margin-top: 10px;
+            font-size: 12px;
+            color: rgba(225, 232, 247, 0.6);
+        }
+
+        .thought-composer {
+            background: rgba(0, 0, 0, 0.3);
+            border: 1px solid var(--accent-green);
+            border-radius: 8px;
+            padding: 15px;
+            margin: 20px 0;
+        }
+
+        .thought-input {
+            width: 100%;
+            background: transparent;
+            border: none;
+            color: var(--text-primary);
+            font-family: inherit;
+            font-size: 14px;
+            resize: vertical;
+            min-height: 80px;
+            outline: none;
+        }
+
+        .thought-input::placeholder {
+            color: rgba(225, 232, 247, 0.4);
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .btn {
+            background: transparent;
+            border: 1px solid var(--accent-green);
+            color: var(--accent-green);
+            padding: 8px 16px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-family: inherit;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .btn:hover {
+            background: rgba(0, 255, 170, 0.1);
+            transform: scale(1.05);
+        }
+
+        .btn.secondary {
+            border-color: var(--accent-blue);
+            color: var(--accent-blue);
+        }
+
+        .btn.secondary:hover {
+            background: rgba(100, 217, 255, 0.1);
+        }
+
+        .activity-stream {
+            max-height: 300px;
+            overflow-y: auto;
+        }
+
+        .activity-item {
+            border-left-color: var(--accent-yellow);
+            font-size: 12px;
+            cursor: default;
+        }
+
+        .activity-timestamp {
+            color: rgba(225, 232, 247, 0.5);
+            font-size: 10px;
+        }
+
+        .connections-graph {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+        }
+
+        .connection-node {
+            background: rgba(183, 148, 246, 0.1);
+            border: 1px solid var(--accent-purple);
+            border-radius: 6px;
+            padding: 10px;
+            text-align: center;
+            font-size: 12px;
+            transition: all 0.3s ease;
+        }
+
+        .connection-node:hover {
+            background: rgba(183, 148, 246, 0.2);
+            transform: scale(1.05);
+        }
+
+        .floating-widgets {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+            z-index: 1000;
+        }
+
+        .widget {
+            background: var(--glass);
+            border: 1px solid rgba(255, 107, 157, 0.3);
+            border-radius: 8px;
+            padding: 15px;
+            backdrop-filter: blur(20px);
+            width: 200px;
+            cursor: move;
+        }
+
+        .widget-title {
+            color: var(--accent-pink);
+            font-size: 12px;
+            font-weight: bold;
+            margin-bottom: 8px;
+        }
+
+        .quick-stats {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 15px;
+            margin: 20px 0;
+        }
+
+        .stat-card {
+            background: rgba(0, 0, 0, 0.3);
+            border-radius: 6px;
+            padding: 15px;
+            text-align: center;
+        }
+
+        .stat-number {
+            font-size: 1.5rem;
+            font-weight: bold;
+            color: var(--accent-yellow);
+        }
+
+        .stat-label {
+            font-size: 12px;
+            color: rgba(225, 232, 247, 0.7);
+            margin-top: 5px;
+        }
+
+        .footer {
+            grid-column: 1 / -1;
+            text-align: center;
+            padding: 20px;
+            color: rgba(225, 232, 247, 0.5);
+            font-size: 12px;
+        }
+
+        /* Responsive Design */
+        @media (max-width: 1024px) {
+            .main-container {
+                grid-template-columns: 1fr;
+                grid-template-rows: auto auto 1fr auto auto;
+            }
+            
+            .sidebar {
+                display: flex;
+                overflow-x: auto;
+                padding: 15px;
+            }
+            
+            .nav-item {
+                min-width: 150px;
+                margin: 0 5px;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="main-container">
+        <!-- Header -->
+        <header class="header">
+            <div class="logo">REFLECTOR</div>
+            <div class="status-indicators">
+                <div class="status-dot active" title="System Online"></div>
+                <div class="status-dot pending" title="Experiments Active"></div>
+                <div class="status-dot experimental" title="Neural Flow"></div>
+                <span style="font-size: 12px;">uprootiny.dev</span>
+            </div>
+        </header>
+
+        <!-- Left Sidebar - Navigation -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Digital Spaces</div>
+            <div class="nav-item active" data-section="overview">
+                <div>🏠 Overview</div>
+                <div style="font-size: 10px; color: rgba(225,232,247,0.6);">System status & quick access</div>
+            </div>
+            <div class="nav-item" data-section="manifestos">
+                <div>📜 Manifestos</div>
+                <div style="font-size: 10px; color: rgba(225,232,247,0.6);">Digital declarations</div>
+            </div>
+            <div class="nav-item" data-section="sefaria">
+                <div>🏛️ Sefaria Library</div>
+                <div style="font-size: 10px; color: rgba(225,232,247,0.6);">Knowledge collection</div>
+            </div>
+            <div class="nav-item" data-section="experiments">
+                <div>🧪 Experiments</div>
+                <div style="font-size: 10px; color: rgba(225,232,247,0.6);">Live prototypes</div>
+            </div>
+            <div class="nav-item" data-section="canvas">
+                <div>🎨 Life Canvas</div>
+                <div style="font-size: 10px; color: rgba(225,232,247,0.6);">Attention flow visualization</div>
+            </div>
+        </aside>
+
+        <!-- Main Content Area -->
+        <main class="main-content">
+            <!-- Overview Section -->
+            <section class="content-section active" id="overview">
+                <h1 class="section-title">Digital Presence Hub</h1>
+                
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-number" id="manifesto-count">3</div>
+                        <div class="stat-label">Manifestos</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="experiment-count">7</div>
+                        <div class="stat-label">Experiments</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number" id="connection-count">42</div>
+                        <div class="stat-label">Connections</div>
+                    </div>
+                </div>
+
+                <div class="thought-composer">
+                    <textarea class="thought-input" placeholder="Capture the texture of this moment... What patterns are emerging? What connections do you sense?" id="thought-input"></textarea>
+                    <div class="action-buttons">
+                        <button class="btn" onclick="captureThought()">Capture Thought</button>
+                        <button class="btn secondary" onclick="generateManifesto()">→ Manifesto</button>
+                        <button class="btn secondary" onclick="addToLibrary()">→ Library</button>
+                    </div>
+                </div>
+
+                <div id="recent-captures"></div>
+            </section>
+
+            <!-- Manifestos Section -->
+            <section class="content-section" id="manifestos">
+                <h1 class="section-title">Digital Manifestos</h1>
+                
+                <div class="manifesto-card" onclick="openManifesto('digital-sovereignty')">
+                    <div class="card-title">Digital Sovereignty Manifesto</div>
+                    <div class="card-description">Reclaiming agency in distributed digital spaces through cryptographic identity and self-sovereign presence.</div>
+                    <div class="card-meta">
+                        <span>Status: Published</span>
+                        <span>2024-06-15</span>
+                    </div>
+                </div>
+
+                <div class="manifesto-card" onclick="openManifesto('paraconsistent-thinking')">
+                    <div class="card-title">Paraconsistent Thinking Framework</div>
+                    <div class="card-description">Embracing contradictions as generative forces in creative and technical work.</div>
+                    <div class="card-meta">
+                        <span>Status: Draft</span>
+                        <span>2024-06-20</span>
+                    </div>
+                </div>
+
+                <div class="manifesto-card" onclick="openManifesto('attention-architecture')">
+                    <div class="card-title">Attention Architecture</div>
+                    <div class="card-description">Designing interfaces that honor human cognitive patterns and flow states.</div>
+                    <div class="card-meta">
+                        <span>Status: Research</span>
+                        <span>2024-06-23</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Sefaria Library Section -->
+            <section class="content-section" id="sefaria">
+                <h1 class="section-title">Sefaria Digital Library</h1>
+                
+                <div class="library-card" onclick="openLibrarySection('research')">
+                    <div class="card-title">📚 Research Collection</div>
+                    <div class="card-description">Curated investigations into digital presence, distributed systems, and human-computer interaction patterns.</div>
+                    <div class="card-meta">
+                        <span>47 entries</span>
+                        <span>Updated today</span>
+                    </div>
+                </div>
+
+                <div class="library-card" onclick="openLibrarySection('artifacts')">
+                    <div class="card-title">🎯 Technical Artifacts</div>
+                    <div class="card-description">Code repositories, system designs, and implementation notes from various experiments.</div>
+                    <div class="card-meta">
+                        <span>23 artifacts</span>
+                        <span>3 active projects</span>
+                    </div>
+                </div>
+
+                <div class="library-card" onclick="openLibrarySection('conversations')">
+                    <div class="card-title">💬 Conversation Graphs</div>
+                    <div class="card-description">LLM dialogue sessions, idea development flows, and collaborative thinking sessions.</div>
+                    <div class="card-meta">
+                        <span>156 conversations</span>
+                        <span>Active dataflow</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Experiments Section -->
+            <section class="content-section" id="experiments">
+                <h1 class="section-title">Live Experiments</h1>
+                
+                <div class="experiment-card" onclick="launchExperiment('dataflow-weaver')">
+                    <div class="card-title">🌊 Dataflow Weaver</div>
+                    <div class="card-description">Interactive graph system for visualizing thoughts, LLM responses, and emergent artifacts.</div>
+                    <div class="card-meta">
+                        <span>Status: Active</span>
+                        <span>Launch →</span>
+                    </div>
+                </div>
+
+                <div class="experiment-card" onclick="launchExperiment('attention-tracer')">
+                    <div class="card-title">👁️ Attention Tracer</div>
+                    <div class="card-description">Real-time visualization of mouse movements and interaction patterns as flow fields.</div>
+                    <div class="card-meta">
+                        <span>Status: Beta</span>
+                        <span>Launch →</span>
+                    </div>
+                </div>
+
+                <div class="experiment-card" onclick="launchExperiment('manifesto-composer')">
+                    <div class="card-title">✍️ Manifesto Composer</div>
+                    <div class="card-description">AI-assisted writing environment for developing and refining digital manifestos.</div>
+                    <div class="card-meta">
+                        <span>Status: Prototype</span>
+                        <span>Launch →</span>
+                    </div>
+                </div>
+            </section>
+
+            <!-- Canvas Section -->
+            <section class="content-section" id="canvas">
+                <h1 class="section-title">Life Weaving Canvas</h1>
+                
+                <div style="background: rgba(0,0,0,0.3); border-radius: 8px; padding: 20px; margin: 20px 0;">
+                    <div style="color: var(--accent-yellow); margin-bottom: 10px;">Canvas Status: Initializing</div>
+                    <div style="font-size: 14px; line-height: 1.5;">
+                        The Life Weaving Canvas provides real-time attention flow visualization, 
+                        project status tracking in helical arrangements, and collaborative spaces 
+                        for thought development. This space integrates your mouse movements, 
+                        interaction patterns, and creative flow into a living digital environment.
+                    </div>
+                    <div class="action-buttons" style="margin-top: 15px;">
+                        <button class="btn" onclick="initializeCanvas()">Initialize Canvas</button>
+                        <button class="btn secondary" onclick="loadCanvasDemo()">Load Demo</button>
+                    </div>
+                </div>
+
+                <div class="quick-stats">
+                    <div class="stat-card">
+                        <div class="stat-number">12</div>
+                        <div class="stat-label">Active Projects</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">847</div>
+                        <div class="stat-label">Attention Traces</div>
+                    </div>
+                    <div class="stat-card">
+                        <div class="stat-number">High</div>
+                        <div class="stat-label">Flow State</div>
+                    </div>
+                </div>
+            </section>
+        </main>
+
+        <!-- Right Sidebar - Activity & Connections -->
+        <aside class="sidebar">
+            <div class="sidebar-title">Live Activity</div>
+            <div class="activity-stream" id="activity-stream">
+                <div class="activity-item">
+                    <div>Thought captured in Overview</div>
+                    <div class="activity-timestamp">2 minutes ago</div>
+                </div>
+                <div class="activity-item">
+                    <div>Manifesto draft updated</div>
+                    <div class="activity-timestamp">1 hour ago</div>
+                </div>
+                <div class="activity-item">
+                    <div>New connection discovered</div>
+                    <div class="activity-timestamp">3 hours ago</div>
+                </div>
+            </div>
+
+            <div class="sidebar-title" style="margin-top: 30px;">Connections</div>
+            <div class="connections-graph">
+                <div class="connection-node">sefaria.dissemblage.art</div>
+                <div class="connection-node">manifestos.uprootiny.dev</div>
+                <div class="connection-node">experiments.lab</div>
+                <div class="connection-node">attention.flow</div>
+            </div>
+        </aside>
+
+        <!-- Footer -->
+        <footer class="footer">
+            Reflector Digital Presence Hub • Built with intention • uprootiny.dev ecosystem
+        </footer>
+    </div>
+
+    <!-- Floating Widgets -->
+    <div class="floating-widgets" id="floating-widgets">
+        <div class="widget">
+            <div class="widget-title">System Pulse</div>
+            <div style="font-size: 12px;">
+                <div>Nodes: <span style="color: var(--accent-green);">Active</span></div>
+                <div>Flow: <span style="color: var(--accent-yellow);">High</span></div>
+                <div>Sync: <span style="color: var(--accent-blue);">Connected</span></div>
+            </div>
+        </div>
+    </div>
+
+    <script>
+        // Reflector Digital Presence Hub - Core System
+        class ReflectorHub {
+            constructor() {
+                this.currentSection = 'overview';
+                this.thoughts = [];
+                this.connections = new Map();
+                this.experiments = new Map();
+                this.activityLog = [];
+                
+                this.init();
+            }
+
+            init() {
+                this.setupNavigation();
+                this.setupThoughtCapture();
+                this.startActivitySimulation();
+                this.loadInitialData();
+                
+                console.log('🔮 Reflector Hub initialized');
+                this.log('System initialized successfully', 'system');
+            }
+
+            setupNavigation() {
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        const section = item.dataset.section;
+                        this.navigateToSection(section);
+                    });
+                });
+            }
+
+            navigateToSection(sectionId) {
+                // Update navigation state
+                document.querySelectorAll('.nav-item').forEach(item => {
+                    item.classList.remove('active');
+                });
+                document.querySelector(`[data-section="${sectionId}"]`).classList.add('active');
+
+                // Update content visibility
+                document.querySelectorAll('.content-section').forEach(section => {
+                    section.classList.remove('active');
+                });
+                document.getElementById(sectionId).classList.add('active');
+
+                this.currentSection = sectionId;
+                this.log(`Navigated to ${sectionId}`, 'navigation');
+            }
+
+            setupThoughtCapture() {
+                const input = document.getElementById('thought-input');
+                
+                input.addEventListener('keydown', (e) => {
+                    if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                        this.captureThought();
+                    }
+                });
+
+                // Auto-save drafts
+                let saveTimeout;
+                input.addEventListener('input', () => {
+                    clearTimeout(saveTimeout);
+                    saveTimeout = setTimeout(() => {
+                        this.saveDraft(input.value);
+                    }, 2000);
+                });
+            }
+
+            captureThought() {
+                const input = document.getElementById('thought-input');
+                const text = input.value.trim();
+                
+                if (!text) return;
+
+                const thought = {
+                    id: Date.now(),
+                    text: text,
+                    timestamp: new Date(),
+                    section: this.currentSection,
+                    connections: this.detectConnections(text)
+                };
+
+                this.thoughts.unshift(thought);
+                this.displayThought(thought);
+                this.log(`Thought captured: "${text.substring(0, 50)}..."`, 'capture');
+                
+                input.value = '';
+                this.updateStats();
+            }
+
+            detectConnections(text) {
+                const keywords = ['manifesto', 'library', 'experiment', 'canvas', 'flow', 'attention'];
+                return keywords.filter(keyword => 
+                    text.toLowerCase().includes(keyword)
+                );
+            }
+
+            displayThought(thought) {
+                const container = document.getElementById('recent-captures');
+                if (!container) return;
+
+                const element = document.createElement('div');
+                element.className = 'manifesto-card';
+                element.style.borderLeftColor = 'var(--accent-green)';
+                
+                element.innerHTML = `
+                    <div class="card-title">Captured Thought</div>
+                    <div class="card-description">${thought.text}</div>
+                    <div class="card-meta">
+                        <span>${thought.connections.length} connections</span>
+                        <span>${thought.timestamp.toLocaleTimeString()}</span>
+                    </div>
+                `;
+
+                element.addEventListener('click', () => {
+                    this.expandThought(thought);
+                });
+
+                container.insertBefore(element, container.firstChild);
+
+                // Keep only recent thoughts visible
+                while (container.children.length > 3) {
+                    container.removeChild(container.lastChild);
+                }
+            }
+
+            expandThought(thought) {
+                // Create modal or expand inline
+                this.log(`Expanded thought: ${thought.id}`, 'interaction');
+            }
+
+            generateManifesto() {
+                const input = document.getElementById('thought-input');
+                const text = input.value.trim();
+                
+                if (text) {
+                    this.log('Generating manifesto from thought...', 'generation');
+                    setTimeout(() => {
+                        this.navigateToSection('manifestos');
+                        this.log('Manifesto draft created', 'success');
+                    }, 1000);
+                }
+            }
+
+            addToLibrary() {
+                const input = document.getElementById('thought-input');
+                const text = input.value.trim();
+                
+                if (text) {
+                    this.log('Adding to Sefaria library...', 'generation');
+                    setTimeout(() => {
+                        this.navigateToSection('sefaria');
+                        this.log('Added to library collection', 'success');
+                    }, 800);
+                }
+            }
+
+            saveDraft(text) {
+                if (text.length > 10) {
+                    localStorage.setItem('reflector-draft', text);
+                    this.log('Draft auto-saved', 'system');
+                }
+            }
+
+            loadInitialData() {
+                // Load any saved drafts
+                const draft = localStorage.getItem('reflector-draft');
+                if (draft) {
+                    document.getElementById('thought-input').value = draft;
+                }
+
+                // Simulate initial connections
+                this.connections.set('sefaria', { status: 'active', type: 'library' });
+                this.connections.set('manifestos', { status: 'active', type: 'content' });
+                this.connections.set('experiments', { status: 'beta', type: 'prototype' });
+            }
+
+            startActivitySimulation() {
+                setInterval(() => {
+                    if (Math.random() > 0.7) {
+                        this.simulateActivity();
+                    }
+                }, 5000);
+            }
+
+            simulateActivity() {
+                const activities = [
+                    'Connection strength updated',
+                    'New pattern detected',
+                    'Flow state measurement',
+                    'Background sync completed',
+                    'Attention trace processed'
+                ];
+
+                const activity = activities[Math.floor(Math.random() * activities.length)];
+                this.log(activity, 'system');
+            }
+
+            updateStats() {
+                document.getElementById('manifesto-count').textContent = 3 + this.thoughts.filter(t => t.connections.includes('manifesto')).length;
+                document.getElementById('connection-count').textContent = 42 + this.thoughts.length * 2;
+            }
+
+            log(message, type = 'info') {
+                const logEntry = {
+                    message,
+                    type,
+                    timestamp: new Date()
+                };
+
+                this.activityLog.unshift(logEntry);
+                this.updateActivityStream();
+
+                // Keep log size manageable
+                if (this.activityLog.length > 50) {
+                    this.activityLog.splice(50);
+                }
+            }
+
+            updateActivityStream() {
+                const container = document.getElementById('activity-stream');
+                if (!container) return;
+
+                // Clear and rebuild recent activity
+                container.innerHTML = '';
+                
+                this.activityLog.slice(0, 8).forEach(entry => {
+                    const element = document.createElement('div');
+                    element.className = 'activity-item';
+                    
+                    const timeAgo = this.getTimeAgo(entry.timestamp);
+                    
+                    element.innerHTML = `
+                        <div>${entry.message}</div>
+                        <div class="activity-timestamp">${timeAgo}</div>
+                    `;
+                    
+                    container.appendChild(element);
+                });
+            }
+
+            getTimeAgo(timestamp) {
+                const diff = Date.now() - timestamp.getTime();
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                
+                if (minutes === 0) return 'just now';
+                if (minutes === 1) return '1 minute ago';
+                if (minutes < 60) return `${minutes} minutes ago`;
+                
+                const hours = Math.floor(minutes / 60);
+                if (hours === 1) return '1 hour ago';
+                return `${hours} hours ago`;
+            }
+        }
+
+        // Global functions for UI interactions
+        function captureThought() {
+            window.reflector.captureThought();
+        }
+
+        function generateManifesto() {
+            window.reflector.generateManifesto();
+        }
+
+        function addToLibrary() {
+            window.reflector.addToLibrary();
+        }
+
+        function openManifesto(id) {
+            window.reflector.log(`Opening manifesto: ${id}`, 'navigation');
+            // In full implementation, would open manifesto editor/viewer
+        }
+
+        function openLibrarySection(section) {
+            window.reflector.log(`Opening library section: ${section}`, 'navigation');
+            // In full implementation, would open library browser
+        }
+
+        function launchExperiment(id) {
+            window.reflector.log(`Launching experiment: ${id}`, 'launch');
+            
+            if (id === 'dataflow-weaver') {
+                // Could open in new window or iframe
+                window.open('/experiments/dataflow-weaver.html', '_blank');
+            }
+        }
+
+        function initializeCanvas() {
+            window.reflector.log('Initializing Life Weaving Canvas...', 'system');
+            setTimeout(() => {
+                window.reflector.log('Canvas initialization complete', 'success');
+            }, 2000);
+        }
+
+        function loadCanvasDemo() {
+            window.reflector.log('Loading canvas demo...', 'system');
+            // Could load demo version of the attention flow visualization
+        }
+
+        // Initialize the system
+        document.addEventListener('DOMContentLoaded', function() {
+            window.reflector = new ReflectorHub();
+            
+            // Add some demo thoughts after a delay
+            setTimeout(() => {
+                window.reflector.log('Welcome to Reflector Digital Presence Hub', 'welcome');
+                window.reflector.log('System ready for thought capture and exploration', 'system');
+            }, 1000);
+        });
+
+        // Make widgets draggable
+        document.addEventListener('DOMContentLoaded', function() {
+            const widgets = document.querySelectorAll('.widget');
+            widgets.forEach(widget => {
+                let isDragging = false;
+                let startX, startY, initialX, initialY;
+
+                widget.addEventListener('mousedown', (e) => {
+                    isDragging = true;
+                    startX = e.clientX;
+                    startY = e.clientY;
+                    initialX = parseInt(window.getComputedStyle(widget.parentElement).right);
+                    initialY = parseInt(window.getComputedStyle(widget.parentElement).bottom);
+                    widget.style.cursor = 'grabbing';
+                });
+
+                document.addEventListener('mousemove', (e) => {
+                    if (!isDragging) return;
+                    
+                    const deltaX = startX - e.clientX;
+                    const deltaY = e.clientY - startY;
+                    
+                    widget.parentElement.style.right = `${initialX + deltaX}px`;
+                    widget.parentElement.style.bottom = `${initialY - deltaY}px`;
+                });
+
+                document.addEventListener('mouseup', () => {
+                    if (isDragging) {
+                        isDragging = false;
+                        widget.style.cursor = 'move';
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html>

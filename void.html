@@ -1,0 +1,1470 @@
+ 
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Life Weaving Canvas - Attention Flow Interface</title>
+    <style>
+        * { box-sizing: border-box; margin: 0; padding: 0; }
+        body { 
+            font-family: 'JetBrains Mono', 'Berkeley Mono', monospace; 
+            background: #0a0e1a; 
+            color: #e1e8f7; 
+            overflow: hidden;
+            cursor: crosshair;
+            --flow-primary: #00ffaa;
+            --flow-secondary: #ff6b9d;
+            --flow-tertiary: #ffd93d;
+            --flow-quaternary: #64d9ff;
+            --flow-quinary: #b794f6;
+            --attention-hot: #ff4757;
+            --attention-warm: #ff9f43;
+            --attention-cool: #3742fa;
+            --attention-cold: #2f3542;
+        }
+        
+        .canvas-container {
+            position: fixed;
+            top: 0;
+            left: 0;
+            width: 100vw;
+            height: 100vh;
+            background: radial-gradient(circle at 30% 40%, rgba(0, 255, 170, 0.1), transparent 50%),
+                        radial-gradient(circle at 70% 60%, rgba(255, 107, 157, 0.08), transparent 50%),
+                        linear-gradient(135deg, #0a0e1a, #111621);
+        }
+        
+        .flow-field {
+            position: absolute;
+            top: 0;
+            left: 0;
+            width: 100%;
+            height: 100%;
+            pointer-events: none;
+            opacity: 0.3;
+        }
+        
+        .attention-tracer {
+            position: absolute;
+            width: 4px;
+            height: 4px;
+            background: var(--flow-primary);
+            border-radius: 50%;
+            pointer-events: none;
+            animation: trace-fade 3s ease-out forwards;
+        }
+        
+        @keyframes trace-fade {
+            0% { opacity: 1; transform: scale(1); }
+            100% { opacity: 0; transform: scale(0.2); }
+        }
+        
+        .thought-capture {
+            position: fixed;
+            bottom: 20px;
+            left: 20px;
+            right: 20px;
+            height: 80px;
+            background: rgba(17, 22, 33, 0.9);
+            border: 1px solid rgba(100, 217, 255, 0.3);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            display: flex;
+            align-items: center;
+            padding: 0 20px;
+            transition: all 0.3s ease;
+        }
+        
+        .thought-capture:focus-within {
+            border-color: var(--flow-primary);
+            box-shadow: 0 0 30px rgba(0, 255, 170, 0.2);
+            height: 120px;
+        }
+        
+        .thought-input {
+            flex: 1;
+            background: transparent;
+            border: none;
+            color: #e1e8f7;
+            font-family: inherit;
+            font-size: 16px;
+            outline: none;
+            resize: none;
+            line-height: 1.4;
+        }
+        
+        .thought-input::placeholder {
+            color: rgba(225, 232, 247, 0.4);
+            font-style: italic;
+        }
+        
+        .thought-meta {
+            display: flex;
+            flex-direction: column;
+            align-items: flex-end;
+            gap: 4px;
+            min-width: 120px;
+            font-size: 11px;
+            color: rgba(225, 232, 247, 0.6);
+        }
+        
+        .word-count {
+            color: var(--flow-tertiary);
+        }
+        
+        .timestamp {
+            color: var(--flow-quaternary);
+        }
+        
+        .notes-stream {
+            position: fixed;
+            top: 20px;
+            right: 20px;
+            width: 320px;
+            max-height: 60vh;
+            overflow-y: auto;
+            background: rgba(17, 22, 33, 0.8);
+            border: 1px solid rgba(100, 217, 255, 0.2);
+            border-radius: 12px;
+            backdrop-filter: blur(20px);
+            padding: 16px;
+        }
+        
+        .note-item {
+            background: rgba(26, 31, 46, 0.6);
+            border-left: 3px solid var(--flow-primary);
+            border-radius: 6px;
+            padding: 12px;
+            margin-bottom: 12px;
+            cursor: pointer;
+            transition: all 0.3s ease;
+            position: relative;
+        }
+        
+        .note-item:hover {
+            transform: translateX(4px);
+            border-left-color: var(--flow-secondary);
+            background: rgba(26, 31, 46, 0.9);
+        }
+        
+        .note-text {
+            font-size: 13px;
+            line-height: 1.4;
+            margin-bottom: 6px;
+        }
+        
+        .note-footer {
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 10px;
+            color: rgba(225, 232, 247, 0.5);
+        }
+        
+        .note-actions {
+            display: flex;
+            gap: 8px;
+            opacity: 0;
+            transition: opacity 0.3s ease;
+        }
+        
+        .note-item:hover .note-actions {
+            opacity: 1;
+        }
+        
+        .note-action {
+            background: none;
+            border: none;
+            color: var(--flow-quaternary);
+            cursor: pointer;
+            font-size: 10px;
+            padding: 2px 4px;
+            border-radius: 3px;
+            transition: all 0.2s ease;
+        }
+        
+        .note-action:hover {
+            background: rgba(100, 217, 255, 0.2);
+        }
+        
+        .project-helix {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            width: 800px;
+            height: 600px;
+            perspective: 1200px;
+            pointer-events: none;
+        }
+        
+        .helix-container {
+            width: 100%;
+            height: 100%;
+            transform-style: preserve-3d;
+            animation: helix-rotate 60s linear infinite;
+        }
+        
+        @keyframes helix-rotate {
+            from { transform: rotateY(0deg); }
+            to { transform: rotateY(360deg); }
+        }
+        
+        .project-card {
+            position: absolute;
+            width: 200px;
+            height: 120px;
+            background: rgba(17, 22, 33, 0.9);
+            border: 1px solid rgba(100, 217, 255, 0.3);
+            border-radius: 8px;
+            padding: 12px;
+            backdrop-filter: blur(10px);
+            cursor: pointer;
+            transition: all 0.3s ease;
+            pointer-events: auto;
+        }
+        
+        .project-card:hover {
+            transform: scale(1.1) translateZ(20px);
+            border-color: var(--flow-primary);
+            box-shadow: 0 8px 32px rgba(0, 255, 170, 0.3);
+        }
+        
+        .project-title {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--flow-primary);
+            margin-bottom: 4px;
+            text-overflow: ellipsis;
+            overflow: hidden;
+            white-space: nowrap;
+        }
+        
+        .project-description {
+            font-size: 10px;
+            color: rgba(225, 232, 247, 0.7);
+            line-height: 1.3;
+            margin-bottom: 8px;
+            height: 36px;
+            overflow: hidden;
+        }
+        
+        .project-stats {
+            display: flex;
+            justify-content: space-between;
+            font-size: 9px;
+            color: rgba(225, 232, 247, 0.5);
+        }
+        
+        .project-status {
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            position: absolute;
+            top: 8px;
+            right: 8px;
+        }
+        
+        .status-active { background: var(--attention-hot); animation: pulse 2s infinite; }
+        .status-maintained { background: var(--flow-primary); }
+        .status-experimental { background: var(--flow-tertiary); }
+        .status-archived { background: var(--attention-cold); }
+        .status-collaborative { background: var(--flow-secondary); }
+        
+        .capability-overlay {
+            position: fixed;
+            top: 20px;
+            left: 20px;
+            background: rgba(17, 22, 33, 0.9);
+            border: 1px solid rgba(183, 148, 246, 0.3);
+            border-radius: 12px;
+            padding: 16px;
+            backdrop-filter: blur(20px);
+            max-width: 300px;
+        }
+        
+        .capability-title {
+            color: var(--flow-quinary);
+            font-size: 12px;
+            font-weight: 600;
+            margin-bottom: 8px;
+            text-transform: uppercase;
+            letter-spacing: 0.5px;
+        }
+        
+        .capability-item {
+            font-size: 11px;
+            line-height: 1.4;
+            margin-bottom: 4px;
+            color: rgba(225, 232, 247, 0.8);
+        }
+        
+        .hotkey-palette {
+            position: fixed;
+            top: 50%;
+            left: 50%;
+            transform: translate(-50%, -50%);
+            background: rgba(10, 14, 26, 0.95);
+            border: 2px solid var(--flow-primary);
+            border-radius: 16px;
+            padding: 24px;
+            backdrop-filter: blur(30px);
+            display: none;
+            z-index: 1000;
+        }
+        
+        .hotkey-palette.active {
+            display: block;
+            animation: palette-appear 0.3s ease-out;
+        }
+        
+        @keyframes palette-appear {
+            from { opacity: 0; transform: translate(-50%, -50%) scale(0.8); }
+            to { opacity: 1; transform: translate(-50%, -50%) scale(1); }
+        }
+        
+        .palette-title {
+            color: var(--flow-primary);
+            font-size: 14px;
+            font-weight: 600;
+            margin-bottom: 16px;
+            text-align: center;
+        }
+        
+        .hotkey-grid {
+            display: grid;
+            grid-template-columns: repeat(3, 1fr);
+            gap: 12px;
+            min-width: 400px;
+        }
+        
+        .hotkey-item {
+            background: rgba(26, 31, 46, 0.8);
+            border: 1px solid rgba(100, 217, 255, 0.2);
+            border-radius: 8px;
+            padding: 12px;
+            text-align: center;
+            cursor: pointer;
+            transition: all 0.2s ease;
+        }
+        
+        .hotkey-item:hover {
+            border-color: var(--flow-primary);
+            background: rgba(26, 31, 46, 1);
+        }
+        
+        .hotkey-key {
+            font-size: 12px;
+            font-weight: 600;
+            color: var(--flow-tertiary);
+            margin-bottom: 4px;
+        }
+        
+        .hotkey-action {
+            font-size: 10px;
+            color: rgba(225, 232, 247, 0.7);
+        }
+        
+        .connection-status {
+            position: fixed;
+            bottom: 20px;
+            right: 20px;
+            background: rgba(17, 22, 33, 0.9);
+            border: 1px solid rgba(100, 217, 255, 0.3);
+            border-radius: 8px;
+            padding: 8px 12px;
+            font-size: 11px;
+            backdrop-filter: blur(10px);
+        }
+        
+        .connection-indicator {
+            display: inline-block;
+            width: 8px;
+            height: 8px;
+            border-radius: 50%;
+            margin-right: 6px;
+            background: var(--flow-primary);
+            animation: pulse 2s infinite;
+        }
+        
+        @keyframes pulse {
+            0%, 100% { opacity: 1; }
+            50% { opacity: 0.5; }
+        }
+        
+        .flow-metrics {
+            position: fixed;
+            top: 20px;
+            left: 50%;
+            transform: translateX(-50%);
+            background: rgba(17, 22, 33, 0.8);
+            border: 1px solid rgba(255, 215, 61, 0.3);
+            border-radius: 8px;
+            padding: 8px 16px;
+            font-size: 11px;
+            backdrop-filter: blur(10px);
+            display: flex;
+            gap: 16px;
+        }
+        
+        .metric {
+            display: flex;
+            align-items: center;
+            gap: 4px;
+        }
+        
+        .metric-label {
+            color: rgba(225, 232, 247, 0.6);
+        }
+        
+        .metric-value {
+            color: var(--flow-tertiary);
+            font-weight: 600;
+        }
+        
+        /* Scrollbars */
+        ::-webkit-scrollbar { width: 4px; }
+        ::-webkit-scrollbar-track { background: rgba(26, 31, 46, 0.3); }
+        ::-webkit-scrollbar-thumb { background: rgba(100, 217, 255, 0.3); border-radius: 2px; }
+        ::-webkit-scrollbar-thumb:hover { background: rgba(100, 217, 255, 0.5); }
+    </style>
+</head>
+<body>
+    <div class="canvas-container">
+        <canvas class="flow-field" id="flow-field"></canvas>
+    </div>
+    
+    <div class="capability-overlay">
+        <div class="capability-title">Current Capabilities</div>
+        <div class="capability-item">🎯 Real-time thought capture & organization</div>
+        <div class="capability-item">🌊 Dynamic attention flow visualization</div>
+        <div class="capability-item">🔄 Project status tracking & helical arrangement</div>
+        <div class="capability-item">⚡ Hotkey-driven interaction system</div>
+        <div class="capability-item">🤖 AI-powered text generation ready</div>
+        <div class="capability-item">📊 Flow state metrics & pattern analysis</div>
+        <div class="capability-item">🎨 Visual transformation tools</div>
+        <div class="capability-item">💫 Cross-project connection mapping</div>
+    </div>
+    
+    <div class="flow-metrics">
+        <div class="metric">
+            <span class="metric-label">Flow:</span>
+            <span class="metric-value" id="flow-intensity">High</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Attention:</span>
+            <span class="metric-value" id="attention-quality">Focused</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Notes:</span>
+            <span class="metric-value" id="note-count">0</span>
+        </div>
+        <div class="metric">
+            <span class="metric-label">Projects:</span>
+            <span class="metric-value" id="project-count">12</span>
+        </div>
+    </div>
+    
+    <div class="project-helix">
+        <div class="helix-container" id="helix-container">
+            <!-- Project cards will be generated here -->
+        </div>
+    </div>
+    
+    <div class="notes-stream" id="notes-stream">
+        <!-- Notes will appear here -->
+    </div>
+    
+    <div class="thought-capture">
+        <textarea 
+            class="thought-input" 
+            id="thought-input" 
+            placeholder="Capture the texture of this moment..."
+            maxlength="500"></textarea>
+        <div class="thought-meta">
+            <div class="word-count" id="word-count">0 words</div>
+            <div class="timestamp" id="timestamp">just now</div>
+        </div>
+    </div>
+    
+    <div class="hotkey-palette" id="hotkey-palette">
+        <div class="palette-title">Life Weaving Hotkeys</div>
+        <div class="hotkey-grid">
+            <div class="hotkey-item" data-action="capture">
+                <div class="hotkey-key">C</div>
+                <div class="hotkey-action">Capture Thought</div>
+            </div>
+            <div class="hotkey-item" data-action="transform">
+                <div class="hotkey-key">T</div>
+                <div class="hotkey-action">Transform Note</div>
+            </div>
+            <div class="hotkey-item" data-action="generate">
+                <div class="hotkey-key">G</div>
+                <div class="hotkey-action">Generate Text</div>
+            </div>
+            <div class="hotkey-item" data-action="connect">
+                <div class="hotkey-key">X</div>
+                <div class="hotkey-action">Connect Ideas</div>
+            </div>
+            <div class="hotkey-item" data-action="flow">
+                <div class="hotkey-key">F</div>
+                <div class="hotkey-action">Enter Flow</div>
+            </div>
+            <div class="hotkey-item" data-action="organize">
+                <div class="hotkey-key">O</div>
+                <div class="hotkey-action">Organize Projects</div>
+            </div>
+            <div class="hotkey-item" data-action="analyze">
+                <div class="hotkey-key">A</div>
+                <div class="hotkey-action">Analyze Patterns</div>
+            </div>
+            <div class="hotkey-item" data-action="export">
+                <div class="hotkey-key">E</div>
+                <div class="hotkey-action">Export Canvas</div>
+            </div>
+            <div class="hotkey-item" data-action="settings">
+                <div class="hotkey-key">S</div>
+                <div class="hotkey-action">Settings</div>
+            </div>
+        </div>
+    </div>
+    
+    <div class="connection-status">
+        <span class="connection-indicator"></span>
+        Connected • OpenRouter Ready
+    </div>
+
+    <script>
+        // Life Weaving Canvas - Attention Flow Interface
+        (function() {
+            'use strict';
+            
+            // === Core State Management ===
+            const LifeWeaver = {
+                canvas: null,
+                ctx: null,
+                notes: [],
+                projects: [],
+                flowField: [],
+                attentionTraces: [],
+                currentProject: null,
+                flowState: 'high',
+                attentionQuality: 'focused',
+                animationId: null,
+                mousePos: { x: 0, y: 0 },
+                lastInteraction: Date.now(),
+                paletteVisible: false,
+                audioContext: null,
+                isRecording: false
+            };
+            
+            // === Sample Project Data (Simulating GitHub) ===
+            const projectData = [
+                {
+                    name: "neural-flow-mapper",
+                    description: "Real-time attention visualization using WebGL and neural networks",
+                    language: "JavaScript",
+                    stars: 127,
+                    status: "active",
+                    lastCommit: "2 days ago",
+                    complexity: "high"
+                },
+                {
+                    name: "clojure-thought-weaver",
+                    description: "Functional programming approach to thought organization",
+                    language: "ClojureScript",
+                    stars: 89,
+                    status: "maintained",
+                    lastCommit: "1 week ago",
+                    complexity: "medium"
+                },
+                {
+                    name: "pattern-synthesis-engine",
+                    description: "Generate visual patterns from textual descriptions",
+                    language: "Python",
+                    stars: 203,
+                    status: "experimental",
+                    lastCommit: "3 days ago",
+                    complexity: "high"
+                },
+                {
+                    name: "collaborative-mind-palace",
+                    description: "Shared virtual spaces for collective thinking",
+                    language: "TypeScript",
+                    stars: 456,
+                    status: "collaborative",
+                    lastCommit: "1 day ago",
+                    complexity: "very-high"
+                },
+                {
+                    name: "micro-meditation-tracker",
+                    description: "Tiny moments of mindfulness throughout the day",
+                    language: "Swift",
+                    stars: 34,
+                    status: "maintained",
+                    lastCommit: "2 weeks ago",
+                    complexity: "low"
+                },
+                {
+                    name: "flow-state-optimizer",
+                    description: "Environment controls for optimal cognitive performance",
+                    language: "Rust",
+                    stars: 178,
+                    status: "active",
+                    lastCommit: "5 hours ago",
+                    complexity: "high"
+                },
+                {
+                    name: "dream-journal-nlp",
+                    description: "Natural language processing for dream pattern analysis",
+                    language: "Python",
+                    stars: 67,
+                    status: "experimental",
+                    lastCommit: "1 month ago",
+                    complexity: "medium"
+                },
+                {
+                    name: "biometric-creativity-sync",
+                    description: "Sync creative work with physiological rhythms",
+                    language: "JavaScript",
+                    stars: 92,
+                    status: "active",
+                    lastCommit: "6 hours ago",
+                    complexity: "medium"
+                },
+                {
+                    name: "quantum-note-entanglement",
+                    description: "Explore non-linear relationships between ideas",
+                    language: "Haskell",
+                    stars: 145,
+                    status: "experimental",
+                    lastCommit: "2 days ago",
+                    complexity: "very-high"
+                },
+                {
+                    name: "ambient-focus-soundscape",
+                    description: "Adaptive audio environments for different work modes",
+                    language: "JavaScript",
+                    stars: 234,
+                    status: "maintained",
+                    lastCommit: "4 days ago",
+                    complexity: "medium"
+                },
+                {
+                    name: "retro-computing-aesthetics",
+                    description: "Nostalgic interfaces for modern productivity",
+                    language: "CSS",
+                    stars: 512,
+                    status: "archived",
+                    lastCommit: "6 months ago",
+                    complexity: "low"
+                },
+                {
+                    name: "memetic-evolution-simulator",
+                    description: "Track how ideas spread and mutate across networks",
+                    language: "Julia",
+                    stars: 87,
+                    status: "experimental",
+                    lastCommit: "1 week ago",
+                    complexity: "very-high"
+                }
+            ];
+            
+            // === Initialization ===
+            function initializeCanvas() {
+                LifeWeaver.canvas = document.getElementById('flow-field');
+                LifeWeaver.ctx = LifeWeaver.canvas.getContext('2d');
+                
+                resizeCanvas();
+                window.addEventListener('resize', resizeCanvas);
+                
+                initializeFlowField();
+                generateProjectHelix();
+                setupEventListeners();
+                startAnimationLoop();
+                
+                console.log('🌊 Life Weaving Canvas initialized');
+            }
+            
+            function resizeCanvas() {
+                LifeWeaver.canvas.width = window.innerWidth;
+                LifeWeaver.canvas.height = window.innerHeight;
+            }
+            
+            function initializeFlowField() {
+                const cols = Math.floor(window.innerWidth / 20);
+                const rows = Math.floor(window.innerHeight / 20);
+                
+                LifeWeaver.flowField = [];
+                for (let y = 0; y < rows; y++) {
+                    for (let x = 0; x < cols; x++) {
+                        const angle = (x * 0.1 + y * 0.1) * Math.PI;
+                        const magnitude = 0.5 + Math.sin(x * 0.05) * 0.3;
+                        LifeWeaver.flowField.push({
+                            x: x * 20,
+                            y: y * 20,
+                            angle: angle,
+                            magnitude: magnitude
+                        });
+                    }
+                }
+            }
+            
+            function generateProjectHelix() {
+                const container = document.getElementById('helix-container');
+                container.innerHTML = '';
+                
+                projectData.forEach((project, index) => {
+                    const card = document.createElement('div');
+                    card.className = 'project-card';
+                    
+                    // Calculate helical position
+                    const angle = (index / projectData.length) * Math.PI * 4; // 2 full rotations
+                    const radius = 150 + (index % 3) * 50;
+                    const height = (index / projectData.length) * 400 - 200;
+                    
+                    const x = Math.cos(angle) * radius;
+                    const z = Math.sin(angle) * radius;
+                    
+                    card.style.transform = \`translate3d(\${x}px, \${height}px, \${z}px) rotateY(\${-angle}rad)\`;
+                    
+                    card.innerHTML = \`
+                        <div class="project-status status-\${project.status}"></div>
+                        <div class="project-title">\${project.name}</div>
+                        <div class="project-description">\${project.description}</div>
+                        <div class="project-stats">
+                            <span>\${project.language}</span>
+                            <span>⭐ \${project.stars}</span>
+                        </div>
+                    \`;
+                    
+                    card.addEventListener('click', () => selectProject(project));
+                    container.appendChild(card);
+                });
+                
+                LifeWeaver.projects = projectData;
+                updateMetrics();
+            }
+            
+            // === Event Listeners ===
+            function setupEventListeners() {
+                // Mouse tracking for attention traces
+                document.addEventListener('mousemove', (e) => {
+                    LifeWeaver.mousePos = { x: e.clientX, y: e.clientY };
+                    LifeWeaver.lastInteraction = Date.now();
+                    
+                    // Create attention trace
+                    createAttentionTrace(e.clientX, e.clientY);
+                });
+                
+                // Thought input handling
+                const thoughtInput = document.getElementById('thought-input');
+                thoughtInput.addEventListener('input', updateWordCount);
+                thoughtInput.addEventListener('keydown', handleThoughtInput);
+                
+                // Hotkey system
+                document.addEventListener('keydown', handleHotkeys);
+                
+                // Hotkey palette interactions
+                document.querySelectorAll('.hotkey-item').forEach(item => {
+                    item.addEventListener('click', () => {
+                        executeAction(item.dataset.action);
+                        hidePalette();
+                    });
+                });
+                
+                // Note interactions
+                document.addEventListener('click', (e) => {
+                    if (e.target.classList.contains('note-action')) {
+                        const action = e.target.textContent.trim();
+                        const noteElement = e.target.closest('.note-item');
+                        const noteIndex = Array.from(noteElement.parentNode.children).indexOf(noteElement);
+                        
+                        handleNoteAction(action, noteIndex);
+                    }
+                });
+            }
+            
+            function createAttentionTrace(x, y) {
+                const trace = document.createElement('div');
+                trace.className = 'attention-tracer';
+                trace.style.left = x + 'px';
+                trace.style.top = y + 'px';
+                
+                // Vary color based on movement speed and time
+                const timeSinceLastMove = Date.now() - LifeWeaver.lastInteraction;
+                const intensity = Math.max(0.2, 1 - timeSinceLastMove / 1000);
+                
+                if (intensity > 0.8) {
+                    trace.style.background = 'var(--attention-hot)';
+                } else if (intensity > 0.5) {
+                    trace.style.background = 'var(--attention-warm)';
+                } else if (intensity > 0.3) {
+                    trace.style.background = 'var(--attention-cool)';
+                } else {
+                    trace.style.background = 'var(--attention-cold)';
+                }
+                
+                document.body.appendChild(trace);
+                
+                // Remove after animation
+                setTimeout(() => {
+                    if (trace.parentNode) {
+                        trace.parentNode.removeChild(trace);
+                    }
+                }, 3000);
+                
+                LifeWeaver.attentionTraces.push({ x, y, time: Date.now(), intensity });
+                
+                // Limit traces array size
+                if (LifeWeaver.attentionTraces.length > 100) {
+                    LifeWeaver.attentionTraces.shift();
+                }
+            }
+            
+            // === Thought Capture System ===
+            function updateWordCount() {
+                const input = document.getElementById('thought-input');
+                const text = input.value.trim();
+                const wordCount = text ? text.split(/\s+/).length : 0;
+                
+                document.getElementById('word-count').textContent = \`\${wordCount} word\${wordCount !== 1 ? 's' : ''}\`;
+                updateTimestamp();
+            }
+            
+            function updateTimestamp() {
+                document.getElementById('timestamp').textContent = 'just now';
+            }
+            
+            function handleThoughtInput(e) {
+                if (e.key === 'Enter' && (e.metaKey || e.ctrlKey)) {
+                    captureThought();
+                } else if (e.key === 'Escape') {
+                    clearThoughtInput();
+                }
+            }
+            
+            function captureThought() {
+                const input = document.getElementById('thought-input');
+                const text = input.value.trim();
+                
+                if (!text) return;
+                
+                const note = {
+                    id: Date.now(),
+                    text: text,
+                    timestamp: new Date(),
+                    wordCount: text.split(/\s+/).length,
+                    mood: analyzeTextMood(text),
+                    connections: [],
+                    transformations: []
+                };
+                
+                LifeWeaver.notes.unshift(note);
+                renderNotes();
+                updateMetrics();
+                
+                // Clear input
+                input.value = '';
+                updateWordCount();
+                
+                // Create visual feedback
+                createCaptureEffect();
+                
+                console.log('💭 Thought captured:', note);
+            }
+            
+            function analyzeTextMood(text) {
+                const lowerText = text.toLowerCase();
+                
+                if (/sluggish|jerky|overheating|crumbly|torn|wind/.test(lowerText)) {
+                    return 'turbulent';
+                } else if (/connected|flow|smooth|clear/.test(lowerText)) {
+                    return 'flowing';
+                } else if (/uncertain|question|doubt/.test(lowerText)) {
+                    return 'questioning';
+                } else if (/excited|energy|bright/.test(lowerText)) {
+                    return 'energetic';
+                } else {
+                    return 'neutral';
+                }
+            }
+            
+            function createCaptureEffect() {
+                const input = document.querySelector('.thought-capture');
+                input.style.transform = 'scale(1.02)';
+                input.style.boxShadow = '0 0 40px rgba(0, 255, 170, 0.4)';
+                
+                setTimeout(() => {
+                    input.style.transform = 'scale(1)';
+                    input.style.boxShadow = '0 0 30px rgba(0, 255, 170, 0.2)';
+                }, 200);
+            }
+            
+            function clearThoughtInput() {
+                document.getElementById('thought-input').value = '';
+                updateWordCount();
+            }
+            
+            // === Note Rendering and Management ===
+            function renderNotes() {
+                const container = document.getElementById('notes-stream');
+                container.innerHTML = '';
+                
+                LifeWeaver.notes.slice(0, 20).forEach((note, index) => {
+                    const noteElement = document.createElement('div');
+                    noteElement.className = 'note-item';
+                    
+                    // Set border color based on mood
+                    const moodColors = {
+                        turbulent: 'var(--attention-hot)',
+                        flowing: 'var(--flow-primary)',
+                        questioning: 'var(--flow-quaternary)',
+                        energetic: 'var(--flow-tertiary)',
+                        neutral: 'var(--flow-secondary)'
+                    };
+                    
+                    noteElement.style.borderLeftColor = moodColors[note.mood] || moodColors.neutral;
+                    
+                    const timeAgo = getTimeAgo(note.timestamp);
+                    
+                    noteElement.innerHTML = \`
+                        <div class="note-text">\${note.text}</div>
+                        <div class="note-footer">
+                            <span>\${timeAgo} • \${note.wordCount} words</span>
+                            <div class="note-actions">
+                                <button class="note-action">✨</button>
+                                <button class="note-action">🔗</button>
+                                <button class="note-action">🎨</button>
+                                <button class="note-action">🗑️</button>
+                            </div>
+                        </div>
+                    \`;
+                    
+                    container.appendChild(noteElement);
+                });
+            }
+            
+            function getTimeAgo(timestamp) {
+                const diff = Date.now() - timestamp.getTime();
+                const seconds = Math.floor(diff / 1000);
+                const minutes = Math.floor(seconds / 60);
+                const hours = Math.floor(minutes / 60);
+                const days = Math.floor(hours / 24);
+                
+                if (days > 0) return \`\${days}d ago\`;
+                if (hours > 0) return \`\${hours}h ago\`;
+                if (minutes > 0) return \`\${minutes}m ago\`;
+                return 'just now';
+            }
+            
+            function handleNoteAction(action, noteIndex) {
+                const note = LifeWeaver.notes[noteIndex];
+                if (!note) return;
+                
+                switch (action) {
+                    case '✨': // Transform
+                        transformNote(note);
+                        break;
+                    case '🔗': // Connect
+                        connectNote(note);
+                        break;
+                    case '🎨': // Visualize
+                        visualizeNote(note);
+                        break;
+                    case '🗑️': // Delete
+                        deleteNote(noteIndex);
+                        break;
+                }
+            }
+            
+            function transformNote(note) {
+                // Simulate AI transformation
+                const transformations = [
+                    "What if this feeling of being 'sluggish and jerky' is actually your mind's way of signaling a need for different rhythms?",
+                    "The texture of uncertainty often precedes breakthrough moments.",
+                    "Consider: what would it feel like if your next words were supported by the wind instead of torn by it?",
+                    "This moment's texture suggests a transition state - what's emerging?"
+                ];
+                
+                const transformation = transformations[Math.floor(Math.random() * transformations.length)];
+                
+                const transformedNote = {
+                    id: Date.now(),
+                    text: transformation,
+                    timestamp: new Date(),
+                    wordCount: transformation.split(/\s+/).length,
+                    mood: 'flowing',
+                    connections: [note.id],
+                    transformations: []
+                };
+                
+                LifeWeaver.notes.unshift(transformedNote);
+                renderNotes();
+                updateMetrics();
+                
+                console.log('✨ Note transformed');
+            }
+            
+            function connectNote(note) {
+                // Find related notes based on word similarity
+                const connections = LifeWeaver.notes.filter(n => 
+                    n.id !== note.id && hasWordOverlap(n.text, note.text)
+                ).slice(0, 3);
+                
+                note.connections = connections.map(n => n.id);
+                renderNotes();
+                
+                console.log('🔗 Note connected to', connections.length, 'other notes');
+            }
+            
+            function visualizeNote(note) {
+                // Create a visual representation of the note in the flow field
+                const visualization = {
+                    text: note.text,
+                    x: Math.random() * window.innerWidth,
+                    y: Math.random() * window.innerHeight,
+                    color: getColorForMood(note.mood),
+                    size: Math.min(note.wordCount * 2, 50),
+                    duration: 5000
+                };
+                
+                drawNoteVisualization(visualization);
+                console.log('🎨 Note visualized');
+            }
+            
+            function deleteNote(index) {
+                LifeWeaver.notes.splice(index, 1);
+                renderNotes();
+                updateMetrics();
+                console.log('🗑️ Note deleted');
+            }
+            
+            // === Hotkey System ===
+            function handleHotkeys(e) {
+                if (e.target.tagName === 'TEXTAREA') return;
+                
+                switch (e.key.toLowerCase()) {
+                    case '?':
+                        e.preventDefault();
+                        togglePalette();
+                        break;
+                    case 'c':
+                        e.preventDefault();
+                        focusThoughtInput();
+                        break;
+                    case 't':
+                        e.preventDefault();
+                        transformLastNote();
+                        break;
+                    case 'g':
+                        e.preventDefault();
+                        generateText();
+                        break;
+                    case 'f':
+                        e.preventDefault();
+                        enterFlowMode();
+                        break;
+                    case 'o':
+                        e.preventDefault();
+                        organizeProjects();
+                        break;
+                    case 'escape':
+                        hidePalette();
+                        break;
+                }
+            }
+            
+            function togglePalette() {
+                const palette = document.getElementById('hotkey-palette');
+                LifeWeaver.paletteVisible = !LifeWeaver.paletteVisible;
+                
+                if (LifeWeaver.paletteVisible) {
+                    palette.classList.add('active');
+                } else {
+                    palette.classList.remove('active');
+                }
+            }
+            
+            function hidePalette() {
+                const palette = document.getElementById('hotkey-palette');
+                palette.classList.remove('active');
+                LifeWeaver.paletteVisible = false;
+            }
+            
+            function executeAction(action) {
+                switch (action) {
+                    case 'capture':
+                        focusThoughtInput();
+                        break;
+                    case 'transform':
+                        transformLastNote();
+                        break;
+                    case 'generate':
+                        generateText();
+                        break;
+                    case 'connect':
+                        connectLastNote();
+                        break;
+                    case 'flow':
+                        enterFlowMode();
+                        break;
+                    case 'organize':
+                        organizeProjects();
+                        break;
+                    case 'analyze':
+                        analyzePatterns();
+                        break;
+                    case 'export':
+                        exportCanvas();
+                        break;
+                    case 'settings':
+                        openSettings();
+                        break;
+                }
+            }
+            
+            // === Action Implementations ===
+            function focusThoughtInput() {
+                document.getElementById('thought-input').focus();
+            }
+            
+            function transformLastNote() {
+                if (LifeWeaver.notes.length > 0) {
+                    transformNote(LifeWeaver.notes[0]);
+                }
+            }
+            
+            function generateText() {
+                // Simulate AI text generation based on recent notes
+                const recentNotes = LifeWeaver.notes.slice(0, 3);
+                const context = recentNotes.map(n => n.text).join(' ');
+                
+                const generatedTexts = [
+                    "The patterns in your recent thoughts suggest a desire for more fluid expression. What would it look like to write with the rhythm of water instead of fighting against the wind?",
+                    "I notice themes of connection and uncertainty in your notes. Perhaps the key is not to resolve the uncertainty, but to dance with it more gracefully.",
+                    "Your words reveal someone navigating between different states of being. What if this transition itself is the message?",
+                    "The texture you describe - 'sluggish and jerky' - might be the sound of old patterns breaking to make room for something new."
+                ];
+                
+                const generated = generatedTexts[Math.floor(Math.random() * generatedTexts.length)];
+                
+                const generatedNote = {
+                    id: Date.now(),
+                    text: "🤖 " + generated,
+                    timestamp: new Date(),
+                    wordCount: generated.split(/\s+/).length,
+                    mood: 'flowing',
+                    connections: recentNotes.map(n => n.id),
+                    transformations: []
+                };
+                
+                LifeWeaver.notes.unshift(generatedNote);
+                renderNotes();
+                updateMetrics();
+                
+                console.log('🤖 Text generated based on context');
+            }
+            
+            function connectLastNote() {
+                if (LifeWeaver.notes.length > 0) {
+                    connectNote(LifeWeaver.notes[0]);
+                }
+            }
+            
+            function enterFlowMode() {
+                // Change visual style to support flow state
+                document.body.style.filter = 'brightness(0.8) saturate(1.2)';
+                LifeWeaver.flowState = 'deep';
+                updateMetrics();
+                
+                // Reset after 10 minutes
+                setTimeout(() => {
+                    document.body.style.filter = 'none';
+                    LifeWeaver.flowState = 'high';
+                    updateMetrics();
+                }, 600000);
+                
+                console.log('🌊 Entering flow mode');
+            }
+            
+            function organizeProjects() {
+                // Reorganize project helix based on activity
+                const container = document.getElementById('helix-container');
+                const cards = Array.from(container.children);
+                
+                // Sort by status priority
+                const statusPriority = { active: 0, experimental: 1, collaborative: 2, maintained: 3, archived: 4 };
+                
+                cards.sort((a, b) => {
+                    const aStatus = a.querySelector('.project-status').className.split(' ')[1].replace('status-', '');
+                    const bStatus = b.querySelector('.project-status').className.split(' ')[1].replace('status-', '');
+                    return statusPriority[aStatus] - statusPriority[bStatus];
+                });
+                
+                // Reposition cards
+                cards.forEach((card, index) => {
+                    const angle = (index / cards.length) * Math.PI * 4;
+                    const radius = 150 + (index % 3) * 50;
+                    const height = (index / cards.length) * 400 - 200;
+                    
+                    const x = Math.cos(angle) * radius;
+                    const z = Math.sin(angle) * radius;
+                    
+                    card.style.transform = \`translate3d(\${x}px, \${height}px, \${z}px) rotateY(\${-angle}rad)\`;
+                });
+                
+                console.log('🔄 Projects reorganized');
+            }
+            
+            function analyzePatterns() {
+                // Analyze patterns in notes and attention traces
+                const patterns = {
+                    moodTrends: analyzeMoodTrends(),
+                    attentionFlow: analyzeAttentionFlow(),
+                    connectionDensity: analyzeConnectionDensity(),
+                    temporalPatterns: analyzeTemporalPatterns()
+                };
+                
+                console.log('📊 Pattern analysis complete:', patterns);
+                
+                // Create analysis note
+                const analysisText = \`Pattern analysis: \${patterns.moodTrends} mood trend, \${patterns.attentionFlow} attention flow, \${patterns.connectionDensity} connection density\`;
+                
+                const analysisNote = {
+                    id: Date.now(),
+                    text: "📊 " + analysisText,
+                    timestamp: new Date(),
+                    wordCount: analysisText.split(/\s+/).length,
+                    mood: 'neutral',
+                    connections: [],
+                    transformations: []
+                };
+                
+                LifeWeaver.notes.unshift(analysisNote);
+                renderNotes();
+                updateMetrics();
+            }
+            
+            function exportCanvas() {
+                // Export current state as JSON
+                const exportData = {
+                    notes: LifeWeaver.notes,
+                    projects: LifeWeaver.projects,
+                    attentionTraces: LifeWeaver.attentionTraces.slice(-50), // Last 50 traces
+                    flowState: LifeWeaver.flowState,
+                    timestamp: new Date().toISOString()
+                };
+                
+                const blob = new Blob([JSON.stringify(exportData, null, 2)], { type: 'application/json' });
+                const url = URL.createObjectURL(blob);
+                
+                const a = document.createElement('a');
+                a.href = url;
+                a.download = \`life-weaving-canvas-\${Date.now()}.json\`;
+                a.click();
+                
+                URL.revokeObjectURL(url);
+                console.log('📤 Canvas exported');
+            }
+            
+            function openSettings() {
+                console.log('⚙️ Settings panel would open here');
+            }
+            
+            // === Analysis Functions ===
+            function analyzeMoodTrends() {
+                const recentMoods = LifeWeaver.notes.slice(0, 10).map(n => n.mood);
+                const moodCounts = recentMoods.reduce((acc, mood) => {
+                    acc[mood] = (acc[mood] || 0) + 1;
+                    return acc;
+                }, {});
+                
+                const dominantMood = Object.keys(moodCounts).reduce((a, b) => 
+                    moodCounts[a] > moodCounts[b] ? a : b
+                );
+                
+                return dominantMood;
+            }
+            
+            function analyzeAttentionFlow() {
+                const recentTraces = LifeWeaver.attentionTraces.slice(-20);
+                const avgIntensity = recentTraces.reduce((sum, trace) => sum + trace.intensity, 0) / recentTraces.length;
+                
+                if (avgIntensity > 0.7) return 'high';
+                if (avgIntensity > 0.4) return 'medium';
+                return 'low';
+            }
+            
+            function analyzeConnectionDensity() {
+                const totalConnections = LifeWeaver.notes.reduce((sum, note) => sum + note.connections.length, 0);
+                const avgConnections = totalConnections / Math.max(LifeWeaver.notes.length, 1);
+                
+                if (avgConnections > 2) return 'high';
+                if (avgConnections > 1) return 'medium';
+                return 'low';
+            }
+            
+            function analyzeTemporalPatterns() {
+                // Analyze note timing patterns
+                const intervals = [];
+                for (let i = 1; i < LifeWeaver.notes.length; i++) {
+                    const diff = LifeWeaver.notes[i-1].timestamp.getTime() - LifeWeaver.notes[i].timestamp.getTime();
+                    intervals.push(diff);
+                }
+                
+                const avgInterval = intervals.reduce((sum, interval) => sum + interval, 0) / intervals.length;
+                
+                if (avgInterval < 60000) return 'rapid'; // Less than 1 minute
+                if (avgInterval < 300000) return 'regular'; // Less than 5 minutes
+                return 'sparse';
+            }
+            
+            // === Flow Field Animation ===
+            function startAnimationLoop() {
+                function animate() {
+                    drawFlowField();
+                    LifeWeaver.animationId = requestAnimationFrame(animate);
+                }
+                animate();
+            }
+            
+            function drawFlowField() {
+                const ctx = LifeWeaver.ctx;
+                ctx.clearRect(0, 0, LifeWeaver.canvas.width, LifeWeaver.canvas.height);
+                
+                const time = Date.now() * 0.001;
+                
+                // Draw flow field vectors
+                LifeWeaver.flowField.forEach(field => {
+                    const dynamicAngle = field.angle + Math.sin(time * 0.5 + field.x * 0.01) * 0.5;
+                    const endX = field.x + Math.cos(dynamicAngle) * field.magnitude * 15;
+                    const endY = field.y + Math.sin(dynamicAngle) * field.magnitude * 15;
+                    
+                    ctx.strokeStyle = \`rgba(100, 217, 255, \${field.magnitude * 0.3})\`;
+                    ctx.lineWidth = 1;
+                    ctx.beginPath();
+                    ctx.moveTo(field.x, field.y);
+                    ctx.lineTo(endX, endY);
+                    ctx.stroke();
+                });
+                
+                // Draw attention heat map
+                drawAttentionHeatMap(ctx);
+            }
+            
+            function drawAttentionHeatMap(ctx) {
+                const recentTraces = LifeWeaver.attentionTraces.filter(trace => 
+                    Date.now() - trace.time < 10000 // Last 10 seconds
+                );
+                
+                recentTraces.forEach(trace => {
+                    const age = (Date.now() - trace.time) / 10000;
+                    const alpha = (1 - age) * trace.intensity * 0.1;
+                    
+                    const gradient = ctx.createRadialGradient(trace.x, trace.y, 0, trace.x, trace.y, 50);
+                    gradient.addColorStop(0, \`rgba(0, 255, 170, \${alpha})\`);
+                    gradient.addColorStop(1, \`rgba(0, 255, 170, 0)\`);
+                    
+                    ctx.fillStyle = gradient;
+                    ctx.fillRect(trace.x - 50, trace.y - 50, 100, 100);
+                });
+            }
+            
+            function drawNoteVisualization(viz) {
+                const ctx = LifeWeaver.ctx;
+                
+                setTimeout(() => {
+                    ctx.fillStyle = viz.color;
+                    ctx.font = \`\${Math.max(12, viz.size / 4)}px monospace\`;
+                    ctx.fillText(viz.text.substring(0, 20) + '...', viz.x, viz.y);
+                }, 100);
+            }
+            
+            // === Utility Functions ===
+            function hasWordOverlap(text1, text2) {
+                const words1 = text1.toLowerCase().split(/\s+/);
+                const words2 = text2.toLowerCase().split(/\s+/);
+                
+                return words1.some(word => words2.includes(word) && word.length > 3);
+            }
+            
+            function getColorForMood(mood) {
+                const colors = {
+                    turbulent: '#ff4757',
+                    flowing: '#00ffaa',
+                    questioning: '#64d9ff',
+                    energetic: '#ffd93d',
+                    neutral: '#b794f6'
+                };
+                return colors[mood] || colors.neutral;
+            }
+            
+            function selectProject(project) {
+                LifeWeaver.currentProject = project;
+                console.log('🎯 Selected project:', project.name);
+                
+                // Highlight selected project
+                document.querySelectorAll('.project-card').forEach(card => {
+                    card.style.borderColor = 'rgba(100, 217, 255, 0.3)';
+                });
+                
+                event.target.closest('.project-card').style.borderColor = 'var(--flow-primary)';
+            }
+            
+            function updateMetrics() {
+                document.getElementById('note-count').textContent = LifeWeaver.notes.length;
+                document.getElementById('project-count').textContent = LifeWeaver.projects.length;
+                document.getElementById('flow-intensity').textContent = LifeWeaver.flowState;
+                document.getElementById('attention-quality').textContent = LifeWeaver.attentionQuality;
+            }
+            
+            // === Initialize on Load ===
+            document.addEventListener('DOMContentLoaded', function() {
+                initializeCanvas();
+                
+                // Add some sample notes
+                setTimeout(() => {
+                    const sampleNotes = [
+                        {
+                            id: Date.now() - 1000,
+                            text: "the texture of this moment is sluggish and jerky and overheating and crumbly and i'm never sure my next words won't be torn with the wind",
+                            timestamp: new Date(Date.now() - 60000),
+                            wordCount: 26,
+                            mood: 'turbulent',
+                            connections: [],
+                            transformations: []
+                        },
+                        {
+                            id: Date.now() - 2000,
+                            text: "hello are you connected are we connected am i connected?",
+                            timestamp: new Date(Date.now() - 120000),
+                            wordCount: 9,
+                            mood: 'questioning',
+                            connections: [],
+                            transformations: []
+                        },
+                        {
+                            id: Date.now() - 3000,
+                            text: "let's come up with an ad-hoc graphical and color schema to represent how the projects are going",
+                            timestamp: new Date(Date.now() - 180000),
+                            wordCount: 17,
+                            mood: 'energetic',
+                            connections: [],
+                            transformations: []
+                        }
+                    ];
+                    
+                    LifeWeaver.notes = sampleNotes;
+                    renderNotes();
+                    updateMetrics();
+                }, 1000);
+                
+                console.log('🕸️ Life Weaving Canvas ready for attention mapping');
+            });
+            
+        })();
+    </script>
+</body>
+</html>
